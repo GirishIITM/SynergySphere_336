@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import "../styles/sidebar.css";
 
 const Sidebar = () => {
+  const location = useLocation();
+
   return (
     <>
       <div className="sidebar">
@@ -10,13 +12,13 @@ const Sidebar = () => {
           <h2 className="section-title">Navigation</h2>
           <ul className="nav-list">
             <li className="nav-item">
-              <Link to="/solutions/tasks">
+              <Link to="/solutions/tasks" className={location.pathname === "/solutions/tasks" ? "active" : ""}>
                 <span className="nav-icon">📋</span>
                 Tasks
               </Link>
             </li>
             <li className="nav-item">
-              <Link to="/solutions/projects">
+              <Link to="/solutions/projects" className={location.pathname === "/solutions/projects" ? "active" : ""}>
                 <span className="nav-icon">📁</span>
                 Projects
               </Link>
