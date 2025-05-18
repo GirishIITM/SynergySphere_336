@@ -1,306 +1,106 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from models import db, Task, Event, Project, User
-from routes import tasks_events_bp
+from auth import auth_bp
 
-# Task Routes
-@tasks_events_bp.route('/projects/<int:project_id>/tasks', methods=['GET'])
-def get_project_tasks(project_id):
-    try:
-        project = Project.query.get(project_id)
-        if not project:
-            return jsonify({'error': 'Project not found'}), 404
-        
-        tasks = Task.query.filter_by(project_id=project_id).all()
-        return jsonify([{
-            'id': task.id,
-            'project_id': task.project_id,
-            'title': task.title,
-            'description': task.description,
-            'assignee_id': task.assignee_id,
-            'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': task.status
-        } for task in tasks])
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+@auth_bp.route('/tasks', methods=['GET'])
+def get_tasks():
+    tasks = Task.query.all()
+    return jsonify([task.to_dict() for task in tasks])
 
-@tasks_events_bp.route('/projects/<int:project_id>/tasks', methods=['POST'])
-def create_project_task(project_id):
-    try:
-        project = Project.query.get(project_id)
-        if not project:
-            return jsonify({'error': 'Project not found'}), 404
 
-        data = request.get_json()
-        
-        # Validate required fields
-        if not data.get('title') or not data.get('status'):
-            return jsonify({'error': 'Title and status are required'}), 400
 
-        # Validate assignee if provided
-        assignee_id = data.get('assignee_id')
-        if assignee_id:
-            assignee = User.query.get(assignee_id)
-            if not assignee:
-                return jsonify({'error': 'Assignee not found'}), 400
+@auth_bp.route('/tasks', methods=['POST'])
+def create_task():
+    data = request.json
+    new_task = Task(**data)
+    db.session.add(new_task)
+    db.session.commit()
+    return jsonify(new_task.to_dict()), 201
 
-        # Parse due date if provided
-        due_date = None
-        if data.get('due_date'):
-            try:
-                due_date = datetime.fromisoformat(data['due_date']).date()
-            except ValueError:
-                return jsonify({'error': 'Invalid due date format. Use ISO 8601 format.'}), 400
 
-        task = Task(
-            project_id=project_id,
-            title=data['title'],
-            description=data.get('description'),
-            assignee_id=assignee_id,
-            due_date=due_date,
-            status=data['status']
-        )
-
-        db.session.add(task)
-        db.session.commit()
-
-        return jsonify({
-            'id': task.id,
-            'project_id': task.project_id,
-            'title': task.title,
-            'description': task.description,
-            'assignee_id': task.assignee_id,
-            'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': task.status
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@tasks_events_bp.route('/tasks/<int:task_id>', methods=['GET'])
-def get_task(task_id):
-    try:
-        task = Task.query.get(task_id)
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
-
-        return jsonify({
-            'id': task.id,
-            'project_id': task.project_id,
-            'title': task.title,
-            'description': task.description,
-            'assignee_id': task.assignee_id,
-            'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': task.status
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@tasks_events_bp.route('/tasks/<int:task_id>', methods=['PUT'])
+@auth_bp.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
-    try:
-        task = Task.query.get(task_id)
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
+    data = request.json
+    task = Task.query.get_or_404(task_id)
+    for key, value in data.items():
+        setattr(task, key, value)
+    db.session.commit()
+    return jsonify(task.to_dict())
 
-        data = request.get_json()
 
-        # Update fields if provided
-        if 'title' in data:
-            task.title = data['title']
-        if 'description' in data:
-            task.description = data['description']
-        if 'assignee_id' in data:
-            if data['assignee_id']:
-                assignee = User.query.get(data['assignee_id'])
-                if not assignee:
-                    return jsonify({'error': 'Assignee not found'}), 400
-            task.assignee_id = data['assignee_id']
-        if 'due_date' in data:
-            try:
-                task.due_date = datetime.fromisoformat(data['due_date']).date() if data['due_date'] else None
-            except ValueError:
-                return jsonify({'error': 'Invalid due date format. Use ISO 8601 format.'}), 400
-        if 'status' in data:
-            task.status = data['status']
-
-        db.session.commit()
-
-        return jsonify({
-            'id': task.id,
-            'project_id': task.project_id,
-            'title': task.title,
-            'description': task.description,
-            'assignee_id': task.assignee_id,
-            'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': task.status
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@tasks_events_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
+@auth_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
-    try:
-        task = Task.query.get(task_id)
-        if not task:
-            return jsonify({'error': 'Task not found'}), 404
+    task = Task.query.get_or_404(task_id)
+    db.session.delete(task)
+    db.session.commit()
+    return '', 204
 
-        db.session.delete(task)
-        db.session.commit()
+@auth_bp.route('/messages', methods=['GET'])
+def get_messages():
+    messages = Message.query.all()
+    return jsonify([message.to_dict() for message in messages])
 
-        return jsonify({'message': 'Task deleted successfully'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
 
-# Event Routes
-@tasks_events_bp.route('/projects/<int:project_id>/events', methods=['GET'])
-def get_project_events(project_id):
-    try:
-        project = Project.query.get(project_id)
-        if not project:
-            return jsonify({'error': 'Project not found'}), 404
-        
-        events = Event.query.filter_by(project_id=project_id).all()
-        return jsonify([{
-            'id': event.id,
-            'project_id': event.project_id,
-            'title': event.title,
-            'description': event.description,
-            'start_time': event.start_time.isoformat(),
-            'end_time': event.end_time.isoformat()
-        } for event in events])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@tasks_events_bp.route('/projects/<int:project_id>/events', methods=['POST'])
-def create_project_event(project_id):
-    try:
-        project = Project.query.get(project_id)
-        if not project:
-            return jsonify({'error': 'Project not found'}), 404
 
-        data = request.get_json()
-        
-        # Validate required fields
-        required_fields = ['title', 'start_time', 'end_time']
-        if not all(field in data for field in required_fields):
-            return jsonify({'error': 'Title, start_time, and end_time are required'}), 400
+@auth_bp.route('/messages', methods=['POST'])
+def create_message():
+    data = request.json
+    new_message = Message(**data)
+    db.session.add(new_message)
+    db.session.commit()
+    return jsonify(new_message.to_dict()), 201
 
-        try:
-            start_time = datetime.fromisoformat(data['start_time'])
-            end_time = datetime.fromisoformat(data['end_time'])
-        except ValueError:
-            return jsonify({'error': 'Invalid datetime format. Use ISO 8601 format.'}), 400
 
-        if end_time <= start_time:
-            return jsonify({'error': 'End time must be after start time'}), 400
+@auth_bp.route('/messages/<int:message_id>', methods=['PUT'])
+def update_message(message_id):
+    data = request.json
+    message = Message.query.get_or_404(message_id)
+    for key, value in data.items():
+        setattr(message, key, value)
+    db.session.commit()
+    return jsonify(message.to_dict())
 
-        event = Event(
-            project_id=project_id,
-            title=data['title'],
-            description=data.get('description'),
-            start_time=start_time,
-            end_time=end_time
-        )
 
-        db.session.add(event)
-        db.session.commit()
+@auth_bp.route('/messages/<int:message_id>', methods=['DELETE'])
+def delete_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    db.session.delete(message)
+    db.session.commit()
+    return '', 204
 
-        return jsonify({
-            'id': event.id,
-            'project_id': event.project_id,
-            'title': event.title,
-            'description': event.description,
-            'start_time': event.start_time.isoformat(),
-            'end_time': event.end_time.isoformat()
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+@auth_bp.route('/projects', methods=['GET'])
+def get_projects():
+    projects = Project.query.all()
+    return jsonify([project.to_dict() for project in projects])
 
-@tasks_events_bp.route('/events/<int:event_id>', methods=['GET'])
-def get_event(event_id):
-    try:
-        event = Event.query.get(event_id)
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
 
-        return jsonify({
-            'id': event.id,
-            'project_id': event.project_id,
-            'title': event.title,
-            'description': event.description,
-            'start_time': event.start_time.isoformat(),
-            'end_time': event.end_time.isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@tasks_events_bp.route('/events/<int:event_id>', methods=['PUT'])
-def update_event(event_id):
-    try:
-        event = Event.query.get(event_id)
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
 
-        data = request.get_json()
+@auth_bp.route('/projects', methods=['POST'])
+def create_project():
+    data = request.json
+    new_project = Project(**data)
+    db.session.add(new_project)
+    db.session.commit()
+    return jsonify(new_project.to_dict()), 201
 
-        # Update fields if provided
-        if 'title' in data:
-            event.title = data['title']
-        if 'description' in data:
-            event.description = data['description']
-        
-        # Handle datetime updates
-        start_time = event.start_time
-        end_time = event.end_time
-        
-        if 'start_time' in data:
-            try:
-                start_time = datetime.fromisoformat(data['start_time'])
-            except ValueError:
-                return jsonify({'error': 'Invalid start_time format. Use ISO 8601 format.'}), 400
-                
-        if 'end_time' in data:
-            try:
-                end_time = datetime.fromisoformat(data['end_time'])
-            except ValueError:
-                return jsonify({'error': 'Invalid end_time format. Use ISO 8601 format.'}), 400
 
-        if end_time <= start_time:
-            return jsonify({'error': 'End time must be after start time'}), 400
+@auth_bp.route('/projects/<int:project_id>', methods=['PUT'])
+def update_project(project_id):
+    data = request.json
+    project = Project.query.get_or_404(project_id)
+    for key, value in data.items():
+        setattr(project, key, value)
+    db.session.commit()
+    return jsonify(project.to_dict())
 
-        event.start_time = start_time
-        event.end_time = end_time
 
-        db.session.commit()
+@auth_bp.route('/projects/<int:project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    db.session.delete(project)
+    db.session.commit()
+    return '', 204
 
-        return jsonify({
-            'id': event.id,
-            'project_id': event.project_id,
-            'title': event.title,
-            'description': event.description,
-            'start_time': event.start_time.isoformat(),
-            'end_time': event.end_time.isoformat()
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@tasks_events_bp.route('/events/<int:event_id>', methods=['DELETE'])
-def delete_event(event_id):
-    try:
-        event = Event.query.get(event_id)
-        if not event:
-            return jsonify({'error': 'Event not found'}), 404
-
-        db.session.delete(event)
-        db.session.commit()
-
-        return jsonify({'message': 'Event deleted successfully'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
