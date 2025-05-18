@@ -3,6 +3,13 @@
 ## Overview
 SynergySphere is an intelligent team collaboration platform designed to revolutionize how teams think, communicate, and work together. Going beyond traditional project management tools, SynergySphere serves as the intelligent backbone for teams, facilitating seamless organization, enhanced communication, and effective resource management.
 
+## Database Model
+![diagram (1)](https://github.com/user-attachments/assets/6fe6df2b-89e4-4b3a-9946-6af600cb4959)
+
+## Flow of Application
+![Screenshot From 2025-05-18 16-57-12](https://github.com/user-attachments/assets/d23bc16d-9103-4cf1-9a93-d6320b08c47a)
+
+
 ## Mission
 Our mission is to be the central nervous system for team collaboration. SynergySphere proactively streamlines tasks and communication while identifying potential issues early, helping teams stay ahead rather than being reactive. We create a supportive, insightful, and seamless experience that naturally integrates into your team's workflow.
 
