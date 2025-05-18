@@ -50,19 +50,49 @@
   border-bottom: 2px solid var(--color-primary);
 }
 
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: column;
     padding: 1rem;
   }
   
-  .navbar-brand {
-    margin-bottom: 1rem;
+  .navbar-toggle {
+    display: block;
   }
   
   .navbar-links {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background-color: var(--color-surface);
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    box-shadow: 0 4px 6px var(--color-shadow);
+    transform: translateY(-150%);
+    transition: transform 0.3s ease;
+    z-index: 99;
+  }
+  
+  .navbar-links.open {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
+  }
+  
+  .navbar-brand {
+    flex: 1;
   }
 }
