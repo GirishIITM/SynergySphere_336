@@ -16,8 +16,16 @@ function App() {
       <div className="app-container">
         <main>
           <Routes>
-            <Route path='/register' element={<Register />} />
-            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={
+              <Navbar>
+                <Register />
+              </Navbar>
+            } />
+            <Route path='/login' element={
+              <Navbar>
+                <Login />
+              </Navbar>
+            } />
             <Route path='/' element={
               <Navbar>
                 <Home />

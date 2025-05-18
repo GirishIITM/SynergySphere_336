@@ -1,0 +1,39 @@
+ .sidebar {
+     width: 256px;
+     background-color: #f3f4f6;
+     height: 100%;
+     padding: 16px;
+ }
+
+ .navigation-section {
+     margin-bottom: 32px;
+ }
+
+ .section-title {
+     font-size: 1.25rem;
+     font-weight: 600;
+     margin-bottom: 16px;
+ }
+
+ .nav-list {
+     display: flex;
+     flex-direction: column;
+     gap: 8px;
+ }
+
+ .nav-item a {
+     display: flex;
+     align-items: center;
+     padding: 8px;
+     border-radius: 4px;
+     text-decoration: none;
+     color: inherit;
+ }
+
+ .nav-item a:hover {
+     background-color: #e5e7eb;
+ }
+
+ .nav-icon {
+     margin-right: 8px;
+ }
