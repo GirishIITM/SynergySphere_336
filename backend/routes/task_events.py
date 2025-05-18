@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
-from models.user import Message, Project, Task, db 
+from models.user import Message, Project, Task, User, db 
 from routes import auth_bp  
 
 @auth_bp.route('/tasks', methods=['GET'])
