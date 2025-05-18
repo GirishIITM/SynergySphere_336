@@ -34,6 +34,10 @@ def create_app(test_config=None):
     # Register blueprints
     from routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from backend.routes.tasks_events import tasks_events_bp
+
+    app.register_blueprint(tasks_events_bp)
     
     return app
 
