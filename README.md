@@ -1,7 +1,11 @@
-# SynergySphere - Advanced Team Collaboration Platform
+# SynergySphere_336
 
-## Overview
-SynergySphere is an intelligent team collaboration platform designed to revolutionize how teams think, communicate, and work together. Going beyond traditional project management tools, SynergySphere serves as the intelligent backbone for teams, facilitating seamless organization, enhanced communication, and effective resource management.
+![SynergySphere Banner](https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80)
+
+SynergySphere is an advanced, intelligent team collaboration platform designed to help teams operate at their best—staying organized, communicating seamlessly, and making informed decisions. Built by Team 336.
+
+
+---
 
 ## Video Demo 
 [drive link](https://drive.google.com/file/d/1OLNroWXx9VEK5ZY5vlhdNmDsXXr4gkmH/view?usp=sharing)
@@ -10,168 +14,151 @@ SynergySphere is an intelligent team collaboration platform designed to revoluti
 https://github.com/user-attachments/assets/67d1b3b7-6c26-4073-92e9-f5b6a4d089d5
 
 
+## 🌟 Project Vision
 
-## Database Model
-![diagram (1)](https://github.com/user-attachments/assets/6fe6df2b-89e4-4b3a-9946-6af600cb4959)
-
-## Flow of Application
-![Screenshot From 2025-05-18 16-57-12](https://github.com/user-attachments/assets/d23bc16d-9103-4cf1-9a93-d6320b08c47a)
-
-
-## Mission
-Our mission is to be the central nervous system for team collaboration. SynergySphere proactively streamlines tasks and communication while identifying potential issues early, helping teams stay ahead rather than being reactive. We create a supportive, insightful, and seamless experience that naturally integrates into your team's workflow.
-
-## Pain Points We Solve
-SynergySphere addresses critical challenges faced by modern teams:
-
-- **Scattered Information**: No more hunting through multiple locations for files, chats, and decisions
-- **Progress Tracking**: Clear visibility into task progress and project status
-- **Resource Management**: Smart task assignment preventing overload and confusion
-- **Deadline Management**: Proactive deadline tracking and early issue identification
-- **Communication Clarity**: Centralized project communication ensuring no team member misses updates
-
-## Key Features (MVP)
-- User authentication system with registration and login
-- Comprehensive project creation and management
-- Team member management and role assignment
-- Task management with due dates and status tracking
-- Project-specific communication channels
-- Intuitive task progress visualization
-- Real-time notifications for important events
-
-## Technical Stack
-
-### Frontend
-- **ReactJS**: For building a dynamic and responsive user interface
-- Modern UI components and state management
-- Responsive design for all device sizes
-
-### Backend
-- **Flask**: Lightweight and flexible Python web framework
-- RESTful API architecture
-- JWT authentication
-- SQLAlchemy ORM
-
-### Database
-- **SQLite**: Efficient file-based database system
-- Suitable for MVP phase with easy scaling options
-
-## Installation
-
-### Prerequisites
-- Python 3.x
-- Node.js and npm
-- Git
-
-### Backend Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/SynergySphere_336.git
-   cd SynergySphere_336/backend
-   ```
-
-2. Create and activate virtual environment:
-   ```bash
-   # Windows
-   python -m venv venv
-   venv\Scripts\activate
-
-   # Linux/macOS
-   python -m venv venv
-   source venv/bin/activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Initialize the database:
-   ```bash
-   python init_db.py
-   ```
-
-5. Start the Flask server:
-   ```bash
-   python app.py
-   ```
-
-### Frontend Setup
-1. Navigate to frontend directory:
-   ```bash
-   cd ../frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-## Usage Guide
-
-### Getting Started
-1. Access the application at `http://localhost:3000`
-2. Register a new account or log in with existing credentials
-3. Create your first project and add team members
-
-### Project Management
-- Create new projects with detailed descriptions
-- Add team members and assign roles
-- Set project milestones and deadlines
-
-### Task Management
-- Create tasks with titles, descriptions, and due dates
-- Assign tasks to team members
-- Track task progress and update status
-- Add comments and attachments to tasks
-
-### Communication
-- Use project-specific chat channels
-- Share updates 
-
-## Contributing
-We welcome contributions to SynergySphere! Here's how you can help:
-
-1. Fork the repository
-2. Create a feature branch:
-   ```bash
-   git checkout -b feature/AmazingFeature
-   ```
-3. Commit your changes:
-   ```bash
-   git commit -m 'Add some AmazingFeature'
-   ```
-4. Push to the branch:
-   ```bash
-   git push origin feature/AmazingFeature
-   ```
-5. Open a Pull Request
-
-### Coding Standards
-- Follow PEP 8 guidelines for Python code
-- Use ESLint configuration for JavaScript code
-- Write clear commit messages
-- Include tests for new features
-- Update documentation as needed
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Screenshots
-[Coming Soon] Visual overview of key features and interfaces:
-- Project Dashboard
-- Task Management Interface
-- Team Communication Channels
-- Progress Tracking Views
-
-## Support
-For support, please open an issue in the GitHub repository or contact the development team.
+SynergySphere is more than project management—it’s the collaboration engine behind our Odoo Hackathon entry. We’ve built a platform that anticipates bottlenecks, keeps everyone synced in real-time, and turns scattered tasks into a single, flowing workspace—whether you’re on desktop or mobile.
 
 ---
 
-Built with ❤️ by Team 336
+## 💡 Why SynergySphere?
+
+SynergySphere was built to directly address the real challenges that teams face every day—challenges we experienced ourselves and set out to solve with a smarter, more supportive platform:
+
+- No More Scattered Information: All your files, chats, tasks, and decisions live in one organized place. No more searching through endless emails or chat threads—everything you need is always at your fingertips.
+- True Progress Visibility: Instantly see what’s done, what’s in progress, and what’s holding things up. Our dashboards and task boards give everyone a clear, real-time view of project status.
+- Smart Resource Management: Assignments are always clear. SynergySphere helps prevent overload and confusion by making sure everyone knows their responsibilities and workload.
+- Proactive Deadline Tracking: Never be surprised by a missed deadline again. Automated reminders and visual timelines keep your team ahead of schedule, surfacing potential issues before they become problems.
+- Seamless Communication: Updates, discussions, and decisions stay connected to the work they’re about. No more missed messages or lost context—SynergySphere keeps everyone in the loop.
+- Mobile & Desktop Ready: Whether you’re at your desk or on the go, SynergySphere’s responsive design ensures you can manage your work and collaborate with your team anywhere, anytime.
+
+SynergySphere isn’t just another project management tool—it’s the intelligent backbone of your team’s collaboration, built to help you work smarter, stay aligned, and achieve more together.
+---
+
+## 🚀 Features
+
+- User Authentication: Secure registration and login.
+- Project Management: Create, view, and manage projects.
+- Team Collaboration: Add team members to projects and assign tasks.
+- Task Management: Assign tasks with due dates, statuses (To-Do, In Progress, Done), and priorities.
+- Threaded Discussions: Communicate within each project context.
+- Progress Visualization: See task status and project progress at a glance.
+- Notifications: Get alerts for important events and deadlines.
+- Mobile & Desktop Ready: Fully responsive UI for all devices.
+
+---
+
+
+
+
+
+## 🛠️ Tech Stack
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original-wordmark.svg" alt="React" width="50" height="50"/>
+  <img src="https://vitejs.dev/logo.svg" alt="Vite" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/flask/flask-original.svg" alt="Flask" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original-wordmark.svg" alt="MySQL" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker" width="50" height="50"/>
+</p>- Frontend: React, Vite, React Router, CSS Modules
+- Backend: Flask, Flask-SQLAlchemy, Flask-Bcrypt, PyJWT
+- Database: Sqlite
+- Authentication: JWT-based authentication
+- Other: Python-dotenv, ESLint
+
+---
+
+## 📱 MVP Wireframes & User Flow
+
+- Login/Sign Up: Email/password fields, sign-up and forgot password options.
+- Project Dashboard: List of projects, quick stats, and a button to create new projects.
+- Project Detail: Task lists/boards, project-specific discussions.
+- Task Board: Tasks with title, assignee, due date, and status. Add/edit tasks easily.
+- Task Detail: View and edit all task details, including status and assignee.
+- User Profile: View user info, logout, and manage basic settings.
+- Mobile First: All screens are fully responsive for mobile and desktop.
+
+---
+
+## 📦 Project Structure
+
+SynergySphere_336/
+├── backend/                  # Backend application (Flask)
+│   ├── app.py
+│   ├── requirements.txt
+│   └── ...
+├── frontend/                 # Frontend application (React)
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   └── ...
+│   ├── package.json
+│   └── ...
+├── .env
+└── README.md
+---
+
+## ⚡ Getting Started
+
+### Prerequisites
+
+- Node.js & npm
+- Python 3.x & pip
+- Sqlite 
+
+### Backend Setup
+
+cd backend
+pip install -r requirements.txt
+# Set up your .env file with DB credentials and secret keys
+python app.py
+### Frontend Setup
+
+cd frontend
+npm install
+npm run dev
+Visit [http://localhost:5173](http://localhost:5173) to view the app.
+
+---
+
+## 📄 API Overview
+
+- Base URL: http://localhost:5000/api
+- Authentication: POST /auth/register, POST /auth/login
+- Projects: CRUD endpoints for projects
+- Tasks: CRUD endpoints for tasks
+- Users: User management endpoints
+
+---
+
+
+
+
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👥 Team
+
+- Team 336:
+  - VEDIKA SANTOSH VANGAR
+  - Rudransh Vikram Singh
+  - Girish V Bhat
+  - Aditya R
+  
+
+
+---
+
+## 📞 Contact
+
+For inquiries, please contact us at 
+-  23f3000802@ds.study.litm.ac.in
+-  21f3001328@ds.study.iitm.ac.in
+-  21f1006862@ds.study.iitm.ac.in
+-  23f2005217@ds.study.iitm.ac.in
