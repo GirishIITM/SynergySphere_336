@@ -1,4 +1,4 @@
- .sidebar {
+.sidebar {
      width: 256px;
      background-color: #f3f4f6;
      height: 100%;
@@ -32,6 +32,12 @@
 
  .nav-item a:hover {
      background-color: #e5e7eb;
+ }
+
+ .nav-item a.active {
+     background-color: #e5e7eb;
+     font-weight: 600;
+     color: var(--color-primary, #4a76c2);
  }
 
  .nav-icon {
