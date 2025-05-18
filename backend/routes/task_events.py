@@ -82,12 +82,9 @@ def get_projects():
 def create_project():
     data = request.json
     name = data.get('name')
-    # find thhe current user and set the creator_id to the current user's id
-    current_user = User.query.get(data.get('user_id'))
-    if not current_user:
-        return jsonify({'error': 'User not found'}), 404
+    creator_id = data.get('creator_id')
     description = data.get('description')
-    new_project = Project(name=name, creator_id=current_user.id, description=description)
+    new_project = Project(name=name, creator_id=creator_id, description=description)
     db.session.add(new_project)
     db.session.commit()
     return jsonify(new_project.to_dict()), 201
