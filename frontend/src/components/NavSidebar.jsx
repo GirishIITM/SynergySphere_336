@@ -1,3 +1,5 @@
+import { faBars, faSearch, faSignOutAlt, faUser } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { clearAuthData, getCurrentUser } from '../../../utils/apicall';
@@ -7,8 +9,10 @@ import Sidebar from './Sidebar';
 const NavSidebar = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const profileRef = useRef(null);
+  const searchInputRef = useRef(null);
   const user = getCurrentUser();
   
   // Close profile menu when clicking outside
@@ -43,32 +47,56 @@ const NavSidebar = ({ children }) => {
     setProfileMenuOpen(false);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      // Navigate to search results or handle search functionality
+      console.log(`Searching for: ${searchTerm}`);
+      // navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
+  const focusSearchInput = () => {
+    searchInputRef.current?.focus();
+  };
+
   return (
     <div className="nav-container">
       <nav className="navbar">
-        <button className="sidebar-toggle" onClick={toggleSidebar}>
-          ☰
-        </button>
-        <div className="brand">
-          <Link to="/">SynergySphere</Link>
+        <div className="navbar-left">
+          <button className="sidebar-toggle" onClick={toggleSidebar} aria-label="Toggle sidebar">
+            <FontAwesomeIcon icon={faBars} />
+          </button>
+          <div className="brand">
+            <Link to="/">SynergySphere</Link>
+          </div>
         </div>
-        <div className='navbar-links'>
+
+        <div className='navbar-right'>
           <div className="search-container">
-            <div className="search-wrapper">
+            <form className="search-wrapper" onSubmit={handleSearch}>
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Search..."
                 className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className="search-button">
-                🔍
+              <button 
+                type="submit" 
+                className="search-button"
+                onClick={handleSearch}
+                aria-label="Search"
+              >
+                <FontAwesomeIcon icon={faSearch} />
               </button>
-            </div>
+            </form>
           </div>
 
           <div className="profile-container" ref={profileRef}>
             <div className="profile-icon" onClick={toggleProfileMenu}>
-              {user?.name?.charAt(0).toUpperCase() || '👤'}
+              {user?.name?.charAt(0).toUpperCase() || <FontAwesomeIcon icon={faUser} />}
             </div>
             
             {profileMenuOpen && (
@@ -79,11 +107,12 @@ const NavSidebar = ({ children }) => {
                 </div>
                 <div className="profile-dropdown-divider"></div>
                 <Link to="/profile" className="profile-dropdown-item" onClick={() => setProfileMenuOpen(false)}>
-                  <span className="dropdown-icon">👤</span>
+                  <span className="dropdown-icon"><FontAwesomeIcon icon={faUser} /></span>
                   My Profile
                 </Link>
+                <div className="profile-dropdown-divider"></div>
                 <button className="profile-dropdown-item" onClick={handleLogout}>
-                  <span className="dropdown-icon">🚪</span>
+                  <span className="dropdown-icon"><FontAwesomeIcon icon={faSignOutAlt} /></span>
                   Logout
                 </button>
               </div>

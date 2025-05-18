@@ -149,8 +149,29 @@ export const authAPI = {
    * @param {string} email - User email
    * @returns {Promise} - Password reset response
    */
-  forgotPassword: (email) => {
-    return apiRequest('/auth/forgot-password', 'POST', { email }, 'auth-forgot-password');
+  forgotPassword: async (email) => {
+    loadingState.setLoading('auth-forgot-password', true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email })
+      });
+      
+      loadingState.setLoading('auth-forgot-password', false);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to process password reset request');
+      }
+      
+      return data;
+    } catch (error) {
+      loadingState.setLoading('auth-forgot-password', false);
+      throw error;
+    }
   },
 
   /**

@@ -6,6 +6,7 @@ import PrivateRoute from './components/PrivateRoute';
 import { isAuthenticated } from '../../utils/apicall';
 import NavSidebar from './components/NavSidebar';
 import About from './pages/About';
+import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Profile from './pages/Profile'; // Import the new Profile component
@@ -38,7 +39,7 @@ function App() {
                 <About />
               </>
             } />
-            
+
             {/* Home page - accessible to everyone, no redirection for authenticated users */}
             <Route path='/' element={
               <>
@@ -62,7 +63,7 @@ function App() {
                 </NavSidebar>
               </PrivateRoute>
             } />
-            
+
             {/* Profile route - protected */}
             <Route path='/profile' element={
               <PrivateRoute>
@@ -71,6 +72,13 @@ function App() {
               </PrivateRoute>
             } />
 
+            {/* Forgot password route */}
+            <Route path="/forgot-password" element={
+              <>
+                <Navbar />
+                <ForgotPassword />
+              </>
+            } />
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
