@@ -1,8 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from models import db, Task, Event, Project, User
-
-tasks_events_bp = Blueprint('tasks_events', __name__)
+from routes import tasks_events_bp
 
 # Task Routes
 @tasks_events_bp.route('/projects/<int:project_id>/tasks', methods=['GET'])
