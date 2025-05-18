@@ -1,10 +1,11 @@
 import React from 'react'
+import '../login.css';
 
 export default function Login() {
   return (
-    <div className="page">
-      <h1>Login</h1>
-      <form>
+    <div className="login-container">
+      <h1 className="login-title">Login into account</h1>
+      <form className="login-form">
         <div>
           <label htmlFor="login-email">Email:</label>
           <input type="email" id="login-email" name="email" required />
@@ -15,6 +16,12 @@ export default function Login() {
         </div>
         <button type="submit">Login</button>
       </form>
+      <p className="login-link-text">
+        Don’t have an account?{" "}
+        <a href="/register" id="signup-link">
+          Sign Up
+        </a>
+      </p>
     </div>
   )
 }
