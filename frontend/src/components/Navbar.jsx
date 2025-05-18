@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
+import "../styles/navbar.css";
 
 function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <Link to="/">My App</Link>
+        <Link to="/">Synergy Sphere</Link>
       </div>
       <div className="navbar-links">
         <Link to="/solutions/tasks">Tasks</Link>
@@ -18,3 +19,4 @@ function Navbar() {
 }
 
 export default Navbar;
+ 
