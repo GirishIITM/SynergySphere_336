@@ -3,6 +3,7 @@ from flask_cors import CORS
 from models import db, bcrypt
 import os
 
+
 def create_app(test_config=None):
     """Create and configure the Flask application."""
     

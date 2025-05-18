@@ -1,9 +1,6 @@
+from models import db, bcrypt   
 from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
 
-db = SQLAlchemy()
-bcrypt = Bcrypt()
 
 # Association table for the many-to-many relationship between User and Project
 project_members = db.Table(
