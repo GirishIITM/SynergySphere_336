@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { authAPI, saveAuthData, loadingState } from '../../../utils/apicall';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { authAPI, loadingState, saveAuthData } from '../../../utils/apicall';
 import LoadingIndicator from '../components/LoadingIndicator';
 import '../styles/login.css';
 
@@ -88,6 +88,9 @@ export default function Login() {
           </div>
           <button type="submit" disabled={isLoading}>Login</button>
         </form>
+        <p className="login-link-text">
+          <Link to="/forgot-password">Forgot Password?</Link>
+        </p>
         <p className="login-link-text">
           Don't have an account?{" "}
           <Link to="/register" id="signup-link">

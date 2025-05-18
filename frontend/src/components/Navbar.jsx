@@ -1,6 +1,8 @@
+import { faBars, faClose } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { isAuthenticated } from '../../../utils/apicall';
+import { clearAuthData, isAuthenticated } from '../../../utils/apicall';
 import "../styles/navbar.css";
 
 function Navbar() {
@@ -8,12 +10,12 @@ function Navbar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(isAuthenticated());
-  
+
   // Re-check authentication status when location changes
   useEffect(() => {
     setAuthenticated(isAuthenticated());
   }, [location]);
-  
+
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
   };
@@ -45,24 +47,24 @@ function Navbar() {
           <span>SynergySphere</span>
         </Link>
       </div>
-      
+
       <button className="navbar-toggle" onClick={toggleMenu} aria-label="Toggle menu">
-        <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`}></i>
+       { menuOpen?(<FontAwesomeIcon icon={faClose} />):(<FontAwesomeIcon icon={faBars} />)}
       </button>
-      
+
       <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
         {authenticated && (
           <>
-            <Link 
-              to="/solutions/tasks" 
+            <Link
+              to="/solutions/tasks"
               className={isActive("/solutions/tasks") ? "active" : ""}
               onClick={closeMenu}
             >
               <i className="fas fa-tasks"></i>
               <span>Tasks</span>
             </Link>
-            <Link 
-              to="/solutions/projects" 
+            <Link
+              to="/solutions/projects"
               className={isActive("/solutions/projects") ? "active" : ""}
               onClick={closeMenu}
             >
@@ -71,18 +73,18 @@ function Navbar() {
             </Link>
           </>
         )}
-        
-        <Link 
-          to="/about" 
+
+        <Link
+          to="/about"
           className={isActive("/about") ? "active" : ""}
           onClick={closeMenu}
         >
           <i className="fas fa-info-circle"></i>
           <span>About</span>
         </Link>
-        
+
         {authenticated ? (
-          <button 
+          <button
             onClick={handleLogout}
             className="logout-button"
           >
@@ -91,16 +93,16 @@ function Navbar() {
           </button>
         ) : (
           <>
-            <Link 
-              to="/register" 
+            <Link
+              to="/register"
               className={isActive("/register") ? "active" : ""}
               onClick={closeMenu}
             >
               <i className="fas fa-user-plus"></i>
               <span>Register</span>
             </Link>
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className={isActive("/login") ? "active" : ""}
               onClick={closeMenu}
             >
