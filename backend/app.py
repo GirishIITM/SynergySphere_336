@@ -1,25 +1,44 @@
 from flask import Flask
-from config import Config
-from models.user import db, bcrypt, init_db
-from routes import auth_bp
+from models.user import db, bcrypt
+import os
 
-def create_app(config_class=Config):
-    app = Flask(__name__)
-    app.config.from_object(config_class)
+def create_app(test_config=None):
+    """Create and configure the Flask application."""
     
-    # Initialize extensions
+    # Create Flask app instance
+    app = Flask(__name__, instance_relative_config=True)
+    
+    # Get the absolute path to the backend directory
+    backend_dir = os.path.abspath(os.path.dirname(__file__))
+    db_path = os.path.join(backend_dir, 'synergysphere.db')
+    
+    if test_config is None:
+        # Load the default configuration
+        app.config.from_mapping(
+            # Set secret key for session management and JWT
+            SECRET_KEY='dev',  # Override this with a real secret key in production
+            # Configure SQLite database file with absolute path
+            SQLALCHEMY_DATABASE_URI=f'sqlite:///{db_path}',
+            SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        )
+    else:
+        # Load test configuration if passed
+        app.config.update(test_config)
+    
+    # Initialize Flask-SQLAlchemy
     db.init_app(app)
+    
+    # Initialize Flask-Bcrypt
     bcrypt.init_app(app)
     
     # Register blueprints
+    from routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    
-    # Create database tables
-    with app.app_context():
-        init_db()
     
     return app
 
+# Create the Flask application instance
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     app.run(debug=True)
