@@ -1,17 +1,22 @@
 # SynergySphere_336
 
-![SynergySphere Banner](https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80)
-
 SynergySphere is an advanced, intelligent team collaboration platform designed to help teams operate at their best—staying organized, communicating seamlessly, and making informed decisions. Built by Team 336.
 
-
----
-
 ## Video Demo 
-[drive link](https://drive.google.com/file/d/1OLNroWXx9VEK5ZY5vlhdNmDsXXr4gkmH/view?usp=sharing)
+[drive link](https://drive.google.com/file/d/1s4rTl4Z_SGdfVMVTQYhGxoxRHlZlw6pQ/view?usp=sharing)
+
+https://github.com/user-attachments/assets/a4174d55-99ee-44fc-b614-34932460aacd
 
 
-https://github.com/user-attachments/assets/67d1b3b7-6c26-4073-92e9-f5b6a4d089d5
+## Application Flow
+![Screenshot From 2025-05-18 17-20-38](https://github.com/user-attachments/assets/610b2a5a-b836-46d2-8ebc-11882fcf4349)
+
+
+
+## Database Models
+![diagram (1)](https://github.com/user-attachments/assets/77d447ee-bddc-4730-974e-9bcaf2534487)
+
+
 
 
 ## 🌟 Project Vision
