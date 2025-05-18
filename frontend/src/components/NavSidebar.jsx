@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
 import { clearAuthData, getCurrentUser } from '../../../utils/apicall';
 import "../styles/navSidebar.css";
+import Sidebar from './Sidebar';
 
 const NavSidebar = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

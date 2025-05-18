@@ -10,7 +10,10 @@ import { isAuthenticated } from '../../../utils/apicall';
 const PrivateRoute = ({ children }) => {
   const location = useLocation();
   
-  if (!isAuthenticated()) {
+  // Force re-evaluation of authentication state
+  const authenticated = isAuthenticated();
+  
+  if (!authenticated) {
     // Redirect to login page with the return URL
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }

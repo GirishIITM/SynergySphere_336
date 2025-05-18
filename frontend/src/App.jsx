@@ -1,16 +1,17 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import './App.css';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
-import './App.css';
 
-import Tasks from './pages/solutions/Tasks';
+import { isAuthenticated } from '../../utils/apicall';
 import NavSidebar from './components/NavSidebar';
-import Projects from './pages/solutions/Projects';
 import About from './pages/About';
 import Home from './pages/Home';
-import Register from './pages/Register';
 import Login from './pages/Login';
-import { isAuthenticated } from '../../utils/apicall';
+import Profile from './pages/Profile'; // Import the new Profile component
+import Register from './pages/Register';
+import Projects from './pages/solutions/Projects';
+import Tasks from './pages/solutions/Tasks';
 
 function App() {
   return (
@@ -38,11 +39,11 @@ function App() {
               </>
             } />
             
-            {/* Home redirects to tasks if authenticated, otherwise shows public home */}
+            {/* Home page - accessible to everyone, no redirection for authenticated users */}
             <Route path='/' element={
               <>
                 <Navbar />
-                {isAuthenticated() ? <Navigate to="/solutions/tasks" replace /> : <Home />}
+                <Home />
               </>
             } />
 
@@ -59,6 +60,14 @@ function App() {
                 <NavSidebar>
                   <Projects />
                 </NavSidebar>
+              </PrivateRoute>
+            } />
+            
+            {/* Profile route - protected */}
+            <Route path='/profile' element={
+              <PrivateRoute>
+                <Navbar />
+                <Profile />
               </PrivateRoute>
             } />
 
