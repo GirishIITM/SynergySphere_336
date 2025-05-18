@@ -117,9 +117,7 @@ SynergySphere addresses critical challenges faced by modern teams:
 
 ### Communication
 - Use project-specific chat channels
-- Share updates and files
-- Mention team members using @username
-- Receive notifications for important events
+- Share updates 
 
 ## Contributing
 We welcome contributions to SynergySphere! Here's how you can help:
