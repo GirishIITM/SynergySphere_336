@@ -18,6 +18,8 @@ def create_task():
     description = data.get('description')
     due_date = data.get('due_date')
     status = data.get('status')
+    # conert date to datetime object
+    due_date = datetime.strptime(due_date, '%Y-%m-%d')
     new_task = Task(project_id=project_id, title=title, description=description, due_date=due_date, status=status)
     db.session.add(new_task)
     db.session.commit()
@@ -32,6 +34,8 @@ def update_task(task_id):
     description = data.get('description')
     due_date = data.get('due_date')
     status = data.get('status')
+    # conert date to datetime object
+    due_date = datetime.strptime(due_date, '%Y-%m-%d')
     task = Task.query.get_or_404(task_id)
     task.project_id = project_id
     task.title = title
