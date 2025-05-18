@@ -6,17 +6,13 @@ function Navbar() {
       <div className="navbar-brand">
         <Link to="/">My App</Link>
       </div>
-      <ul className="navbar-links">
-        <li>
-          <Link to="/">Home</Link>
-        </li>
-        <li>
-          <Link to="/about">About</Link>
-        </li>
-        <li>
-          <Link to="/contact">Contact</Link>
-        </li>
-      </ul>
+      <div className="navbar-links">
+        <Link to="/solutions/tasks">Tasks</Link>
+        <Link to="/solutions/projects">Projects</Link>
+        <Link to="/about">About</Link>
+        <Link to="/register">Register</Link>
+        <Link to="/login">Login</Link>
+      </div>
     </nav>
   );
 }

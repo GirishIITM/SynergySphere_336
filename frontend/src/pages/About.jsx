@@ -1,10 +1,10 @@
-function About() {
+
+const About = () => {
   return (
-    <div className="page">
-      <h1>About Page</h1>
-      <p>This is the about page of our application.</p>
+    <div>
+      About
     </div>
-  );
+  )
 }
 
-export default About;
+export default About
