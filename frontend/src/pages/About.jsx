@@ -7,50 +7,50 @@ const AboutPage = () => {
     <div className="about-page">
       <section className="about-hero">
         <h1>About SynergySphere</h1>
-        <p>A modern technology firm dedicated to futurifying businesses with Design, Technology, and Digital Engineering.</p>
+        <p>A comprehensive project management platform designed to enhance team collaboration, streamline workflows, and boost productivity.</p>
       </section>
       
       <section className="mission-vision">
         <div className="mission">
           <h2>Our Mission</h2>
-          <p>To empower businesses by delivering comprehensive and customized solutions that address their specific challenges and enhance their sustainable growth.</p>
+          <p>To empower teams of all sizes with intuitive project management tools that simplify complex workflows and foster effective collaboration.</p>
         </div>
         
         <div className="vision">
           <h2>Our Vision</h2>
-          <p>To be recognized as the strategic partner of reference for companies of all sizes and sectors, standing out for our ability to offer innovative and effective solutions that drive business success.</p>
+          <p>To become the leading project management solution that transforms how teams work together, enabling them to achieve more with less effort and stress.</p>
         </div>
       </section>
       
       <section className="history">
         <h2>Our History</h2>
-        <p>SynergySphere was born from the shared vision of a group of professionals passionate about technology, business consulting, and digital marketing. Founded in 2024, our company started as a small consulting firm focused on providing strategic advisory services and technology platform development for startups.</p>
-        <p>Today, we've grown into a comprehensive technology firm with expertise in BPO, IT, SAP/ERP, Financial, Insurance, BFSI, Health Care, Automotive, Oil & Gas, Power, and Manufacturing industries.</p>
+        <p>SynergySphere was born from the frustration of its founders with existing project management tools that were either too complex or too simplistic. Founded in 2024, we set out to create a solution that strikes the perfect balance between functionality and usability.</p>
+        <p>Today, SynergySphere serves teams across multiple industries including technology, marketing, education, construction, healthcare, and creative agencies.</p>
       </section>
       
       <section className="what-we-do">
-        <h2>What We Do</h2>
+        <h2>What We Offer</h2>
         <div className="services-grid">
           <div className="service-card">
-            <h3>Business Consulting</h3>
-            <p>We provide your company with the tools and strategies necessary to successfully meet current and future business challenges, from strategic consulting to advanced technology implementation.</p>
+            <h3>Task & Project Management</h3>
+            <p>Our core functionality enables teams to create, assign, and track tasks within projects, set dependencies, and visualize progress through multiple views including Kanban boards, Gantt charts, and calendars.</p>
           </div>
           
           <div className="service-card">
-            <h3>Professional Development</h3>
-            <p>Our Professional Development service helps your employees reach their full potential through customized programs that strengthen key skills and foster a continuous learning environment.</p>
+            <h3>Collaboration Tools</h3>
+            <p>Built-in communication features including comments, @mentions, file sharing, and real-time updates ensure everyone stays informed and aligned without switching between applications.</p>
           </div>
           
           <div className="service-card">
-            <h3>Integrated Technology Solutions</h3>
-            <p>We offer integrated technology solutions designed to optimize operations, improve efficiency, and facilitate your company's digital transformation with robust and scalable infrastructure.</p>
+            <h3>Workflow Automation</h3>
+            <p>Reduce manual work with customizable automation rules that handle routine tasks, notifications, and status updates based on triggers you define for your team's specific needs.</p>
           </div>
         </div>
       </section>
       
       <section className="team">
         <h2>Our Team</h2>
-        <p>With years of expertise and experience, our team of professionals is dedicated to leveraging the latest technology solutions to improve the quality of life at work, at home, and in every aspect of your business journey.</p>
+        <p>Our diverse team of developers, designers, and project management experts is dedicated to continuously improving SynergySphere based on user feedback and the latest best practices in team collaboration.</p>
       </section>
       
       <Footer />
