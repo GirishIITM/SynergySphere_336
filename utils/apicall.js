@@ -188,6 +188,108 @@ export const authAPI = {
 };
 
 /**
+ * Project related API functions
+ */
+export const projectAPI = {
+  /**
+   * Get all projects
+   * @returns {Promise} - Projects list response
+   */
+  getAllProjects: () => {
+    return apiRequest('/auth/projects', 'GET', null, 'projects-get-all');
+  },
+
+  /**
+   * Create a new project
+   * @param {string} name - Project name
+   * @param {number} creator_id - ID of the user creating the project
+   * @returns {Promise} - Created project response
+   */
+  createProject: (name, creator_id) => {
+    return apiRequest('/auth/projects', 'POST', { name, creator_id }, 'projects-create');
+  },
+
+  /**
+   * Update an existing project
+   * @param {number} projectId - Project ID
+   * @param {object} projectData - Updated project data
+   * @returns {Promise} - Updated project response
+   */
+  updateProject: (projectId, projectData) => {
+    return apiRequest(`/auth/projects/${projectId}`, 'PUT', projectData, `projects-update-${projectId}`);
+  },
+
+  /**
+   * Delete a project
+   * @param {number} projectId - Project ID
+   * @returns {Promise} - Delete response
+   */
+  deleteProject: (projectId) => {
+    return apiRequest(`/auth/projects/${projectId}`, 'DELETE', null, `projects-delete-${projectId}`);
+  }
+};
+
+/**
+ * Task related API functions
+ */
+export const taskAPI = {
+  /**
+   * Get all tasks
+   * @returns {Promise} - Tasks list response
+   */
+  getAllTasks: () => {
+    return apiRequest('/auth/tasks', 'GET', null, 'tasks-get-all');
+  },
+
+  /**
+   * Create a new task
+   * @param {number} project_id - Project ID
+   * @param {string} title - Task title
+   * @param {string} description - Task description
+   * @param {string} due_date - Due date in YYYY-MM-DD format
+   * @param {string} status - Task status
+   * @returns {Promise} - Created task response
+   */
+  createTask: (project_id, title, description, due_date, status) => {
+    return apiRequest(
+      '/auth/tasks', 
+      'POST', 
+      { project_id, title, description, due_date, status }, 
+      'tasks-create'
+    );
+  },
+
+  /**
+   * Update an existing task
+   * @param {number} taskId - Task ID
+   * @param {number} project_id - Project ID
+   * @param {string} title - Task title
+   * @param {string} description - Task description
+   * @param {string} due_date - Due date in YYYY-MM-DD format
+   * @param {string} status - Task status
+   * @returns {Promise} - Updated task response
+   */
+  updateTask: (taskId, project_id, title, description, due_date, status) => {
+    return apiRequest(
+      `/auth/tasks/${taskId}`, 
+      'PUT', 
+      { project_id, title, description, due_date, status }, 
+      `tasks-update-${taskId}`
+    );
+  },
+
+  /**
+   * Delete a task
+   * @param {number} taskId - Task ID
+   * @param {number} project_id - Project ID the task belongs to
+   * @returns {Promise} - Delete response
+   */
+  deleteTask: (taskId, project_id) => {
+    return apiRequest(`/auth/tasks/${taskId}`, 'DELETE', { project_id }, `tasks-delete-${taskId}`);
+  }
+};
+
+/**
  * Store authentication data in localStorage
  * @param {string} token - JWT token
  * @param {object} userData - User information
@@ -224,6 +326,8 @@ export const getCurrentUser = () => {
 
 export default {
   authAPI,
+  projectAPI,
+  taskAPI,
   saveAuthData,
   clearAuthData,
   isAuthenticated,
