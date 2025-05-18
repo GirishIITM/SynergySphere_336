@@ -1,0 +1,211 @@
+const API_BASE_URL =  'http://localhost:5000';
+
+/**
+ * Loading state management
+ */
+export const loadingState = {
+  // Store loading states for different request types
+  states: {},
+  
+  // Store event listeners
+  listeners: {},
+  
+  /**
+   * Set loading state for a specific request type
+   * @param {string} requestKey - Unique key to identify the request
+   * @param {boolean} isLoading - Loading status
+   */
+  setLoading: (requestKey, isLoading) => {
+    loadingState.states[requestKey] = isLoading;
+    
+    // Notify any listeners for this request
+    if (loadingState.listeners[requestKey]) {
+      loadingState.listeners[requestKey].forEach(callback => callback(isLoading));
+    }
+  },
+  
+  /**
+   * Get loading state for a specific request
+   * @param {string} requestKey - Unique key to identify the request
+   * @returns {boolean} - Current loading state (defaults to false)
+   */
+  isLoading: (requestKey) => {
+    return !!loadingState.states[requestKey];
+  },
+  
+  /**
+   * Check if any requests are currently loading
+   * @returns {boolean} - True if any request is loading
+   */
+  isAnyLoading: () => {
+    return Object.values(loadingState.states).some(state => state === true);
+  },
+  
+  /**
+   * Subscribe to loading state changes
+   * @param {string} requestKey - Unique key to identify the request
+   * @param {function} callback - Function to call when loading state changes
+   * @returns {function} - Unsubscribe function
+   */
+  subscribe: (requestKey, callback) => {
+    if (!loadingState.listeners[requestKey]) {
+      loadingState.listeners[requestKey] = [];
+    }
+    
+    loadingState.listeners[requestKey].push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      loadingState.listeners[requestKey] = 
+        loadingState.listeners[requestKey].filter(cb => cb !== callback);
+    };
+  }
+};
+
+/**
+ * Enhanced API request with loading state tracking
+ * @param {string} endpoint - API endpoint
+ * @param {string} method - HTTP method
+ * @param {object} data - Request payload
+ * @param {string} loadingKey - Optional key to track loading state
+ * @returns {Promise} - Response promise
+ */
+const apiRequest = async (endpoint, method = 'GET', data = null, loadingKey = null) => {
+  // Set loading state if loadingKey is provided
+  if (loadingKey) {
+    loadingState.setLoading(loadingKey, true);
+  }
+  
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  };
+
+  // Add token to headers if available
+  const token = localStorage.getItem('token');
+  if (token) {
+    options.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'An error occurred');
+    }
+    
+    // Reset loading state
+    if (loadingKey) {
+      loadingState.setLoading(loadingKey, false);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('API request error:', error);
+    
+    // Reset loading state on error too
+    if (loadingKey) {
+      loadingState.setLoading(loadingKey, false);
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Authentication API functions
+ */
+export const authAPI = {
+  /**
+   * Register a new user
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @param {string} name - User name
+   * @returns {Promise} - Registration response
+   */
+  register: (email, password, name) => {
+    return apiRequest('/auth/register', 'POST', { email, password, name }, 'auth-register');
+  },
+
+  /**
+   * Login an existing user
+   * @param {string} email - User email
+   * @param {string} password - User password
+   * @returns {Promise} - Login response with token and user data
+   */
+  login: (email, password) => {
+    return apiRequest('/auth/login', 'POST', { email, password }, 'auth-login');
+  },
+
+  /**
+   * Request password reset for an email
+   * @param {string} email - User email
+   * @returns {Promise} - Password reset response
+   */
+  forgotPassword: (email) => {
+    return apiRequest('/auth/forgot-password', 'POST', { email }, 'auth-forgot-password');
+  },
+
+  /**
+   * Logout the current user
+   * @param {string} email - User email
+   * @returns {Promise} - Logout response
+   */
+  logout: () => {
+    // Get the current user's email from local storage to pass in the request
+    const user = getCurrentUser();
+    const email = user ? user.email : '';
+    return apiRequest('/auth/logout', 'POST', { email }, 'auth-logout');
+  }
+};
+
+/**
+ * Store authentication data in localStorage
+ * @param {string} token - JWT token
+ * @param {object} userData - User information
+ */
+export const saveAuthData = (token, userData) => {
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(userData));
+};
+
+/**
+ * Clear authentication data from localStorage
+ */
+export const clearAuthData = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
+
+/**
+ * Check if user is authenticated
+ * @returns {boolean} - Authentication status
+ */
+export const isAuthenticated = () => {
+  return !!localStorage.getItem('token');
+};
+
+/**
+ * Get current user data
+ * @returns {object|null} - User data or null if not logged in
+ */
+export const getCurrentUser = () => {
+  const userData = localStorage.getItem('user');
+  return userData ? JSON.parse(userData) : null;
+};
+
+export default {
+  authAPI,
+  saveAuthData,
+  clearAuthData,
+  isAuthenticated,
+  getCurrentUser,
+  loadingState
+};

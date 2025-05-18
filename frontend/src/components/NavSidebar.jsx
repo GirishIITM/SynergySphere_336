@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import { clearAuthData, getCurrentUser } from '../../../utils/apicall';
 import "../styles/navSidebar.css";
 
 const NavSidebar = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const profileRef = useRef(null);
+  const user = getCurrentUser();
+  
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -12,6 +31,16 @@ const NavSidebar = ({ children }) => {
 
   const closeSidebar = () => {
     setSidebarOpen(false);
+  };
+  
+  const toggleProfileMenu = () => {
+    setProfileMenuOpen(!profileMenuOpen);
+  };
+
+  const handleLogout = () => {
+    clearAuthData();
+    navigate('/login');
+    setProfileMenuOpen(false);
   };
 
   return (
@@ -37,10 +66,28 @@ const NavSidebar = ({ children }) => {
             </div>
           </div>
 
-          <div className="profile-container">
-            <div className="profile-icon">
-              👤
+          <div className="profile-container" ref={profileRef}>
+            <div className="profile-icon" onClick={toggleProfileMenu}>
+              {user?.name?.charAt(0).toUpperCase() || '👤'}
             </div>
+            
+            {profileMenuOpen && (
+              <div className="profile-dropdown">
+                <div className="profile-dropdown-header">
+                  <span className="profile-name">{user?.name || 'User'}</span>
+                  <span className="profile-email">{user?.email || ''}</span>
+                </div>
+                <div className="profile-dropdown-divider"></div>
+                <Link to="/profile" className="profile-dropdown-item" onClick={() => setProfileMenuOpen(false)}>
+                  <span className="dropdown-icon">👤</span>
+                  My Profile
+                </Link>
+                <button className="profile-dropdown-item" onClick={handleLogout}>
+                  <span className="dropdown-icon">🚪</span>
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>

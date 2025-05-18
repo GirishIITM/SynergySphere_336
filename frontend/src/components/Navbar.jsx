@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { isAuthenticated, clearAuthData } from '../../../utils/apicall';
 import "../styles/navbar.css";
 
 function Navbar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const authenticated = isAuthenticated();
   
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -12,6 +15,12 @@ function Navbar() {
 
   const closeMenu = () => {
     setMenuOpen(false);
+  };
+
+  const handleLogout = () => {
+    clearAuthData();
+    navigate('/login');
+    closeMenu();
   };
 
   // Helper function to check if link is active
@@ -33,20 +42,25 @@ function Navbar() {
       </button>
       
       <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-        <Link 
-          to="/solutions/tasks" 
-          className={isActive("/solutions/tasks") ? "active" : ""}
-          onClick={closeMenu}
-        >
-          Tasks
-        </Link>
-        <Link 
-          to="/solutions/projects" 
-          className={isActive("/solutions/projects") ? "active" : ""}
-          onClick={closeMenu}
-        >
-          Projects
-        </Link>
+        {authenticated && (
+          <>
+            <Link 
+              to="/solutions/tasks" 
+              className={isActive("/solutions/tasks") ? "active" : ""}
+              onClick={closeMenu}
+            >
+              Tasks
+            </Link>
+            <Link 
+              to="/solutions/projects" 
+              className={isActive("/solutions/projects") ? "active" : ""}
+              onClick={closeMenu}
+            >
+              Projects
+            </Link>
+          </>
+        )}
+        
         <Link 
           to="/about" 
           className={isActive("/about") ? "active" : ""}
@@ -54,20 +68,32 @@ function Navbar() {
         >
           About
         </Link>
-        <Link 
-          to="/register" 
-          className={isActive("/register") ? "active" : ""}
-          onClick={closeMenu}
-        >
-          Register
-        </Link>
-        <Link 
-          to="/login" 
-          className={isActive("/login") ? "active" : ""}
-          onClick={closeMenu}
-        >
-          Login
-        </Link>
+        
+        {authenticated ? (
+          <button 
+            onClick={handleLogout}
+            className="logout-button"
+          >
+            Logout
+          </button>
+        ) : (
+          <>
+            <Link 
+              to="/register" 
+              className={isActive("/register") ? "active" : ""}
+              onClick={closeMenu}
+            >
+              Register
+            </Link>
+            <Link 
+              to="/login" 
+              className={isActive("/login") ? "active" : ""}
+              onClick={closeMenu}
+            >
+              Login
+            </Link>
+          </>
+        )}
       </div>
     </nav>
   );

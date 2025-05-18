@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from models.user import db, bcrypt
 import os
 
@@ -7,6 +8,9 @@ def create_app(test_config=None):
     
     # Create Flask app instance
     app = Flask(__name__, instance_relative_config=True)
+    
+    # Enable CORS for all routes and origins
+    CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Get the absolute path to the backend directory
     backend_dir = os.path.abspath(os.path.dirname(__file__))
@@ -35,9 +39,9 @@ def create_app(test_config=None):
     from routes import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    from backend.routes.tasks_events import tasks_events_bp
+    # from backend.routes.tasks_events import tasks_events_bp
 
-    app.register_blueprint(tasks_events_bp)
+    # app.register_blueprint(tasks_events_bp)
     
     return app
 
