@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import './App.css';
-import './styles/navbar.css';
-import Register from './pages/Register';
-import Login from './pages/Login';
+
 import Tasks from './pages/solutions/Tasks';
 import NavSidebar from './components/NavSidebar';
 import Projects from './pages/solutions/Projects';
 import About from './pages/About';
 import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
 
 function App() {
   return (
@@ -17,24 +17,28 @@ function App() {
         <main>
           <Routes>
             <Route path='/register' element={
-              <Navbar>
+              <>
+                <Navbar />
                 <Register />
-              </Navbar>
+              </>
             } />
             <Route path='/login' element={
-              <Navbar>
+              <>
+                <Navbar />
                 <Login />
-              </Navbar>
+              </>
             } />
             <Route path='/' element={
-              <Navbar>
+              <>
+                <Navbar />
                 <Home />
-              </Navbar>
+              </>
             } />
             <Route path='/about' element={
-              <Navbar>
+              <>
+                <Navbar />
                 <About />
-              </Navbar>
+              </>
             } />
             <Route path='/solutions/tasks' element={
               <NavSidebar>
