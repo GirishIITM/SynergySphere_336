@@ -1,22 +1,103 @@
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
+# Association table for the many-to-many relationship between User and Project
+project_members = db.Table(
+    'project_members',
+    db.Column('project_id', db.Integer, db.ForeignKey('project.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 class User(db.Model):
-    __tablename__ = 'users'  # Explicitly define the table name
+    """
+    User model representing platform users.
     
+    Attributes:
+        id: Unique identifier for the user
+        email: User's email address (unique)
+        password_hash: Hashed password for security
+        name: User's full name
+        created_projects: Projects created by this user
+        projects: Projects user is a member of
+        assigned_tasks: Tasks assigned to this user
+        messages: Messages sent by this user
+    """
+    __tablename__ = 'user'
+
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
 
-    def set_password(self, raw):
-        self.password = bcrypt.generate_password_hash(raw).decode('utf-8')
+    # Relationships
+    created_projects = db.relationship('Project', backref='creator', lazy=True, foreign_keys='Project.created_by')
+    projects = db.relationship('Project', secondary=project_members, backref=db.backref('members', lazy=True))
+    assigned_tasks = db.relationship('Task', backref='assignee', lazy=True)
+    messages = db.relationship('Message', backref='sender', lazy=True)
 
-    def check_password(self, raw):
-        return bcrypt.check_password_hash(self.password, raw)
+class Project(db.Model):
+    """
+    Project model representing collaboration projects.
+    
+    Attributes:
+        id: Unique identifier for the project
+        name: Project name
+        created_by: ID of the user who created the project
+        tasks: Tasks associated with this project
+        messages: Messages in the project
+    """
+    __tablename__ = 'project'
 
-def init_db():
-    """Initialize the database by creating all tables"""
-    db.create_all()
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    # Relationships
+    tasks = db.relationship('Task', backref='project', lazy=True)
+    messages = db.relationship('Message', backref='project', lazy=True)
+
+class Task(db.Model):
+    """
+    Task model representing project tasks.
+    
+    Attributes:
+        id: Unique identifier for the task
+        project_id: ID of the project this task belongs to
+        title: Task title
+        description: Detailed task description
+        assignee_id: ID of the user assigned to this task
+        due_date: Task due date
+        status: Current status of the task
+    """
+    __tablename__ = 'task'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    assignee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    due_date = db.Column(db.Date)
+    status = db.Column(db.String(50), nullable=False)
+
+class Message(db.Model):
+    """
+    Message model representing project communications.
+    
+    Attributes:
+        id: Unique identifier for the message
+        project_id: ID of the project this message belongs to
+        user_id: ID of the user who sent the message
+        content: Message content
+        timestamp: Time when the message was sent
+    """
+    __tablename__ = 'message'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 
