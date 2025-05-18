@@ -1,0 +1,38 @@
+.task-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  overflow-x: hidden;
+}
+
+.task-list-container {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.task-content {
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.task-description {
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+  .task-card {
+    padding: 1rem;
+  }
+
+  .task-actions {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+}
