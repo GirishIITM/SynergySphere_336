@@ -81,14 +81,16 @@ SynergySphere isn’t just another project management tool—it’s the intellig
 
 ---
 
+Markdown
+
 ## 📦 Project Structure
 
 SynergySphere_336/
-├── backend/                  # Backend application (Flask)
+├── backend/             # Backend application (Flask)
 │   ├── app.py
 │   ├── requirements.txt
 │   └── ...
-├── frontend/                 # Frontend application (React)
+├── frontend/            # Frontend application (React)
 │   ├── src/
 │   │   ├── components/
 │   │   ├── pages/
@@ -98,7 +100,6 @@ SynergySphere_336/
 │   └── ...
 ├── .env
 └── README.md
----
 
 ## ⚡ Getting Started
 
