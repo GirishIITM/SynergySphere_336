@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
 :root {
   --color-bg: #f8f9fa;
   --color-surface: #ffffff;
@@ -21,6 +23,14 @@
   --color-error: #ef4444;
   --color-success: #22c55e;
 
+  --font-family: 'Roboto', sans-serif;
+  --font-size: 16px;
+  --font-size-sm: 14px;
+  --font-size-lg: 18px;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  --transition: all 0.3s ease;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .theme-dark {
@@ -47,3 +57,79 @@
   --color-success: #4ade80;
 }
 
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-bold);
+}
+
+p {
+  font-family: var(--font-family);
+  margin: 0;
+  font-weight: var(--font-weight-normal);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+  font-family: var(--font-family);
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--color-link-hover);
+}
+
+a:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-link-hover);
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition), color var(--transition);
+}
+
+button:hover {
+  background-color: var(--color-btn-bg-hover);
+}
+
+button:disabled {
+  background-color: var(--color-btn-disabled-bg);
+  color: var(--color-btn-disabled-text);
+  cursor: not-allowed;
+}
+
+button.primary {
+  background-color: var(--color-btn-bg);
+  color: var(--color-btn-text);
+}
+
+button.primary:hover {
+  background-color: var(--color-btn-bg-hover);
+}
+
+button.primary:disabled {
+  background-color: var(--color-btn-disabled-bg);
+  color: var(--color-btn-disabled-text);
+}
