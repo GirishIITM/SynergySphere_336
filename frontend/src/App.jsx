@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import './App.css';
-import './styles/navbar.css';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Tasks from './pages/solutions/Tasks';
@@ -16,8 +15,16 @@ function App() {
       <div className="app-container">
         <main>
           <Routes>
-            <Route path='/register' element={<Register />} />
-            <Route path='/login' element={<Login />} />
+            <Route path='/register' element={
+              <Navbar>
+                <Register />
+              </Navbar>
+            } />
+            <Route path='/login' element={
+              <Navbar>
+                <Login />
+              </Navbar>
+            } />
             <Route path='/' element={
               <Navbar>
                 <Home />
