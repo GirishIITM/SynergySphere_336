@@ -3,24 +3,31 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background-color: var(--color-surface);
-  box-shadow: 0 2px 4px var(--color-shadow);
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-primary);
+  box-shadow: 0 3px 6px var(--color-shadow);
+  border-bottom: none;
 }
 
 .navbar-brand {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .navbar-brand a {
-  color: var(--color-primary);
+  color: var(--color-text-light, white);
   text-decoration: none;
   transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .navbar-brand a:hover {
-  color: var(--color-primary-hover);
+  color: var(--color-bg);
+}
+
+.navbar-brand i {
+  font-size: 1.75rem;
 }
 
 .navbar-links {
@@ -29,25 +36,67 @@
   align-items: center;
 }
 
-.navbar-links a {
-  color: var(--color-text);
+.navbar-links a, .logout-button {
+  color: var(--color-text-light-muted, rgba(255, 255, 255, 0.9));
   text-decoration: none;
   font-weight: 500;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.navbar-links a:hover {
-  color: var(--color-primary);
-  background-color: var(--color-bg);
+.navbar-links a i, .logout-button i {
+  font-size: 1.2rem;
+}
+
+.navbar-links a:hover, .logout-button:hover {
+  color: var(--color-text-light, white);
+  background-color: var(--color-primary-light, rgba(255, 255, 255, 0.1));
 }
 
 .navbar-links a.active {
-  color: var(--color-primary);
-  background-color: var(--color-bg);
+  color: var(--color-text-light, white);
+  background-color: var(--color-primary-light, rgba(255, 255, 255, 0.15));
   font-weight: 700;
-  border-bottom: 2px solid var(--color-primary);
+  border-bottom: 2px solid var(--color-text-light, white);
+}
+
+/* Search bar styling */
+.navbar-search {
+  position: relative;
+  width: 250px;
+}
+
+.navbar-search input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border-radius: 20px;
+  border: none;
+  background-color: var(--color-primary-light, rgba(255, 255, 255, 0.15));
+  color: var(--color-text-light, white);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.navbar-search input::placeholder {
+  color: var(--color-text-light-muted, rgba(255, 255, 255, 0.7));
+}
+
+.navbar-search input:focus {
+  background-color: var(--color-primary-lighter, rgba(255, 255, 255, 0.25));
+  box-shadow: 0 0 0 2px var(--color-primary-light, rgba(255, 255, 255, 0.3));
+}
+
+.navbar-search i {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-light-muted, rgba(255, 255, 255, 0.7));
+  pointer-events: none;
 }
 
 .navbar-toggle {
@@ -56,23 +105,13 @@
   border: none;
   cursor: pointer;
   font-size: 1.5rem;
+  color: var(--color-text-light, white);
 }
 
 .logout-button {
-  color: var(--color-text);
   background: none;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: 4px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-button:hover {
-  color: var(--color-primary);
-  background-color: var(--color-bg);
 }
 
 @media (max-width: 768px) {
@@ -89,7 +128,7 @@
     top: 70px;
     left: 0;
     right: 0;
-    background-color: var(--color-surface);
+    background-color: var(--color-primary);
     flex-direction: column;
     align-items: center;
     padding: 1rem;
@@ -101,6 +140,24 @@
   
   .navbar-links.open {
     transform: translateY(0);
+  }
+  
+  /* Make icons larger on mobile for better touch targets */
+  .navbar-links a i, .logout-button i {
+    font-size: 1.4rem;
+  }
+  
+  /* Stack icons and text for better mobile presentation */
+  .navbar-links a, .logout-button {
+    flex-direction: column;
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+  }
+
+  /* Adjust searchbar for mobile */
+  .navbar-search {
+    width: 100%;
+    margin: 0.5rem 0;
   }
 }
 
