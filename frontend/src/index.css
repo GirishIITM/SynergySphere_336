@@ -24,6 +24,33 @@
   --color-success: #22c55e;
   
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+
+  /* Color palette */
+  --color-primary-dark: #1d4ed8;  /* Darker shade of primary */
+  --color-secondary: #4b5563;     /* Secondary gray color */
+  --color-accent-hover: #3b82f6;  /* Accent color for hover effects */
+  --color-background: #f9fafb;    /* Light background color */
+  --color-text-light: #6b7280;    /* Light text color */
+  --color-white: #ffffff;         /* White */
+  --color-black: #000000;         /* Black */
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border radius */
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+  --border-radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .theme-dark {
@@ -68,4 +95,41 @@ h1, h2, h3, h4, h5, h6 {
 
 button, input, select, textarea {
   font-family: var(--font-family);
+}
+
+/* Tailwind CSS utility classes using CSS variables */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+.bg-background {
+  background-color: var(--color-background);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-secondary {
+  color: var(--color-secondary);
+}
+
+.hover\:bg-accent:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.hover\:text-accent:hover {
+  color: var(--color-accent-hover);
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md);
 }
