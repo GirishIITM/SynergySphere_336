@@ -36,6 +36,13 @@ class User(db.Model):
     assigned_tasks = db.relationship('Task', backref='assignee', lazy=True)
     messages = db.relationship('Message', backref='sender', lazy=True)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'name': self.name
+        }
+
 class Project(db.Model):
     """
     Project model representing collaboration projects.
@@ -56,6 +63,15 @@ class Project(db.Model):
     # Relationships
     tasks = db.relationship('Task', backref='project', lazy=True)
     messages = db.relationship('Message', backref='project', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'created_by': self.created_by,
+            'tasks': [task.to_dict() for task in self.tasks],
+            'member_count': len(self.members)
+        }
 
 class Task(db.Model):
     """
@@ -80,6 +96,17 @@ class Task(db.Model):
     due_date = db.Column(db.Date)
     status = db.Column(db.String(50), nullable=False)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'title': self.title,
+            'description': self.description,
+            'assignee_id': self.assignee_id,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'status': self.status
+        }
+
 class Message(db.Model):
     """
     Message model representing project communications.
@@ -97,4 +124,13 @@ class Message(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow) 
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'user_id': self.user_id,
+            'content': self.content,
+            'timestamp': self.timestamp.isoformat()
+        } 

@@ -83,11 +83,15 @@ def create_project():
     data = request.json
     name = data.get('name')
     creator_id = data.get('creator_id')
-    description = data.get('description')
-    new_project = Project(name=name, creator_id=creator_id, description=description)
+    new_project = Project(name=name, created_by=creator_id)
     db.session.add(new_project)
     db.session.commit()
+    # add the project to the user's projects
+    current_user = User.query.get(creator_id)
+    current_user.projects.append(new_project)
+    db.session.commit()
     return jsonify(new_project.to_dict()), 201
+
 
 
 @auth_bp.route('/projects/<int:project_id>', methods=['PUT'])
