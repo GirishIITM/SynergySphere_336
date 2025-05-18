@@ -34,11 +34,14 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <Link to="/">SynergySphere</Link>
+        <Link to="/">
+          <i className="fas fa-project-diagram"></i>
+          <span>SynergySphere</span>
+        </Link>
       </div>
       
-      <button className="navbar-toggle" onClick={toggleMenu}>
-        {menuOpen ? '✕' : '☰'}
+      <button className="navbar-toggle" onClick={toggleMenu} aria-label="Toggle menu">
+        <i className={`fas ${menuOpen ? 'fa-times' : 'fa-bars'}`}></i>
       </button>
       
       <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
@@ -49,14 +52,16 @@ function Navbar() {
               className={isActive("/solutions/tasks") ? "active" : ""}
               onClick={closeMenu}
             >
-              Tasks
+              <i className="fas fa-tasks"></i>
+              <span>Tasks</span>
             </Link>
             <Link 
               to="/solutions/projects" 
               className={isActive("/solutions/projects") ? "active" : ""}
               onClick={closeMenu}
             >
-              Projects
+              <i className="fas fa-folder-open"></i>
+              <span>Projects</span>
             </Link>
           </>
         )}
@@ -66,7 +71,8 @@ function Navbar() {
           className={isActive("/about") ? "active" : ""}
           onClick={closeMenu}
         >
-          About
+          <i className="fas fa-info-circle"></i>
+          <span>About</span>
         </Link>
         
         {authenticated ? (
@@ -74,7 +80,8 @@ function Navbar() {
             onClick={handleLogout}
             className="logout-button"
           >
-            Logout
+            <i className="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
           </button>
         ) : (
           <>
@@ -83,14 +90,16 @@ function Navbar() {
               className={isActive("/register") ? "active" : ""}
               onClick={closeMenu}
             >
-              Register
+              <i className="fas fa-user-plus"></i>
+              <span>Register</span>
             </Link>
             <Link 
               to="/login" 
               className={isActive("/login") ? "active" : ""}
               onClick={closeMenu}
             >
-              Login
+              <i className="fas fa-sign-in-alt"></i>
+              <span>Login</span>
             </Link>
           </>
         )}
