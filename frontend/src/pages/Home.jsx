@@ -10,35 +10,35 @@ const HomePage = () => {
         <h2>Why Choose SynergySphere?</h2>
         <div className="feature-cards">
           <div className="feature-card">
-            <h3>Centralized Information</h3>
-            <p>Keep all your important files, chats, and decisions in one place, making it easy to track and access information.</p>
+            <h3>Task Management</h3>
+            <p>Create, assign, and track tasks with ease. Set priorities, deadlines, and monitor progress in real-time.</p>
           </div>
           
           <div className="feature-card">
-            <h3>Clear Progress Tracking</h3>
-            <p>Gain visibility into tasks and project progress, identifying bottlenecks before they become problems.</p>
+            <h3>Project Dashboards</h3>
+            <p>Get a comprehensive view of all your projects with intuitive dashboards showing progress, timelines, and resource allocation.</p>
           </div>
           
           <div className="feature-card">
-            <h3>Efficient Resource Management</h3>
-            <p>Optimize assignments and prevent overload or confusion among team members.</p>
+            <h3>Team Collaboration</h3>
+            <p>Foster teamwork with shared workspaces, file sharing, comments, and integrated communication tools.</p>
           </div>
           
           <div className="feature-card">
-            <h3>Proactive Deadline Management</h3>
-            <p>Get early warnings about potential delays, allowing you to address issues before deadlines are missed.</p>
+            <h3>Deadline Tracking</h3>
+            <p>Never miss a deadline with automated reminders, calendar integration, and visual progress indicators.</p>
           </div>
           
           <div className="feature-card">
-            <h3>Seamless Communication</h3>
-            <p>Ensure everyone stays in the loop with integrated communication tools that prevent information gaps.</p>
+            <h3>Reporting & Analytics</h3>
+            <p>Make data-driven decisions with customizable reports on team productivity, project status, and resource utilization.</p>
           </div>
         </div>
       </section>
       
       <section className="cta-section">
-        <h2>Ready to Transform Your Team's Collaboration?</h2>
-        <p>Join SynergySphere today and experience the difference in how your team works together.</p>
+        <h2>Ready to Streamline Your Project Management?</h2>
+        <p>Join SynergySphere today and transform how your team collaborates on tasks and projects.</p>
         <button className="cta-button">Start Free Trial</button>
       </section>
       

@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { isAuthenticated, clearAuthData } from '../../../utils/apicall';
+import { isAuthenticated } from '../../../utils/apicall';
 import "../styles/navbar.css";
 
 function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const authenticated = isAuthenticated();
+  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  
+  // Re-check authentication status when location changes
+  useEffect(() => {
+    setAuthenticated(isAuthenticated());
+  }, [location]);
   
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -19,6 +24,7 @@ function Navbar() {
 
   const handleLogout = () => {
     clearAuthData();
+    setAuthenticated(false);
     navigate('/login');
     closeMenu();
   };
