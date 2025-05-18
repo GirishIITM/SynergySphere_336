@@ -4,6 +4,9 @@ from auth import register_user, login_user, forgot_password
 from models import User
 from flask import current_app
 import jwt
+from models import db
+import bcrypt
+
 
 
 @auth_bp.route('/register', methods=['POST'])
@@ -37,13 +40,9 @@ def login():
     
     # generate a token for the user
     token = jwt.encode({'email': data.get('email')}, current_app.config['SECRET_KEY'], algorithm='HS256')
-
-    # if the user is logged in successfully, return the response and token 
-    if response:
-        return jsonify({"msg": "User logged in successfully", "token": token}),200 
-    else:
-        return jsonify({"msg": "User login failed"}), 400
-
+    
+    return jsonify({"msg": "User logged in successfully", "token": token}),200 
+    
 
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_pwd():
@@ -68,10 +67,10 @@ def forgot_pwd():
 @auth_bp.route('/logout', methods=['POST'])
 def logout():
     data = request.get_json()
-    response, status_code = logout_user(email=data.get('email'))
-    if response:
-        return jsonify({"msg": "User logged out successfully"}), status_code
-    else:
-        return jsonify({"msg": "User logout failed"}), 400
-
-
+    email = data.get('email')
+    # check if the user is registered
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"msg": "User not found"}), 400
+    # log the user out 
+    return jsonify({"msg": "User logged out successfully"}), 200
