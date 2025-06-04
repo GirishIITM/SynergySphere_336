@@ -3,8 +3,7 @@ import {
   FolderKanban,
   LayoutDashboard,
   Target,
-  Users,
-  AlertTriangle
+  Users
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
