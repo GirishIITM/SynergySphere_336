@@ -380,7 +380,7 @@ def get_task(task_id):
     project = task.project
     
     if not any(member.id == user_id for member in project.members):
-        return jsonify({'msg': 'Not authorized'}), 403
+        return jsonify({'success': False, 'message': 'Not authorized'}), 403
     
     status_mapping = {
         'pending': 'Not Started',
@@ -406,6 +406,15 @@ def get_task(task_id):
     attachments = [{'id': att.id, 'file_url': att.file_url, 'uploaded_at': att.uploaded_at.isoformat()} 
                    for att in task.attachments]
     
+    # Format expenses for response
+    expenses_data = []
+    for expense in task_expenses:
+        # Get the user who created the expense
+        expense_creator = User.query.get(expense.created_by) if expense.created_by else None
+        expense_data = expense.to_dict()
+        expense_data['created_by_name'] = expense_creator.full_name if expense_creator else 'Unknown User'
+        expenses_data.append(expense_data)
+    
     task_data = {
         'id': task.id,
         'title': task.title,
@@ -422,7 +431,7 @@ def get_task(task_id):
         'total_spent': total_spent,
         'budget_remaining': budget_remaining,
         'budget_utilization': budget_utilization,
-        'expenses': [expense.to_dict() for expense in task_expenses],
+        'expenses': expenses_data,
         'attachments': attachments,
         'priority_score': task.priority_score,
         'estimated_effort': task.estimated_effort,
@@ -431,7 +440,7 @@ def get_task(task_id):
         'dependency_count': task.dependency_count,
         'is_overdue': task.is_overdue()
     }
-    return jsonify(task_data)
+    return jsonify({'success': True, 'data': task_data})
 
 @task_bp.route('/projects/<int:project_id>/tasks', methods=['GET'])
 @jwt_required()

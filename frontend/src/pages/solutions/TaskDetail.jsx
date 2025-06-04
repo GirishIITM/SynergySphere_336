@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
+import './TaskDetail.css';
 import { 
   Calendar,
   Clock,
@@ -105,20 +106,27 @@ const TaskDetail = () => {
    */
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'In Progress': return 'bg-blue-100 text-blue-800';
-      case 'Not Started': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Completed': return 'task-status-completed';
+      case 'In Progress': return 'task-status-in-progress';
+      case 'Not Started': return 'task-status-not-started';
+      default: return 'task-status-not-started';
     }
   };
 
   /**
-   * Get budget status color based on utilization.
+   * Get budget status class based on utilization.
+   */
+  const getBudgetStatusClass = (utilization) => {
+    if (utilization > 100) return 'negative';
+    if (utilization > 80) return 'warning';
+    return 'positive';
+  };
+
+  /**
+   * Get budget status color based on utilization (legacy function).
    */
   const getBudgetStatusColor = (utilization) => {
-    if (utilization > 100) return 'text-red-600';
-    if (utilization > 80) return 'text-yellow-600';
-    return 'text-green-600';
+    return getBudgetStatusClass(utilization);
   };
 
   /**
@@ -145,19 +153,19 @@ const TaskDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="task-detail-loading">
+        <div className="task-detail-loading-spinner"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-            <span className="text-red-700">{error}</span>
+      <div className="task-detail-error">
+        <div className="task-detail-error-content">
+          <div className="task-detail-error-inner">
+            <AlertTriangle className="task-detail-error-icon" />
+            <span className="task-detail-error-text">{error}</span>
           </div>
         </div>
       </div>
@@ -166,42 +174,42 @@ const TaskDetail = () => {
 
   if (!task) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center text-gray-500">Task not found</div>
+      <div className="task-detail-error">
+        <div className="task-detail-empty-state">Task not found</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="task-detail-container">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-start justify-between">
+      <div className="task-detail-header">
+        <div className="task-detail-header-content">
           <div className="flex items-start space-x-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              className="task-detail-back-btn"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div>
-              <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(task.status)}`}>
+              <div className="task-detail-status-container">
+                <h1 className="task-detail-title">{task.title}</h1>
+                <span className={`task-status-badge ${getStatusColor(task.status)}`}>
                   {task.status}
                 </span>
                 {task.is_overdue && (
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                  <span className="task-overdue-badge">
                     Overdue
                   </span>
                 )}
               </div>
-              <p className="text-gray-600 max-w-2xl">{task.description || 'No description provided'}</p>
+              <p className="task-detail-description">{task.description || 'No description provided'}</p>
             </div>
           </div>
           <button
             onClick={() => navigate(`/solutions/tasks/${taskId}/edit`)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="task-detail-edit-btn"
           >
             <Edit className="h-4 w-4" />
             <span>Edit Task</span>
@@ -209,51 +217,51 @@ const TaskDetail = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="task-detail-grid">
         {/* Task Information */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="task-detail-main">
           {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-5 w-5 text-gray-400" />
-                <div>
-                  <span className="text-sm text-gray-500">Due Date</span>
-                  <p className="font-medium">{formatDate(task.due_date)}</p>
+          <div className="task-detail-card">
+            <h2 className="task-detail-card-title">Task Information</h2>
+            <div className="task-detail-info-grid">
+              <div className="task-detail-info-item">
+                <Calendar className="task-detail-info-icon" />
+                <div className="task-detail-info-content">
+                  <span className="task-detail-info-label">Due Date</span>
+                  <p className="task-detail-info-value">{formatDate(task.due_date)}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <User className="h-5 w-5 text-gray-400" />
-                <div>
-                  <span className="text-sm text-gray-500">Assignee</span>
-                  <p className="font-medium">{task.assignee || 'Unassigned'}</p>
+              <div className="task-detail-info-item">
+                <User className="task-detail-info-icon" />
+                <div className="task-detail-info-content">
+                  <span className="task-detail-info-label">Assignee</span>
+                  <p className="task-detail-info-value">{task.assignee || 'Unassigned'}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Target className="h-5 w-5 text-gray-400" />
-                <div>
-                  <span className="text-sm text-gray-500">Progress</span>
-                  <p className="font-medium">{task.percent_complete || 0}%</p>
+              <div className="task-detail-info-item">
+                <Target className="task-detail-info-icon" />
+                <div className="task-detail-info-content">
+                  <span className="task-detail-info-label">Progress</span>
+                  <p className="task-detail-info-value">{task.percent_complete || 0}%</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Clock className="h-5 w-5 text-gray-400" />
-                <div>
-                  <span className="text-sm text-gray-500">Estimated Effort</span>
-                  <p className="font-medium">{task.estimated_effort || 0} hours</p>
+              <div className="task-detail-info-item">
+                <Clock className="task-detail-info-icon" />
+                <div className="task-detail-info-content">
+                  <span className="task-detail-info-label">Estimated Effort</span>
+                  <p className="task-detail-info-value">{task.estimated_effort || 0} hours</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Budget and Expenses */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Budget & Expenses</h2>
+          <div className="task-detail-card">
+            <div className="task-detail-card-title">
+              <span>Budget & Expenses</span>
               <button
                 onClick={() => setShowAddExpense(!showAddExpense)}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="task-detail-add-expense-btn"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Expense</span>
@@ -262,27 +270,27 @@ const TaskDetail = () => {
 
             {/* Budget Overview */}
             {task.budget && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="h-5 w-5 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">Total Budget</span>
+              <div className="task-detail-budget-grid">
+                <div className="task-detail-budget-card task-detail-budget-total">
+                  <div className="task-detail-budget-header">
+                    <DollarSign className="task-detail-budget-icon" />
+                    <span className="task-detail-budget-label">Total Budget</span>
                   </div>
-                  <p className="text-2xl font-bold text-blue-900">{formatCurrency(task.budget)}</p>
+                  <p className="task-detail-budget-amount">{formatCurrency(task.budget)}</p>
                 </div>
-                <div className="bg-red-50 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <TrendingDown className="h-5 w-5 text-red-600" />
-                    <span className="text-sm font-medium text-red-900">Total Spent</span>
+                <div className="task-detail-budget-card task-detail-budget-spent">
+                  <div className="task-detail-budget-header">
+                    <TrendingDown className="task-detail-budget-icon" />
+                    <span className="task-detail-budget-label">Total Spent</span>
                   </div>
-                  <p className="text-2xl font-bold text-red-900">{formatCurrency(task.total_spent)}</p>
+                  <p className="task-detail-budget-amount">{formatCurrency(task.total_spent)}</p>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-medium text-green-900">Remaining</span>
+                <div className="task-detail-budget-card task-detail-budget-remaining">
+                  <div className="task-detail-budget-header">
+                    <TrendingUp className="task-detail-budget-icon" />
+                    <span className="task-detail-budget-label">Remaining</span>
                   </div>
-                  <p className={`text-2xl font-bold ${getBudgetStatusColor(task.budget_utilization)}`}>
+                  <p className={`task-detail-budget-amount ${getBudgetStatusColor(task.budget_utilization)}`}>
                     {formatCurrency(task.budget_remaining)}
                   </p>
                 </div>
@@ -291,56 +299,56 @@ const TaskDetail = () => {
 
             {/* Add Expense Form */}
             {showAddExpense && (
-              <form onSubmit={handleAddExpense} className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">Add New Expense</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <form onSubmit={handleAddExpense} className="task-detail-expense-form">
+                <h3 className="task-detail-expense-form-title">Add New Expense</h3>
+                <div className="task-detail-expense-form-grid">
+                  <div className="task-detail-form-group">
+                    <label className="task-detail-form-label">Amount</label>
                     <input
                       type="number"
                       step="0.01"
                       value={newExpense.amount}
                       onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="task-detail-form-input"
                       placeholder="0.00"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <div className="task-detail-form-group">
+                    <label className="task-detail-form-label">Category</label>
                     <select
                       value={newExpense.category}
                       onChange={(e) => setNewExpense({...newExpense, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="task-detail-form-select"
                     >
                       {expenseCategories.map(category => (
                         <option key={category} value={category}>{category}</option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <div className="task-detail-form-group">
+                    <label className="task-detail-form-label">Description</label>
                     <input
                       type="text"
                       value={newExpense.description}
                       onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="task-detail-form-input"
                       placeholder="Expense description"
                       required
                     />
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 mt-4">
+                <div className="task-detail-form-actions">
                   <button
                     type="button"
                     onClick={() => setShowAddExpense(false)}
-                    className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="task-detail-form-btn cancel"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="task-detail-form-btn submit"
                   >
                     Add Expense
                   </button>
@@ -350,53 +358,53 @@ const TaskDetail = () => {
 
             {/* Expenses List */}
             <div>
-              <h3 className="font-medium text-gray-900 mb-3">Expense History</h3>
+              <h3 className="task-detail-expense-form-title">Expense History</h3>
               {task.expenses && task.expenses.length > 0 ? (
-                <div className="space-y-3">
+                <div className="task-detail-expenses-list">
                   {task.expenses.map((expense) => (
-                    <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <span className="font-medium text-gray-900">{expense.description}</span>
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                    <div key={expense.id} className="task-detail-expense-item">
+                      <div className="task-detail-expense-content">
+                        <div className="task-detail-expense-header">
+                          <span className="task-detail-expense-title">{expense.description}</span>
+                          <span className="task-detail-expense-category">
                             {expense.category}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="task-detail-expense-meta">
                           Added by {expense.created_by_name} on {formatDate(expense.incurred_at)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-red-600">{formatCurrency(expense.amount)}</p>
+                      <div className="task-detail-expense-amount">
+                        <p>{formatCurrency(expense.amount)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No expenses recorded for this task</p>
+                <p className="task-detail-empty-state">No expenses recorded for this task</p>
               )}
             </div>
           </div>
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="task-detail-sidebar">
           {/* Quick Stats */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Stats</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Priority Score</span>
-                <span className="font-medium">{task.priority_score || 0}</span>
+          <div className="task-detail-card">
+            <h2 className="task-detail-card-title">Quick Stats</h2>
+            <div className="task-detail-quick-stats">
+              <div className="task-detail-stat-item">
+                <span className="task-detail-stat-label">Priority Score</span>
+                <span className="task-detail-stat-value">{task.priority_score || 0}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Subtasks</span>
-                <span className="font-medium">{task.dependency_count || 0}</span>
+              <div className="task-detail-stat-item">
+                <span className="task-detail-stat-label">Subtasks</span>
+                <span className="task-detail-stat-value">{task.dependency_count || 0}</span>
               </div>
               {task.budget && (
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Budget Utilization</span>
-                  <span className={`font-medium ${getBudgetStatusColor(task.budget_utilization)}`}>
+                <div className="task-detail-stat-item">
+                  <span className="task-detail-stat-label">Budget Utilization</span>
+                  <span className={`task-detail-stat-value ${getBudgetStatusColor(task.budget_utilization)}`}>
                     {task.budget_utilization.toFixed(1)}%
                   </span>
                 </div>
@@ -405,18 +413,18 @@ const TaskDetail = () => {
           </div>
 
           {/* Attachments */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Attachments</h2>
+          <div className="task-detail-card">
+            <h2 className="task-detail-card-title">Attachments</h2>
             {task.attachments && task.attachments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="task-detail-attachments-list">
                 {task.attachments.map((attachment) => (
-                  <div key={attachment.id} className="flex items-center space-x-3">
-                    <Paperclip className="h-4 w-4 text-gray-400" />
+                  <div key={attachment.id} className="task-detail-attachment-item">
+                    <Paperclip className="task-detail-attachment-icon" />
                     <a
                       href={attachment.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 truncate"
+                      className="task-detail-attachment-link"
                     >
                       Attachment {attachment.id}
                     </a>
@@ -424,20 +432,20 @@ const TaskDetail = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">No attachments</p>
+              <p className="task-detail-empty-state">No attachments</p>
             )}
           </div>
 
           {/* Project Info */}
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Project</h2>
-            <div className="flex items-center space-x-3">
-              <BarChart3 className="h-5 w-5 text-gray-400" />
-              <div>
-                <p className="font-medium text-gray-900">{task.project_name}</p>
+          <div className="task-detail-card">
+            <h2 className="task-detail-card-title">Project</h2>
+            <div className="task-detail-project-info">
+              <BarChart3 className="task-detail-project-icon" />
+              <div className="task-detail-project-content">
+                <p className="task-detail-project-name">{task.project_name}</p>
                 <button
                   onClick={() => navigate(`/solutions/projects/${task.project_id}`)}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="task-detail-project-link"
                 >
                   View Project Details
                 </button>
