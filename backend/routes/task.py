@@ -2,11 +2,14 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import cloudinary.uploader
+import logging
 from models import Task, User, Project, TaskAttachment, Notification
 from extensions import db
 from utils.email import send_email
 from utils.datetime_utils import ensure_utc
 from utils.route_cache import cache_route, invalidate_cache_on_change
+
+logger = logging.getLogger(__name__)
 
 task_bp = Blueprint('task', __name__)
 
@@ -57,13 +60,24 @@ def create_task(project_id):
         if not any(member.id == assignee.id for member in project.members):
             return jsonify({'msg': 'Assignee must be project member'}), 400
     
+    # Get budget from request data with validation
+    budget = data.get('budget')
+    if budget is not None:
+        try:
+            budget = float(budget)
+            if budget < 0:
+                return jsonify({'msg': 'Budget must be a positive number'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'msg': 'Budget must be a valid number'}), 400
+    
     task = Task(
         title=title, 
         description=description, 
         due_date=due_date,
         status=status, 
         project_id=project_id,
-        owner_id=assignee.id if assignee else user_id
+        owner_id=assignee.id if assignee else user_id,
+        budget=budget
     )
     db.session.add(task)
     db.session.commit()
@@ -129,7 +143,8 @@ def get_all_tasks():
             'assignee_id': task.owner_id,
             'assignee': assignee_name,
             'created_at': task.created_at.isoformat() if task.created_at else None,
-            'project_name': task.project.name if task.project else None
+            'project_name': task.project.name if task.project else None,
+            'budget': task.budget
         }
         tasks_data.append(task_data)
     return jsonify(tasks_data)
@@ -194,13 +209,24 @@ def create_task_direct():
         if not any(member.id == assignee.id for member in project.members):
             return jsonify({'msg': 'Assignee must be project member'}), 400
     
+    # Get budget from request data with validation
+    budget = data.get('budget')
+    if budget is not None:
+        try:
+            budget = float(budget)
+            if budget < 0:
+                return jsonify({'msg': 'Budget must be a positive number'}), 400
+        except (ValueError, TypeError):
+            return jsonify({'msg': 'Budget must be a valid number'}), 400
+    
     task = Task(
         title=title, 
         description=description, 
         due_date=due_date, 
         status=status, 
         project_id=project_id, 
-        owner_id=assignee_id if assignee_id else user_id
+        owner_id=assignee_id if assignee_id else user_id,
+        budget=budget
     )
     db.session.add(task)
     db.session.commit()
@@ -268,6 +294,21 @@ def update_task_direct(task_id):
         task.project_id = data['project_id']
     if 'owner_id' in data:
         task.owner_id = data['owner_id']
+    
+    # Handle budget updates
+    if 'budget' in data:
+        budget = data.get('budget')
+        if budget is not None:
+            try:
+                budget = float(budget)
+                if budget < 0:
+                    return jsonify({'msg': 'Budget must be a positive number'}), 400
+                task.budget = budget
+            except (ValueError, TypeError):
+                return jsonify({'msg': 'Budget must be a valid number'}), 400
+        else:
+            task.budget = None
+    
     db.session.commit()
     return jsonify({'msg': 'Task updated'})
 
@@ -332,4 +373,128 @@ def update_task_status(task_id):
     
     db.session.commit()
     return jsonify({'msg': 'Task status updated'})
+
+@task_bp.route('/tasks/<int:task_id>', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
+def get_task(task_id):
+    user_id = int(get_jwt_identity())
+    task = Task.query.get_or_404(task_id)
+    project = task.project
+    
+    if not any(member.id == user_id for member in project.members):
+        return jsonify({'success': False, 'message': 'Not authorized'}), 403
+    
+    status_mapping = {
+        'pending': 'Not Started',
+        'in_progress': 'In Progress',
+        'completed': 'Completed'
+    }
+    readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+    
+    # Get assignee name
+    assignee_name = None
+    if task.owner_id:
+        assignee = User.query.get(task.owner_id)
+        assignee_name = assignee.full_name if assignee else 'Unknown User'
+    
+    # Get task expenses and calculate financial metrics
+    from models.expense import Expense
+    task_expenses = Expense.query.filter_by(task_id=task_id).all()
+    total_spent = sum(expense.amount for expense in task_expenses)
+    budget_remaining = (task.budget - total_spent) if task.budget else None
+    budget_utilization = (total_spent / task.budget * 100) if task.budget and task.budget > 0 else 0
+    
+    # Get attachments
+    attachments = [{'id': att.id, 'file_url': att.file_url, 'uploaded_at': att.uploaded_at.isoformat()} 
+                   for att in task.attachments]
+    
+    # Format expenses for response
+    expenses_data = []
+    for expense in task_expenses:
+        # Get the user who created the expense
+        expense_creator = User.query.get(expense.created_by) if expense.created_by else None
+        expense_data = expense.to_dict()
+        expense_data['created_by_name'] = expense_creator.full_name if expense_creator else 'Unknown User'
+        expenses_data.append(expense_data)
+    
+    task_data = {
+        'id': task.id,
+        'title': task.title,
+        'description': task.description,
+        'due_date': task.due_date.isoformat() if task.due_date else None,
+        'status': readable_status,
+        'project_id': task.project_id,
+        'owner_id': task.owner_id,
+        'assignee_id': task.owner_id,
+        'assignee': assignee_name,
+        'created_at': task.created_at.isoformat() if task.created_at else None,
+        'project_name': task.project.name if task.project else None,
+        'budget': task.budget,
+        'total_spent': total_spent,
+        'budget_remaining': budget_remaining,
+        'budget_utilization': budget_utilization,
+        'expenses': expenses_data,
+        'attachments': attachments,
+        'priority_score': task.priority_score,
+        'estimated_effort': task.estimated_effort,
+        'percent_complete': task.percent_complete,
+        'parent_task_id': task.parent_task_id,
+        'dependency_count': task.dependency_count,
+        'is_overdue': task.is_overdue()
+    }
+    return jsonify({'success': True, 'data': task_data})
+
+@task_bp.route('/projects/<int:project_id>/tasks', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
+def get_project_tasks(project_id):
+    """Get all tasks for a specific project"""
+    user_id = int(get_jwt_identity())
+    
+    # Check if user has access to this project
+    project = Project.query.get_or_404(project_id)
+    if not any(member.id == user_id for member in project.members):
+        return jsonify({'msg': 'Not authorized'}), 403
+    
+    try:
+        # Get all tasks for this project
+        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
+        
+        tasks_data = []
+        for task in tasks:
+            status_mapping = {
+                'pending': 'Not Started',
+                'in_progress': 'In Progress',
+                'completed': 'Completed'
+            }
+            readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+            
+            # Get assignee name
+            assignee_name = None
+            if task.owner_id:
+                assignee = User.query.get(task.owner_id)
+                assignee_name = assignee.full_name if assignee else 'Unknown User'
+            
+            task_data = {
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'status': readable_status,
+                'project_id': task.project_id,
+                'owner_id': task.owner_id,
+                'assignee_id': task.owner_id,
+                'assignee': assignee_name,
+                'created_at': task.created_at.isoformat() if task.created_at else None,
+                'project_name': task.project.name if task.project else None,
+                'budget': task.budget
+            }
+            tasks_data.append(task_data)
+        
+        return jsonify(tasks_data), 200
+        
+    except Exception as e:
+        logger.error(f"Get project tasks error: {e}")
+        return jsonify({'msg': 'An error occurred while fetching project tasks'}), 500
 

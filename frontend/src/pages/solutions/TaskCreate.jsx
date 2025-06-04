@@ -1,15 +1,20 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@radix-ui/react-dropdown-menu';
+import { Label } from '../../components/ui/label';
 import {
   ArrowLeft,
-  Save
+  Save,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { loadingState } from '../../utils/apiCalls';
 import { getCurrentUser } from '../../utils/apiCalls/auth';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
@@ -23,7 +28,8 @@ const TaskCreate = () => {
     description: '',
     due_date: '',
     status: 'Not Started',
-    assigned_to: '' // Add assigned user field
+    assigned_to: '', // Add assigned user field
+    budget: ''  // Add budget field
   });
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [error, setError] = useState('');
@@ -130,7 +136,8 @@ const TaskCreate = () => {
         formData.description,
         formData.due_date,
         formData.status,
-        formData.assigned_to // Include assigned user
+        formData.assigned_to, // Include assigned user
+        formData.budget // Include budget
       );
       
       setSuccess('Task created successfully! Redirecting...');
@@ -331,6 +338,20 @@ const TaskCreate = () => {
                   </Card>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget (Optional)</Label>
+              <Input
+                type="number"
+                id="budget"
+                name="budget"
+                value={formData.budget}
+                onChange={handleInputChange}
+                placeholder="Enter task budget"
+                min="0"
+                step="0.01"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-6">

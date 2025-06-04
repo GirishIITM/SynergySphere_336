@@ -20,4 +20,4 @@ def register_blueprints(app):
     app.register_blueprint(notification_bp)
     app.register_blueprint(cache_bp, url_prefix='/cache')
     app.register_blueprint(dashboard_bp)
-    app.register_blueprint(analytics_bp, url_prefix='/analytics')
+    app.register_blueprint(analytics_bp)

@@ -1,5 +1,6 @@
 from flask import Flask, current_app
 from flask_cors import CORS
+from flask_apscheduler import APScheduler
 from dotenv import load_dotenv
 import cloudinary
 import os
@@ -14,6 +15,9 @@ from utils.postgresql_migrator import migrate_sqlite_to_postgresql, check_postgr
 
 load_dotenv()
 
+# Global scheduler instance
+scheduler = APScheduler()
+
 def create_app(config_class=None):
     """Application factory pattern."""
     app = Flask(__name__)
@@ -26,13 +30,17 @@ def create_app(config_class=None):
     
     app.config.from_object(config_instance)
     
+    # Scheduler configuration
+    app.config['SCHEDULER_API_ENABLED'] = True
+    
     # CORS setup
     CORS(
         app,
-        origins="*",
+        resources={r"/*": {"origins": [app.config['FRONTEND_URL'], "http://localhost:3000"]}},
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With"],
-        supports_credentials=False
+        supports_credentials=True,
+        max_age=600
     )
     
     # Extensions
@@ -40,6 +48,9 @@ def create_app(config_class=None):
     jwt.init_app(app)
     bcrypt.init_app(app)
     init_redis(app)
+    
+    # Initialize scheduler
+    scheduler.init_app(app)
     
     # Cloudinary
     cloudinary.config(
@@ -57,6 +68,34 @@ def create_app(config_class=None):
         jti = jwt_payload['jti']
         token = TokenBlocklist.query.filter_by(jti=jti).first()
         return token is not None
+    
+    # Scheduled jobs
+    def scheduled_deadline_monitoring():
+        """Scheduled job to monitor task deadlines and send notifications."""
+        with app.app_context():
+            try:
+                from services.deadline_service import DeadlineService
+                from models import User
+                
+                users = User.query.all()
+                total_notifications = 0
+                
+                for user in users:
+                    try:
+                        result = DeadlineService.scan_and_notify(user.id)
+                        total_notifications += result.get('notifications_created', 0)
+                    except Exception as e:
+                        print(f"Error monitoring deadlines for user {user.id}: {str(e)}")
+                
+                print(f"Deadline monitoring completed. Created {total_notifications} notifications.")
+                
+            except Exception as e:
+                print(f"Error in scheduled deadline monitoring: {str(e)}")
+    
+    # Add scheduled jobs
+    @scheduler.task('interval', id='deadline_monitoring', hours=1, misfire_grace_time=900)
+    def deadline_monitoring_job():
+        scheduled_deadline_monitoring()
     
     # Everything below runs inside app context!
     with app.app_context():
@@ -85,9 +124,12 @@ def create_app(config_class=None):
                 print("Using SQLite database...")
                 db.create_all()
                 
-                # Update SQLite schema
-                from utils.db_migrate import update_sqlite_schema
-                update_sqlite_schema()
+                # Update SQLite schema (if migration utility exists)
+                try:
+                    from utils.db_migrate import update_sqlite_schema
+                    update_sqlite_schema()
+                except ImportError:
+                    print("No SQLite migration utility found, using db.create_all()")
             
             # Gmail credentials
             try:
@@ -107,6 +149,11 @@ def create_app(config_class=None):
             print("Cache warm-up completed successfully")
         except Exception as e:
             print(f"Cache warm-up error: {e}")
+        
+        # Start scheduler
+        if not scheduler.running:
+            scheduler.start()
+            print("Scheduler started for deadline monitoring")
     
     # Cache invalidation listeners
     @db.event.listens_for(User, 'after_insert')
@@ -125,7 +172,7 @@ def create_app(config_class=None):
 # Create the app instance
 app = create_app()
 
-atexit.register(lambda: None)  # Cleanup placeholder
+atexit.register(lambda: scheduler.shutdown() if scheduler.running else None)
 
 if __name__ == '__main__':
     app.run(port=5000, host='0.0.0.0', debug=True)
