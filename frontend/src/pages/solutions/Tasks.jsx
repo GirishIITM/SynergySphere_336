@@ -19,7 +19,8 @@ import {
   Trash2,
   TrendingUp,
   Star,
-  Zap
+  Zap,
+  Eye
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -430,6 +431,12 @@ const Tasks = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
+                          <Link to={`/solutions/tasks/${task.id}`}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
                           <Link to={`/solutions/tasks/edit/${task.id}`}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Task
@@ -501,19 +508,33 @@ const Tasks = () => {
                       </span>
                     </div>
                     
-                    <Select
-                      value={task.status}
-                      onValueChange={(newStatus) => handleUpdateStatus(task.id, newStatus)}
-                    >
-                      <SelectTrigger className="w-32 h-8">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Not Started</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild
+                        className="h-8"
+                      >
+                        <Link to={`/solutions/tasks/${task.id}`}>
+                          <Eye className="h-3 w-3 mr-1" />
+                          View Details
+                        </Link>
+                      </Button>
+                      
+                      <Select
+                        value={task.status}
+                        onValueChange={(newStatus) => handleUpdateStatus(task.id, newStatus)}
+                      >
+                        <SelectTrigger className="w-32 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Not Started</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardFooter>
               </Card>

@@ -20,12 +20,16 @@ export const taskAPI = {
     return apiRequest(`/tasks/${id}`, 'GET', null, 'tasks-get-single');
   },
 
-  createTask: (project_id, title, description, due_date, status, assigned_to) => {
-    return apiRequest('/tasks', 'POST', { project_id, title, description, due_date, status, assigned_to }, 'tasks-create');
+  getTaskDetails: (id) => {
+    return apiRequest(`/tasks/${id}`, 'GET', null, 'task-details-get');
   },
 
-  updateTask: (id, project_id, title, description, due_date, status, assigned_to) => {
-    return apiRequest(`/tasks/${id}`, 'PUT', { project_id, title, description, due_date, status, assigned_to }, 'tasks-update');
+  createTask: (project_id, title, description, due_date, status, assigned_to, budget) => {
+    return apiRequest('/tasks', 'POST', { project_id, title, description, due_date, status, assigned_to, budget }, 'tasks-create');
+  },
+
+  updateTask: (id, project_id, title, description, due_date, status, assigned_to, budget) => {
+    return apiRequest(`/tasks/${id}`, 'PUT', { project_id, title, description, due_date, status, assigned_to, budget }, 'tasks-update');
   },
 
   updateTaskStatus: (id, status) => {
@@ -34,5 +38,9 @@ export const taskAPI = {
 
   deleteTask: (id, project_id) => {
     return apiRequest(`/tasks/${id}`, 'DELETE', { project_id }, 'tasks-delete');
+  },
+
+  getProjectTasks: (project_id) => {
+    return apiRequest(`/projects/${project_id}/tasks`, 'GET', null, 'project-tasks-get');
   }
 };

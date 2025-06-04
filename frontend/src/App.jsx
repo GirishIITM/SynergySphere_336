@@ -19,11 +19,13 @@ import Register from './pages/Register';
 import ResetPassword from './pages/ResetPassword';
 import Settings from './pages/Settings';
 import ProjectCreate from './pages/solutions/ProjectCreate';
+import ProjectDetail from './pages/solutions/ProjectDetail';
 import ProjectEdit from './pages/solutions/ProjectEdit';
 import Projects from './pages/solutions/Projects';
 import ProjectAnalytics from './pages/solutions/ProjectAnalytics';
 import ProjectFinance from './pages/solutions/ProjectFinance';
 import TaskCreate from './pages/solutions/TaskCreate';
+import TaskDetail from './pages/solutions/TaskDetail';
 import TaskEdit from './pages/solutions/TaskEdit.jsx';
 import Tasks from './pages/solutions/Tasks';
 import VerifyOTP from './pages/VerifyOTP';
@@ -162,6 +164,16 @@ function App() {
                 </PrivateRoute>
               } />
 
+              <Route path='/solutions/projects/:id' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Project Details">
+                      <ProjectDetail />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
               <Route path='/solutions/projects/:projectId/finance' element={
                 <PrivateRoute>
                   <AdminPanelLayout>
@@ -207,6 +219,16 @@ function App() {
                   <AdminPanelLayout>
                     <ContentLayout title="Create Task">
                       <TaskCreate />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/solutions/tasks/:taskId' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Task Details">
+                      <TaskDetail />
                     </ContentLayout>
                   </AdminPanelLayout>
                 </PrivateRoute>

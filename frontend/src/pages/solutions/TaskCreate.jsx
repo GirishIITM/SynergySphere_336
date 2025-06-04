@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@radix-ui/react-dropdown-menu';
+import { Label } from '../../components/ui/label';
 import {
   ArrowLeft,
   Save,
@@ -28,7 +28,8 @@ const TaskCreate = () => {
     description: '',
     due_date: '',
     status: 'Not Started',
-    assigned_to: '' // Add assigned user field
+    assigned_to: '', // Add assigned user field
+    budget: ''  // Add budget field
   });
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [error, setError] = useState('');
@@ -135,7 +136,8 @@ const TaskCreate = () => {
         formData.description,
         formData.due_date,
         formData.status,
-        formData.assigned_to // Include assigned user
+        formData.assigned_to, // Include assigned user
+        formData.budget // Include budget
       );
       
       setSuccess('Task created successfully! Redirecting...');
@@ -336,6 +338,20 @@ const TaskCreate = () => {
                   </Card>
                 )}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget (Optional)</Label>
+              <Input
+                type="number"
+                id="budget"
+                name="budget"
+                value={formData.budget}
+                onChange={handleInputChange}
+                placeholder="Enter task budget"
+                min="0"
+                step="0.01"
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-6">

@@ -36,7 +36,8 @@ def migrate_database():
                     ('parent_task_id', 'INTEGER'),
                     ('estimated_effort', 'INTEGER DEFAULT 0'),
                     ('percent_complete', 'INTEGER DEFAULT 0'),
-                    ('last_progress_update', 'DATETIME')
+                    ('last_progress_update', 'DATETIME'),
+                    ('budget', 'REAL')
                 ]
             else:
                 new_task_columns = [
@@ -44,7 +45,8 @@ def migrate_database():
                     ('parent_task_id', 'INTEGER'),
                     ('estimated_effort', 'INTEGER DEFAULT 0'),
                     ('percent_complete', 'INTEGER DEFAULT 0'),
-                    ('last_progress_update', 'TIMESTAMP')
+                    ('last_progress_update', 'TIMESTAMP'),
+                    ('budget', 'REAL')
                 ]
             
             with db.engine.begin() as connection:

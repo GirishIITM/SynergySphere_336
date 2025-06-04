@@ -1,4 +1,4 @@
-import { AlertCircle, Calendar, CheckCircle, Clock, Edit, MoreHorizontal, Plus, Search, Trash2, Users } from 'lucide-react';
+import { AlertCircle, Calendar, CheckCircle, Clock, Edit, Eye, MoreHorizontal, Plus, Search, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LoadingIndicator from '../../components/LoadingIndicator';
@@ -224,7 +224,12 @@ const Projects = () => {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1 flex-1">
-                          <CardTitle className="text-lg leading-tight">{project.name}</CardTitle>
+                          <CardTitle 
+                            className="text-lg leading-tight cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => navigate(`/solutions/projects/${project.id}`)}
+                          >
+                            {project.name}
+                          </CardTitle>
                           <div className="flex items-center gap-2">
                             {getStatusIcon(project.status)}
                             <span className={`text-xs px-2 py-1 rounded-full border capitalize ${getStatusColor(project.status)}`}>
@@ -241,6 +246,10 @@ const Projects = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => navigate(`/solutions/projects/${project.id}`)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(project)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
@@ -328,11 +337,33 @@ const Projects = () => {
                     </CardContent>
 
                     {project.deadline && (
-                      <CardFooter className="pt-0">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          Due: {formatDate(project.deadline)}
+                      <CardFooter className="pt-0 pb-4">
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            Due: {formatDate(project.deadline)}
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => navigate(`/solutions/projects/${project.id}`)}
+                          >
+                            View Details
+                          </Button>
                         </div>
+                      </CardFooter>
+                    )}
+                    
+                    {!project.deadline && (
+                      <CardFooter className="pt-0 pb-4">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/solutions/projects/${project.id}`)}
+                          className="w-full"
+                        >
+                          View Details
+                        </Button>
                       </CardFooter>
                     )}
                   </Card>
