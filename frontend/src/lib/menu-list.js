@@ -3,7 +3,10 @@ import {
   FolderKanban,
   LayoutDashboard,
   Settings,
-  User
+  User,
+  AlertTriangle,
+  BarChart3,
+  DollarSign
 } from "lucide-react";
 
 export function getMenuList(pathname) {
@@ -57,6 +60,25 @@ export function getMenuList(pathname) {
               active: pathname === "/solutions/tasks/create"
             }
           ]
+        }
+      ]
+    },
+    {
+      groupLabel: "Analytics & Finance",
+      menus: [
+        {
+          href: "/analytics",
+          label: "Analytics",
+          icon: BarChart3,
+          active: pathname.includes("/analytics"),
+          submenus: []
+        },
+        {
+          href: "/finance",
+          label: "Finance",
+          icon: DollarSign,
+          active: pathname.includes("/finance"),
+          submenus: []
         }
       ]
     },

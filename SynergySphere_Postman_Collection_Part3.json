@@ -1,0 +1,430 @@
+{
+  "name": "09 - Finance Management",
+  "item": [
+    {
+      "name": "Create Project Budget",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"total_amount\": 50000,\n  \"allocated_amount\": 30000,\n  \"description\": \"Q4 Project Budget\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/budget",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "budget"]
+        }
+      }
+    },
+    {
+      "name": "Update Budget",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"total_amount\": 60000,\n  \"allocated_amount\": 35000,\n  \"description\": \"Updated Q4 Project Budget\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/budgets/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["budgets", "1"]
+        }
+      }
+    },
+    {
+      "name": "Delete Budget",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/budgets/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["budgets", "1"]
+        }
+      }
+    },
+    {
+      "name": "Create Expense",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 2500.00,\n  \"description\": \"Software licenses\",\n  \"category\": \"Software\",\n  \"date\": \"2024-01-15\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/expenses",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "expenses"]
+        }
+      }
+    },
+    {
+      "name": "Update Expense",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 3000.00,\n  \"description\": \"Updated software licenses\",\n  \"category\": \"Software\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/expenses/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["expenses", "1"]
+        }
+      }
+    },
+    {
+      "name": "Delete Expense",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/expenses/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["expenses", "1"]
+        }
+      }
+    },
+    {
+      "name": "Get Project Expenses",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/expenses",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "expenses"]
+        }
+      }
+    },
+    {
+      "name": "Get Project Financials",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/financials",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "financials"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "10 - Cache Management",
+  "item": [
+    {
+      "name": "Get Cache Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/cache/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["cache", "stats"]
+        }
+      }
+    },
+    {
+      "name": "Clear Cache",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cache_type\": \"all\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/cache/clear",
+          "host": ["{{baseUrl}}"],
+          "path": ["cache", "clear"]
+        }
+      }
+    },
+    {
+      "name": "Warm Up Cache",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/cache/warm",
+          "host": ["{{baseUrl}}"],
+          "path": ["cache", "warm"]
+        }
+      }
+    },
+    {
+      "name": "Invalidate Cache",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cache_keys\": [\"user_search\", \"project_data\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/cache/invalidate",
+          "host": ["{{baseUrl}}"],
+          "path": ["cache", "invalidate"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "11 - System & Health",
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Get Version",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/version",
+          "host": ["{{baseUrl}}"],
+          "path": ["version"]
+        }
+      }
+    },
+    {
+      "name": "Root Endpoint",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "12 - User Settings",
+  "item": [
+    {
+      "name": "Get User Settings",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/auth/settings",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "settings"]
+        }
+      }
+    },
+    {
+      "name": "Update User Settings",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notifications_enabled\": true,\n  \"email_notifications\": true,\n  \"theme_preference\": \"dark\",\n  \"timezone\": \"UTC\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/settings",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "settings"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "13 - Google OAuth",
+  "item": [
+    {
+      "name": "Get Google Client ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/auth/google/client-id",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "google", "client-id"]
+        }
+      }
+    },
+    {
+      "name": "Google Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"credential\": \"google_id_token_here\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/google-register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "google-register"]
+        }
+      }
+    },
+    {
+      "name": "Google Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"credential\": \"google_id_token_here\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/google-login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "google-login"]
+        }
+      }
+    },
+    {
+      "name": "Google Exchange Code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"code\": \"google_auth_code_here\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/google/exchange-code",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "google", "exchange-code"]
+        }
+      }
+    }
+  ]
+} 
