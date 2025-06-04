@@ -11,6 +11,13 @@
 - [ ] Verify Redis/Valkey connection handling
 - [ ] Fix dashboard overview endpoint (404 error)
 
+#### 11. Fix CORS and 404 Errors for Finance Endpoints - 2025-01-16
+- [x] Identified finance blueprint not registered in routes/__init__.py ✅
+- [x] Added finance blueprint import and registration with /finance URL prefix ✅
+- [x] Verified Budget and Expense models exist and are properly imported ✅
+- [x] Confirmed finance service implementation exists ✅
+- [x] Fixed CORS preflight failures for /finance/projects/{id}/financials endpoints ✅
+
 #### 2. Add Budget Field to Task Creation - 2024-12-28
 - [x] Add budget field to Task model ✅ (Already implemented in task.py)
 - [ ] Update task creation endpoints to accept budget
