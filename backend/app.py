@@ -72,6 +72,12 @@ def create_app(config_class=None):
     # Blueprints
     register_blueprints(app)
     
+    # Import Socket.IO handlers to register them
+    from services.task_comment_service import (
+        handle_join_task_room, handle_leave_task_room, 
+        handle_send_task_comment, handle_connect, handle_disconnect
+    )
+    
     # JWT token blocklist callback
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
@@ -185,4 +191,4 @@ app = create_app()
 atexit.register(lambda: scheduler.shutdown() if scheduler.running else None)
 
 if __name__ == '__main__':
-    app.run(port=5000, host='0.0.0.0', debug=True)
+    socketio.run(app, port=5000, host='0.0.0.0', debug=True)

@@ -5,6 +5,7 @@ def register_blueprints(app):
     from .profile import profile_bp
     from .project import project_bp
     from .task import task_bp
+    from .task_comments import task_comments_bp
     from .message import message_bp
     from .notification import notification_bp
     from .cache_management import cache_bp
@@ -16,6 +17,7 @@ def register_blueprints(app):
     app.register_blueprint(profile_bp)
     app.register_blueprint(project_bp)
     app.register_blueprint(task_bp)
+    app.register_blueprint(task_comments_bp)
     app.register_blueprint(message_bp)
     app.register_blueprint(notification_bp)
     app.register_blueprint(cache_bp, url_prefix='/cache')
