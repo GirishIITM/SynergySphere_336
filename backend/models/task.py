@@ -26,7 +26,6 @@ class Task(db.Model):
     estimated_effort = db.Column(db.Integer, default=0)  # In hours
     percent_complete = db.Column(db.Integer, default=0)  # 0-100
     last_progress_update = db.Column(db.DateTime, default=get_utc_now)
-    budget = db.Column(db.Float, nullable=True)  # Task budget in project currency
     is_favorite = db.Column(db.Boolean, default=False, nullable=False)  # User favorite status
     
     # Relationships
@@ -51,6 +50,11 @@ class Task(db.Model):
         """Count the number of subtasks for this task."""
         return len(self.subtasks)
 
+    @property
+    def total_expenses(self):
+        """Calculate total expenses for this task."""
+        return sum(expense.amount for expense in self.expenses)
+
     def to_dict(self):
         """Convert task to dictionary for JSON serialization."""
         return {
@@ -67,7 +71,7 @@ class Task(db.Model):
             'estimated_effort': self.estimated_effort,
             'percent_complete': self.percent_complete,
             'last_progress_update': self.last_progress_update.isoformat() if self.last_progress_update else None,
-            'budget': self.budget,
+            'total_expenses': self.total_expenses,
             'dependency_count': self.dependency_count,
             'is_overdue': self.is_overdue(),
             'is_favorite': self.is_favorite

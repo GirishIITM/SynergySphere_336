@@ -1,4 +1,4 @@
-from models import Project, User, Notification, Task
+from models import Project, User, Notification, Task, Budget
 from extensions import db
 from utils.email import send_email
 from utils.cloudinary_upload import upload_project_image, validate_image_file
@@ -28,6 +28,20 @@ class ProjectService:
         
         db.session.add(project)
         db.session.flush()  # Get project ID
+        
+        # Create budget if budget amount is provided
+        if data.get('budget'):
+            try:
+                budget_amount = float(data['budget'])
+                if budget_amount > 0:
+                    budget = Budget(
+                        project_id=project.id,
+                        allocated_amount=budget_amount,
+                        currency='USD'
+                    )
+                    db.session.add(budget)
+            except (ValueError, TypeError):
+                raise ValueError('Budget must be a valid positive number')
         
         from models.project import Membership
         owner_membership = Membership(

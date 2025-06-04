@@ -60,24 +60,13 @@ def create_task(project_id):
         if not any(member.id == assignee.id for member in project.members):
             return jsonify({'msg': 'Assignee must be project member'}), 400
     
-    # Get budget from request data with validation
-    budget = data.get('budget')
-    if budget is not None:
-        try:
-            budget = float(budget)
-            if budget < 0:
-                return jsonify({'msg': 'Budget must be a positive number'}), 400
-        except (ValueError, TypeError):
-            return jsonify({'msg': 'Budget must be a valid number'}), 400
-    
     task = Task(
         title=title, 
         description=description, 
         due_date=due_date,
         status=status, 
         project_id=project_id,
-        owner_id=assignee.id if assignee else user_id,
-        budget=budget
+        owner_id=assignee.id if assignee else user_id
     )
     db.session.add(task)
     db.session.commit()
@@ -195,7 +184,7 @@ def get_all_tasks():
                 'assigned_to_name': assignee_name,
                 'created_at': task.created_at.isoformat() if task.created_at else None,
                 'project_name': task.project.name if task.project else None,
-                'budget': task.budget,
+                'total_expenses': task.total_expenses,
                 'is_favorite': task.is_favorite
             }
             tasks_data.append(task_data)
@@ -254,7 +243,6 @@ def create_task_direct():
             return jsonify({'msg': 'Invalid date format. Use ISO format with timezone.'}), 400
     
     status = data.get('status', 'To Do')
-    # Map status to enum values
     status_mapping = {
         'To Do': 'pending',
         'In Progress': 'in_progress', 
@@ -265,55 +253,37 @@ def create_task_direct():
     }
     status = status_mapping.get(status, 'pending')
     
-    assignee_id = data.get('assignee_id')
-    
-    if assignee_id:
-        assignee = User.query.get(assignee_id)
+    assignee = None
+    if 'assigned_to' in data and data['assigned_to']:
+        assignee = User.query.get(data['assigned_to'])
         if not assignee:
             return jsonify({'msg': 'Assignee not found'}), 404
         if not any(member.id == assignee.id for member in project.members):
             return jsonify({'msg': 'Assignee must be project member'}), 400
     
-    # Get budget from request data with validation
-    budget = data.get('budget')
-    if budget is not None:
-        try:
-            budget = float(budget)
-            if budget < 0:
-                return jsonify({'msg': 'Budget must be a positive number'}), 400
-        except (ValueError, TypeError):
-            return jsonify({'msg': 'Budget must be a valid number'}), 400
-    
     task = Task(
         title=title, 
         description=description, 
-        due_date=due_date, 
+        due_date=due_date,
         status=status, 
-        project_id=project_id, 
-        owner_id=assignee_id if assignee_id else user_id,
-        budget=budget
+        project_id=project_id,
+        owner_id=assignee.id if assignee else user_id
     )
     db.session.add(task)
     db.session.commit()
     
-    # Schedule dynamic reminders for the new task
-    if due_date:
-        from services.deadline_service import DeadlineService
-        DeadlineService.schedule_dynamic_reminders(task.id)
-    
     # Send assignment notification if assigning to someone else
-    if assignee_id and assignee_id != user_id:
+    if assignee and assignee.id != user_id:
         try:
             from tasks.notification_tasks import send_task_assignment_notification
-            send_task_assignment_notification.delay(task.id, assignee_id, user_id)
+            send_task_assignment_notification.delay(task.id, assignee.id, user_id)
         except Exception as e:
             # Fallback to direct notification if Celery is not available
             logger.warning(f"Celery task failed, using direct notification: {e}")
             message = f"You have been assigned task '{task.title}' in project '{project.name}'"
-            notification = Notification(user_id=assignee_id, message=message)
+            notification = Notification(user_id=assignee.id, message=message)
             db.session.add(notification)
-            assignee = User.query.get(assignee_id)
-            if assignee and hasattr(assignee, 'notify_email') and assignee.notify_email:
+            if hasattr(assignee, 'notify_email') and assignee.notify_email:
                 send_email("Task Assigned", [assignee.email], "", message)
             db.session.commit()
     
@@ -376,19 +346,8 @@ def update_task_direct(task_id):
     if 'owner_id' in data:
         task.owner_id = data['owner_id']
     
-    # Handle budget updates
-    if 'budget' in data:
-        budget = data.get('budget')
-        if budget is not None:
-            try:
-                budget = float(budget)
-                if budget < 0:
-                    return jsonify({'msg': 'Budget must be a positive number'}), 400
-                task.budget = budget
-            except (ValueError, TypeError):
-                return jsonify({'msg': 'Budget must be a valid number'}), 400
-        else:
-            task.budget = None
+    # Tasks do not have budgets - only expenses can be added to tasks
+    # Budgets are managed at the project level
     
     db.session.commit()
     
@@ -509,12 +468,9 @@ def get_task(task_id):
         assignee = User.query.get(task.owner_id)
         assignee_name = assignee.full_name if assignee else 'Unknown User'
     
-    # Get task expenses and calculate financial metrics
+    # Get task expenses
     from models.expense import Expense
     task_expenses = Expense.query.filter_by(task_id=task_id).all()
-    total_spent = sum(expense.amount for expense in task_expenses)
-    budget_remaining = (task.budget - total_spent) if task.budget else None
-    budget_utilization = (total_spent / task.budget * 100) if task.budget and task.budget > 0 else 0
     
     # Get attachments
     attachments = [{'id': att.id, 'file_url': att.file_url, 'uploaded_at': att.uploaded_at.isoformat()} 
@@ -542,10 +498,7 @@ def get_task(task_id):
         'assigned_to_name': assignee_name,
         'created_at': task.created_at.isoformat() if task.created_at else None,
         'project_name': task.project.name if task.project else None,
-        'budget': task.budget,
-        'total_spent': total_spent,
-        'budget_remaining': budget_remaining,
-        'budget_utilization': budget_utilization,
+        'total_expenses': task.total_expenses,
         'expenses': expenses_data,
         'attachments': attachments,
         'priority_score': task.priority_score,
@@ -599,7 +552,7 @@ def get_project_tasks(project_id):
                 'assigned_to_name': assignee_name,
                 'created_at': task.created_at.isoformat() if task.created_at else None,
                 'project_name': task.project.name if task.project else None,
-                'budget': task.budget,
+                'total_expenses': task.total_expenses,
                 'is_favorite': task.is_favorite
             }
             tasks_data.append(task_data)
