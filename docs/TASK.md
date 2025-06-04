@@ -41,6 +41,17 @@
 - [ ] Add appropriate icon and styling for the button
 - [ ] Test navigation functionality
 
+#### 6. Real-Time Task Comment System with Socket.IO - 2025-01-15
+- [ ] Add Flask-SocketIO dependency to requirements.txt
+- [ ] Create Socket.IO integration in Flask app
+- [ ] Create task comment service for real-time messaging
+- [ ] Add Socket.IO routes for task-specific chat rooms
+- [ ] Create task comment component in frontend
+- [ ] Integrate real-time comments in TaskDetail page
+- [ ] Add Socket.IO client connection management
+- [ ] Create tests for real-time comment functionality
+- [ ] Add proper error handling and reconnection logic
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
@@ -64,7 +75,7 @@
 
 ### 🔥 New Enhancement Tasks for Expenses Feature
 
-#### 6. Advanced Expense Management Enhancements - 2024-12-28
+#### 7. Advanced Expense Management Enhancements - 2024-12-28
 - [ ] Add expense receipt/attachment upload functionality
 - [ ] Implement expense approval workflow for large expenses
 - [ ] Add recurring expense templates
@@ -74,7 +85,7 @@
 - [ ] Add expense tags for better organization
 - [ ] Create expense comparison between projects
 
-#### 7. Enhanced Budget Management - 2024-12-28
+#### 8. Enhanced Budget Management - 2024-12-28
 - [ ] Add budget categories and sub-budgets
 - [ ] Implement budget forecasting based on spending trends
 - [ ] Add budget approval workflow for modifications
@@ -82,7 +93,7 @@
 - [ ] Add quarterly/yearly budget planning
 - [ ] Implement budget variance analysis and reporting
 
-#### 8. Financial Analytics Enhancements - 2024-12-28
+#### 9. Financial Analytics Enhancements - 2024-12-28
 - [ ] Add expense trending analysis with predictions
 - [ ] Create cost-per-task analytics
 - [ ] Implement ROI tracking for projects

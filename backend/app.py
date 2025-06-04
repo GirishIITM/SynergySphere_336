@@ -7,7 +7,7 @@ import os
 import atexit
 
 from config import get_config
-from extensions import db, jwt, bcrypt, mail, init_redis
+from extensions import db, jwt, bcrypt, mail, init_redis, socketio
 from models import User, TokenBlocklist
 from routes import register_blueprints
 from utils.gmail import initialize_gmail_credentials
@@ -48,6 +48,16 @@ def create_app(config_class=None):
     jwt.init_app(app)
     bcrypt.init_app(app)
     init_redis(app)
+    
+    # Initialize Socket.IO with proper CORS
+    socketio.init_app(
+        app,
+        cors_allowed_origins=[app.config['FRONTEND_URL'], "http://localhost:3000"],
+        async_mode='threading',
+        manage_session=False,
+        engineio_logger=True,
+        socketio_logger=True
+    )
     
     # Initialize scheduler
     scheduler.init_app(app)

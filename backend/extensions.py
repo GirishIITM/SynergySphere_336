@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
+from flask_socketio import SocketIO
 import valkey
 import ssl
 
@@ -10,6 +11,7 @@ db = SQLAlchemy()
 jwt = JWTManager()
 bcrypt = Bcrypt()
 mail = Mail()
+socketio = SocketIO()
 redis_client = None
 
 def init_redis(app):
