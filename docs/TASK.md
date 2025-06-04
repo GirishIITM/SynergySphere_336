@@ -47,6 +47,11 @@
 - [x] Remove redundant static Quick Actions section at bottom ✅
 - [x] Keep only the working Quick Actions and dynamic Recent Projects/Tasks sections ✅
 
+#### 7. Remove View At-Risk Tasks Button from Recent Tasks in Dashboard - 2025-01-15
+- [ ] Remove "View At-Risk Tasks" button from Recent Tasks card
+- [ ] Remove "At-Risk Tasks Section" card from dashboard
+- [ ] Clean up unused AlertTriangle import if no longer needed
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
@@ -70,7 +75,7 @@
 
 ### 🔥 New Enhancement Tasks for Expenses Feature
 
-#### 7. Advanced Expense Management Enhancements - 2024-12-28
+#### 8. Advanced Expense Management Enhancements - 2024-12-28
 - [ ] Add expense receipt/attachment upload functionality
 - [ ] Implement expense approval workflow for large expenses
 - [ ] Add recurring expense templates
@@ -80,7 +85,7 @@
 - [ ] Add expense tags for better organization
 - [ ] Create expense comparison between projects
 
-#### 8. Enhanced Budget Management - 2024-12-28
+#### 9. Enhanced Budget Management - 2024-12-28
 - [ ] Add budget categories and sub-budgets
 - [ ] Implement budget forecasting based on spending trends
 - [ ] Add budget approval workflow for modifications
@@ -88,7 +93,7 @@
 - [ ] Add quarterly/yearly budget planning
 - [ ] Implement budget variance analysis and reporting
 
-#### 9. Financial Analytics Enhancements - 2024-12-28
+#### 10. Financial Analytics Enhancements - 2024-12-28
 - [ ] Add expense trending analysis with predictions
 - [ ] Create cost-per-task analytics
 - [ ] Implement ROI tracking for projects

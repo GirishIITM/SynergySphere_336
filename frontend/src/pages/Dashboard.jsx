@@ -224,35 +224,11 @@ const Dashboard = () => {
                       </div>
                     </div>
                   ))}
-                  <div className="pt-2">
-                    <Button variant="outline" size="sm" asChild className="w-full">
-                      <Link to="/solutions/tasks/at-risk">
-                        <AlertTriangle className="h-4 w-4 mr-2" />
-                        View At-Risk Tasks
-                      </Link>
-                    </Button>
-                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
-
-        {/* At-Risk Tasks Section */}
-        <Card className="my-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Tasks Requiring Attention
-            </CardTitle>
-            <CardDescription>
-              Tasks that may miss their deadlines and need immediate attention
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* At-Risk Tasks component removed */}
-          </CardContent>
-        </Card>
 
       </LoadingIndicator>
     </div>
