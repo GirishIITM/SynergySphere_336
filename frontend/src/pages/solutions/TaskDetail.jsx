@@ -88,16 +88,18 @@ const TaskDetail = () => {
 
       const response = await financeAPI.addExpense(task.project_id, expenseData);
       
-      if (response.success) {
+      // Backend returns the expense object directly on success (201 status)
+      // If we get here without throwing an error, the expense was created successfully
+      if (response && (response.id || response.amount)) {
         setNewExpense({ amount: '', description: '', category: 'Other' });
         setShowAddExpense(false);
         loadTaskDetails(); // Reload to get updated expenses
       } else {
-        setError(response.message || 'Failed to add expense');
+        setError('Failed to add expense');
       }
     } catch (err) {
       console.error('Error adding expense:', err);
-      setError('Failed to add expense');
+      setError(err.message || 'Failed to add expense');
     }
   };
 

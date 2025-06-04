@@ -4,6 +4,10 @@ from extensions import db
 from utils.datetime_utils import get_utc_now
 from utils.email import send_email
 from sqlalchemy import func, and_, extract
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class FinanceService:
@@ -168,7 +172,7 @@ class FinanceService:
                         message
                     )
                 except Exception as e:
-                    print(f"Failed to send budget overrun email to {member.email}: {str(e)}")
+                    logger.error(f"Failed to send budget overrun email to {member.email}: {str(e)}")
     
     @staticmethod
     def get_project_financials(user_id: int, project_id: int) -> Dict[str, Any]:

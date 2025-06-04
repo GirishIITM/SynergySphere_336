@@ -160,7 +160,8 @@ const ProjectFinance = () => {
       fetchExpenses();
       fetchFinancials();
     } catch (err) {
-      setError('Failed to add expense');
+      console.error('Error adding expense:', err);
+      setError(err.message || 'Failed to add expense');
     }
   };
 
@@ -184,7 +185,8 @@ const ProjectFinance = () => {
       fetchExpenses();
       fetchFinancials();
     } catch (err) {
-      setError('Failed to update expense');
+      console.error('Error updating expense:', err);
+      setError(err.message || 'Failed to update expense');
     }
   };
 
@@ -195,7 +197,8 @@ const ProjectFinance = () => {
       fetchExpenses();
       fetchFinancials();
     } catch (err) {
-      setError('Failed to delete expense');
+      console.error('Error deleting expense:', err);
+      setError(err.message || 'Failed to delete expense');
     }
   };
 

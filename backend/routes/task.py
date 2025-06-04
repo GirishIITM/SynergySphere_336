@@ -2,11 +2,14 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import cloudinary.uploader
+import logging
 from models import Task, User, Project, TaskAttachment, Notification
 from extensions import db
 from utils.email import send_email
 from utils.datetime_utils import ensure_utc
 from utils.route_cache import cache_route, invalidate_cache_on_change
+
+logger = logging.getLogger(__name__)
 
 task_bp = Blueprint('task', __name__)
 
@@ -492,6 +495,6 @@ def get_project_tasks(project_id):
         return jsonify(tasks_data), 200
         
     except Exception as e:
-        print(f"Get project tasks error: {e}")
+        logger.error(f"Get project tasks error: {e}")
         return jsonify({'msg': 'An error occurred while fetching project tasks'}), 500
 
