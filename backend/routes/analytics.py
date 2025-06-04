@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """
 Analytics routes for SynergySphere platform.
 
@@ -16,6 +15,7 @@ from models import User, Project, Task, Membership
 from extensions import db
 from utils.route_cache import cache_route
 from utils.datetime_utils import get_utc_now, ensure_utc
+from services.analytics_service import AnalyticsService
 
 analytics_bp = Blueprint('analytics', __name__)
 
@@ -436,13 +436,8 @@ def _calculate_workload_distribution(member_analytics: List[Dict]) -> Dict:
             'min': min(task_counts),
             'max': max(task_counts)
         }
-    } 
-=======
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from services.analytics_service import AnalyticsService
+    }
 
-analytics_bp = Blueprint('analytics', __name__)
 
 @analytics_bp.route('/projects/<int:project_id>/stats', methods=['GET'])
 @jwt_required()
@@ -457,6 +452,7 @@ def get_project_stats(project_id):
         return jsonify({'msg': str(e)}), 403
     except Exception as e:
         return jsonify({'msg': 'Error fetching project statistics'}), 500
+
 
 @analytics_bp.route('/users/<int:user_id>/dashboard', methods=['GET'])
 @jwt_required()
@@ -473,6 +469,7 @@ def get_user_dashboard(user_id):
         return jsonify(dashboard_data), 200
     except Exception as e:
         return jsonify({'msg': 'Error fetching user dashboard'}), 500
+
 
 @analytics_bp.route('/users/<int:user_id>/productivity', methods=['GET'])
 @jwt_required()
@@ -493,6 +490,7 @@ def get_user_productivity(user_id):
     except Exception as e:
         return jsonify({'msg': 'Error fetching productivity metrics'}), 500
 
+
 @analytics_bp.route('/projects/<int:project_id>/health', methods=['GET'])
 @jwt_required()
 def get_project_health(project_id):
@@ -507,6 +505,7 @@ def get_project_health(project_id):
     except Exception as e:
         return jsonify({'msg': 'Error fetching project health'}), 500
 
+
 @analytics_bp.route('/projects/<int:project_id>/resources', methods=['GET'])
 @jwt_required()
 def get_resource_utilization(project_id):
@@ -519,5 +518,4 @@ def get_resource_utilization(project_id):
     except PermissionError as e:
         return jsonify({'msg': str(e)}), 403
     except Exception as e:
-        return jsonify({'msg': 'Error fetching resource utilization'}), 500 
->>>>>>> 152c293333000def3e55e8b7b8974333d53c2a97
+        return jsonify({'msg': 'Error fetching resource utilization'}), 500
