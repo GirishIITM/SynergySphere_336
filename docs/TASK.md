@@ -18,6 +18,17 @@
 - [x] Confirmed finance service implementation exists ✅
 - [x] Fixed CORS preflight failures for /finance/projects/{id}/financials endpoints ✅
 
+#### 12. Enforce Expense-Task and Budget-Project Relationships - 2025-01-16
+- [ ] Update Expense model to make task_id required (nullable=False)
+- [ ] Update finance service validation to require task_id for all expenses
+- [ ] Update expense creation endpoints to validate task_id presence
+- [ ] Update frontend expense forms to require task selection
+- [ ] Create database migration for the schema change
+- [ ] Update existing expenses to link to appropriate tasks
+- [ ] Update expense-related tests to account for required task_id
+- [ ] Ensure budget remains properly linked to project as a whole
+- [ ] Add validation to prevent orphaned expenses
+
 #### 2. Add Budget Field to Task Creation - 2024-12-28
 - [x] Add budget field to Task model ✅ (Already implemented in task.py)
 - [ ] Update task creation endpoints to accept budget
