@@ -63,7 +63,14 @@ const TaskBoardPage = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
+      console.log('TaskBoardPage: Fetching tasks from API');
       const response = await taskAPI.getAllTasks({});
+      
+      console.log('TaskBoardPage: API response received', {
+        responseType: typeof response,
+        hasTasks: !!response.tasks,
+        tasksCount: response.tasks ? response.tasks.length : 0
+      });
       
       // Handle new API response structure with tasks and pagination
       const allTasks = response.tasks || response || [];
@@ -75,11 +82,16 @@ const TaskBoardPage = () => {
         isFavorite: task.isFavorite || false
       }));
       
+      console.log('TaskBoardPage: Setting tasks state', {
+        tasksCount: tasksWithFavorites.length,
+        sampleTask: tasksWithFavorites[0] || null
+      });
+      
       setTasks(tasksWithFavorites);
       setError('');
     } catch (err) {
+      console.error('TaskBoardPage: Failed to fetch tasks:', err);
       setError('Failed to fetch tasks: ' + (err.message || 'Unknown error'));
-      console.error('Error fetching tasks:', err);
       setTasks([]);
     } finally {
       setLoading(false);
@@ -107,11 +119,17 @@ const TaskBoardPage = () => {
    *   updatedTask (object): The updated task object
    */
   const handleTaskUpdate = (updatedTask) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
+    console.log('TaskBoardPage: Received task update', updatedTask);
+    setTasks(prevTasks => {
+      const newTasks = prevTasks.map(task => 
         task.id === updatedTask.id ? updatedTask : task
-      )
-    );
+      );
+      console.log('TaskBoardPage: Updated tasks state', {
+        totalTasks: newTasks.length,
+        updatedTaskId: updatedTask.id
+      });
+      return newTasks;
+    });
   };
 
   /**

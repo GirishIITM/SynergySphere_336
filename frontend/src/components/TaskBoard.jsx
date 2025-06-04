@@ -167,9 +167,17 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
       return;
     }
 
+    console.log('TaskBoard: Updating task status', {
+      taskId: draggedTask.id,
+      currentStatus: draggedTask.status,
+      newStatus: newStatus
+    });
+
     try {
       // Update task status via API
       await taskAPI.updateTaskStatus(draggedTask.id, newStatus);
+      
+      console.log('TaskBoard: API call successful, updating local state');
       
       // Update local state
       const updatedTasks = tasks.map(task => 
@@ -181,13 +189,21 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
 
       // Notify parent component if callback provided
       if (onTaskUpdate) {
-        onTaskUpdate({ ...draggedTask, status: newStatus });
+        const updatedTask = { ...draggedTask, status: newStatus };
+        console.log('TaskBoard: Notifying parent component', updatedTask);
+        onTaskUpdate(updatedTask);
       }
 
       setDraggedTask(null);
     } catch (error) {
-      console.error('Failed to update task status:', error);
-      // You might want to show an error toast here
+      console.error('TaskBoard: Failed to update task status:', error);
+      
+      // Show error message to user
+      // TODO: Replace with proper toast notification
+      alert(`Failed to update task status: ${error.message || 'Unknown error'}`);
+      
+      // Reset drag state on error
+      setDraggedTask(null);
     }
   };
 
