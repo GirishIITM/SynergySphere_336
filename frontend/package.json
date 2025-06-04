@@ -41,6 +41,7 @@
     "react-pro-sidebar": "^1.1.0",
     "react-router-dom": "^7.6.0",
     "recharts": "^2.15.3",
+    "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.8",
     "zustand": "^5.0.5"

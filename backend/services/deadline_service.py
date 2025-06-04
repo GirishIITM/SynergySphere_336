@@ -250,4 +250,257 @@ class DeadlineService:
             
             db.session.commit()
         
-        return True 
+        return True
+    
+    @staticmethod
+    def schedule_dynamic_reminders(task_id: int) -> Dict[str, Any]:
+        """
+        Schedule dynamic reminders for a task based on its deadline and priority.
+        
+        Args:
+            task_id (int): Task ID to schedule reminders for
+            
+        Returns:
+            Dict[str, Any]: Summary of scheduled reminders
+        """
+        try:
+            from tasks.deadline_tasks import update_task_priority_reminders
+            
+            # Schedule reminder updates in background
+            update_task_priority_reminders.delay(task_id)
+            
+            return {
+                'task_id': task_id,
+                'status': 'scheduled',
+                'timestamp': get_utc_now().isoformat()
+            }
+        except Exception as e:
+            return {
+                'task_id': task_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
+    
+    @staticmethod
+    def trigger_bulk_reminders(user_id: int) -> Dict[str, Any]:
+        """
+        Trigger bulk reminder check for a user using Celery task.
+        
+        Args:
+            user_id (int): User ID to check reminders for
+            
+        Returns:
+            Dict[str, Any]: Task execution summary
+        """
+        try:
+            from tasks.deadline_tasks import bulk_reminder_check
+            
+            # Execute bulk reminder check in background
+            task_result = bulk_reminder_check.delay(user_id)
+            
+            return {
+                'user_id': user_id,
+                'task_id': task_result.id,
+                'status': 'queued',
+                'timestamp': get_utc_now().isoformat()
+            }
+        except Exception as e:
+            return {
+                'user_id': user_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
+    
+    @staticmethod
+    def schedule_standard_reminders(task_id: int) -> Dict[str, Any]:
+        """
+        Schedule standard reminders for a task (24 hours and 1 hour before deadline).
+        
+        Args:
+            task_id (int): Task ID to schedule reminders for
+            
+        Returns:
+            Dict[str, Any]: Summary of scheduled reminders
+        """
+        try:
+            from tasks.deadline_tasks import schedule_task_reminder
+            
+            task = Task.query.get(task_id)
+            if not task or not task.due_date:
+                return {'task_id': task_id, 'status': 'skipped', 'reason': 'No due date'}
+            
+            current_time = get_utc_now()
+            due_date = ensure_utc(task.due_date)
+            
+            # Calculate reminder times
+            reminder_24h = due_date - timedelta(hours=24)
+            reminder_1h = due_date - timedelta(hours=1)
+            
+            scheduled_count = 0
+            
+            # Schedule 24-hour reminder if it's in the future
+            if reminder_24h > current_time:
+                schedule_task_reminder.delay(task_id, reminder_24h.isoformat())
+                scheduled_count += 1
+            
+            # Schedule 1-hour reminder if it's in the future
+            if reminder_1h > current_time:
+                schedule_task_reminder.delay(task_id, reminder_1h.isoformat())
+                scheduled_count += 1
+            
+            return {
+                'task_id': task_id,
+                'status': 'scheduled',
+                'reminders_scheduled': scheduled_count,
+                'timestamp': current_time.isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                'task_id': task_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
+    
+    @staticmethod
+    def schedule_project_reminders(project_id: int) -> Dict[str, Any]:
+        """
+        Schedule deadline reminders for a project.
+        
+        Args:
+            project_id (int): Project ID to schedule reminders for
+            
+        Returns:
+            Dict[str, Any]: Summary of scheduled reminders
+        """
+        try:
+            from models import Project
+            from tasks.notification_tasks import send_project_deadline_reminder
+            
+            project = Project.query.get(project_id)
+            if not project or not project.deadline:
+                return {
+                    'project_id': project_id,
+                    'status': 'skipped',
+                    'reason': 'No deadline set'
+                }
+            
+            current_time = get_utc_now()
+            deadline = ensure_utc(project.deadline)
+            
+            # Skip if deadline has already passed
+            if deadline <= current_time:
+                return {
+                    'project_id': project_id,
+                    'status': 'skipped',
+                    'reason': 'Deadline already passed'
+                }
+            
+            # Calculate reminder times
+            reminder_7d = deadline - timedelta(days=7)
+            reminder_3d = deadline - timedelta(days=3)
+            reminder_1d = deadline - timedelta(days=1)
+            reminder_4h = deadline - timedelta(hours=4)
+            
+            scheduled_count = 0
+            
+            # Schedule reminders if they're in the future
+            if reminder_7d > current_time:
+                send_project_deadline_reminder.apply_async(
+                    args=[project_id, 'due_soon'],
+                    eta=reminder_7d
+                )
+                scheduled_count += 1
+            
+            if reminder_3d > current_time:
+                send_project_deadline_reminder.apply_async(
+                    args=[project_id, 'due_soon'],
+                    eta=reminder_3d
+                )
+                scheduled_count += 1
+            
+            if reminder_1d > current_time:
+                send_project_deadline_reminder.apply_async(
+                    args=[project_id, 'due_soon'],
+                    eta=reminder_1d
+                )
+                scheduled_count += 1
+            
+            if reminder_4h > current_time:
+                send_project_deadline_reminder.apply_async(
+                    args=[project_id, 'final_reminder'],
+                    eta=reminder_4h
+                )
+                scheduled_count += 1
+            
+            return {
+                'project_id': project_id,
+                'status': 'scheduled',
+                'reminders_scheduled': scheduled_count,
+                'deadline': deadline.isoformat(),
+                'timestamp': current_time.isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                'project_id': project_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
+    
+    @staticmethod
+    def cancel_project_reminders(project_id: int) -> Dict[str, Any]:
+        """
+        Cancel existing project reminders (placeholder for production implementation).
+        In production, you'd track scheduled task IDs to cancel them.
+        
+        Args:
+            project_id (int): Project ID
+            
+        Returns:
+            Dict[str, Any]: Summary of cancellation
+        """
+        # Note: In production, implement task ID tracking and cancellation
+        return {
+            'project_id': project_id,
+            'status': 'cancelled',
+            'timestamp': get_utc_now().isoformat()
+        }
+    
+    @staticmethod
+    def reschedule_project_reminders(project_id: int) -> Dict[str, Any]:
+        """
+        Reschedule project reminders after deadline change.
+        
+        Args:
+            project_id (int): Project ID
+            
+        Returns:
+            Dict[str, Any]: Summary of rescheduling
+        """
+        try:
+            # Cancel existing reminders
+            cancel_result = DeadlineService.cancel_project_reminders(project_id)
+            
+            # Schedule new reminders
+            schedule_result = DeadlineService.schedule_project_reminders(project_id)
+            
+            return {
+                'project_id': project_id,
+                'status': 'rescheduled',
+                'cancel_result': cancel_result,
+                'schedule_result': schedule_result,
+                'timestamp': get_utc_now().isoformat()
+            }
+            
+        except Exception as e:
+            return {
+                'project_id': project_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
