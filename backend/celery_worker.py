@@ -10,9 +10,7 @@ Usage:
 import os
 import sys
 
-# Import the celery instance from the main app
 from app import celery
 
 if __name__ == '__main__':
-    # Allow running celery commands directly
     celery.start()
