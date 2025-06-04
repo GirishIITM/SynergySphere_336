@@ -10,13 +10,13 @@ import '../styles/LoadingIndicator.css';
  * @param {React.ReactNode} props.children - Content to render when not loading
  * @returns {React.ReactNode} - Loading indicator or children
  */
-const LoadingIndicator = ({ loading = false, size = "medium", children }) => {
+const LoadingIndicator = ({ loading = false, size = "large", children }) => {
   if (loading) {
     return (
       <div className="loading-overlay">
         <div className="loading-container">
           <div className="loading-content">
-            <Atom color="#32cd32" size={size} text="" textColor="" />
+            <Atom color="#2563eb" size={size} text="" textColor="" />
           </div>
         </div>
       </div>

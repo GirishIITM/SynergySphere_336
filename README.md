@@ -2,12 +2,6 @@
 
 SynergySphere is an advanced, intelligent team collaboration platform designed to help teams operate at their best—staying organized, communicating seamlessly, and making informed decisions. Built by Team 336.
 
-## Video Demo 
-[drive link](https://drive.google.com/file/d/1s4rTl4Z_SGdfVMVTQYhGxoxRHlZlw6pQ/view?usp=sharing)
-
-https://github.com/user-attachments/assets/a4174d55-99ee-44fc-b614-34932460aacd
-
-
 ## Application Flow
 ![Screenshot From 2025-05-18 17-20-38](https://github.com/user-attachments/assets/610b2a5a-b836-46d2-8ebc-11882fcf4349)
 
@@ -64,13 +58,13 @@ SynergySphere isn’t just another project management tool—it’s the intellig
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/flask/flask-original.svg" alt="Flask" width="50" height="50"/>
-  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mysql/mysql-original-wordmark.svg" alt="MySQL" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original-wordmark.svg" alt="PostgreSQL" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker" width="50" height="50"/>
 </p>- Frontend: React, Vite, React Router, CSS Modules
 - Backend: Flask, Flask-SQLAlchemy, Flask-Bcrypt, PyJWT
-- Database: Sqlite
+- Database: PostgreSQL (Production), SQLite (Development fallback)
 - Authentication: JWT-based authentication
-- Other: Python-dotenv, ESLint
+- Other: Python-dotenv, ESLint, psycopg2-binary
 
 ---
 
@@ -112,20 +106,23 @@ SynergySphere_336/
 
 - Node.js & npm
 - Python 3.x & pip
-- Sqlite 
+- PostgreSQL Server (for production)
 
 ### Backend Setup
 
+```bash
 cd backend
 pip install -r requirements.txt
-# Set up your .env file with DB credentials and secret keys
+# Set up your .env file with PostgreSQL credentials and secret keys
 python app.py
+```
+
 ### Frontend Setup
 
 cd frontend
 npm install
 npm run dev
-Visit [http://localhost:5173](http://localhost:5173) to view the app.
+Visit [https://voluble-tapioca-bc2df4.netlify.app](https://voluble-tapioca-bc2df4.netlify.app) to view the app.
 
 ---
 
@@ -152,7 +149,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 - Team 336:
-  - VEDIKA SANTOSH VANGAR
+  - Vedika Santosh Vangar
   - Rudransh Vikram Singh
   - Girish V Bhat
   - Aditya R

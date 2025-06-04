@@ -4,6 +4,53 @@
   padding: 2rem 1.5rem;
 }
 
+.home-nav {
+  width: 100%;
+  background: var(--color-surface, #fff);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--color-shadow, rgba(0,0,0,0.04));
+  margin-bottom: 2rem;
+  padding: 1.5rem 2rem 1.5rem 2rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-content-vertical {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+.nav-message {
+  font-size: 1.1rem;
+  color: var(--color-primary, #2563eb);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.nav-links-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.nav-link {
+  color: var(--color-primary, #2563eb);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+  font-size: 1.08rem;
+}
+
+.nav-link:hover {
+  color: var(--color-accent, #f59e42);
+}
+
 /* Hero Section */
 .hero {
   display: flex;
@@ -37,36 +84,6 @@
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
-}
-
-.hero-button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.hero-button.primary {
-  background-color: var(--color-primary);
-  color: #ffffff;
-}
-
-.hero-button.primary:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-}
-
-.hero-button.secondary {
-  background-color: transparent;
-  color: var(--color-primary);
-  border: 2px solid var(--color-primary);
-}
-
-.hero-button.secondary:hover {
-  background-color: var(--color-primary-light, rgba(37, 99, 235, 0.1));
-  transform: translateY(-2px);
 }
 
 /* Features Section */
@@ -154,29 +171,13 @@
   color: var(--color-text-secondary);
 }
 
-.cta-button {
-  background-color: var(--color-primary);
-  color: #ffffff;
-  padding: 0.75rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-
-.cta-button:hover {
-  background-color: var(--color-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-}
-
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.5rem;
+  }
+
+  .home-nav{
+    display: block;
   }
   
   .hero p {
@@ -203,10 +204,6 @@
   
   .hero-buttons {
     flex-direction: column;
-    width: 100%;
-  }
-  
-  .hero-button {
     width: 100%;
   }
 }

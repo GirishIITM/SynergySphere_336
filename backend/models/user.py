@@ -1,136 +1,101 @@
-from models import db, bcrypt   
-from datetime import datetime
-
-
-# Association table for the many-to-many relationship between User and Project
-project_members = db.Table(
-    'project_members',
-    db.Column('project_id', db.Integer, db.ForeignKey('project.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
-)
+from extensions import db, bcrypt
+from utils.datetime_utils import get_utc_now
 
 class User(db.Model):
-    """
-    User model representing platform users.
-    
-    Attributes:
-        id: Unique identifier for the user
-        email: User's email address (unique)
-        password_hash: Hashed password for security
-        name: User's full name
-        created_projects: Projects created by this user
-        projects: Projects user is a member of
-        assigned_tasks: Tasks assigned to this user
-        messages: Messages sent by this user
-    """
-    __tablename__ = 'user'
-
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.String(255), nullable=False)
+    full_name = db.Column(db.String(100), nullable=False)  # Add full name field
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=True)  # Make nullable for Google OAuth users
+    google_id = db.Column(db.String(100), unique=True, nullable=True)  # Add = Google ID
+    profile_picture = db.Column(db.String(255), nullable=True)  # Add profile picture URL
+    about = db.Column(db.Text, nullable=True)  # Add about field
+    notify_email = db.Column(db.Boolean, default=True)
+    notify_in_app = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=get_utc_now)
 
-    # Relationships
-    created_projects = db.relationship('Project', backref='creator', lazy=True, foreign_keys='Project.created_by')
-    projects = db.relationship('Project', secondary=project_members, backref=db.backref('members', lazy=True))
-    assigned_tasks = db.relationship('Task', backref='assignee', lazy=True)
-    messages = db.relationship('Message', backref='sender', lazy=True)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'email': self.email,
-            'name': self.name
-        }
-
-class Project(db.Model):
-    """
-    Project model representing collaboration projects.
     
-    Attributes:
-        id: Unique identifier for the project
-        name: Project name
-        created_by: ID of the user who created the project
-        tasks: Tasks associated with this project
-        messages: Messages in the project
-    """
-    __tablename__ = 'project'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
-    # Relationships
-    tasks = db.relationship('Task', backref='project', lazy=True)
-    messages = db.relationship('Message', backref='project', lazy=True)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'created_by': self.created_by,
-            'tasks': [task.to_dict() for task in self.tasks],
-            'member_count': len(self.members)
-        }
-
-class Task(db.Model):
-    """
-    Task model representing project tasks.
+    projects = db.relationship('Project', secondary='membership', back_populates='members')
     
-    Attributes:
-        id: Unique identifier for the task
-        project_id: ID of the project this task belongs to
-        title: Task title
-        description: Detailed task description
-        assignee_id: ID of the user assigned to this task
-        due_date: Task due date
-        status: Current status of the task
-    """
-    __tablename__ = 'task'
-
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
-    assignee_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    due_date = db.Column(db.Date)
-    status = db.Column(db.String(50), nullable=False)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'project_id': self.project_id,
-            'title': self.title,
-            'description': self.description,
-            'assignee_id': self.assignee_id,
-            'due_date': self.due_date.isoformat() if self.due_date else None,
-            'status': self.status
-        }
-
-class Message(db.Model):
-    """
-    Message model representing project communications.
+    tasks = db.relationship('Task', back_populates='assignee')
     
-    Attributes:
-        id: Unique identifier for the message
-        project_id: ID of the project this message belongs to
-        user_id: ID of the user who sent the message
-        content: Message content
-        timestamp: Time when the message was sent
-    """
-    __tablename__ = 'message'
+    messages = db.relationship('Message', back_populates='user')
+    
+    notifications = db.relationship('Notification', back_populates='user')
+    
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self._invalidate_search_cache()
+    
+    def _invalidate_search_cache(self):
+        """Invalidate user search cache when user data changes"""
+        try:
+            from utils.cache_helpers import UserSearchCache
+            UserSearchCache.invalidate_user_cache()
+        except ImportError:
+            pass
+        except Exception as e:
+            print(f"Cache invalidation error: {e}")
+    
+    def save(self):
+        """Custom save method with cache invalidation"""
+        db.session.add(self)
+        db.session.commit()
+        self._invalidate_search_cache()
+    
+    def update(self, **kwargs):
+        """Update user with cache invalidation"""
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+        db.session.commit()
+        self._invalidate_search_cache()
+    
+    def set_password(self, password):
+        self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+    
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return bcrypt.check_password_hash(self.password_hash, password)
+    
+    @staticmethod
+    def create_google_user(google_info):
+        """Create a new user from Google OAuth info"""
+        full_name = google_info.get('name', google_info.get('given_name', 'User'))
+        
+        username = google_info.get('given_name', google_info['email'].split('@')[0])
+        base_username = username
+        counter = 1
+        while User.query.filter_by(username=username).first():
+            username = f"{base_username}{counter}"
+            counter += 1
+        
+        user = User(
+            full_name=full_name,
+            username=username,
+            email=google_info['email'],
+            google_id=google_info['google_id'],
+            profile_picture=google_info.get('picture')
+        )
+        db.session.add(user)
+        db.session.commit()
+        user._invalidate_search_cache()
+        return user
 
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'project_id': self.project_id,
-            'user_id': self.user_id,
-            'content': self.content,
-            'timestamp': self.timestamp.isoformat()
-        } 
+    @staticmethod
+    def find_or_create_google_user(google_info):
+        """Find existing user by Google ID or email, or create new user"""
+        user = User.query.filter_by(google_id=google_info['google_id']).first()
+        if user:
+            return user
+        
+        user = User.query.filter_by(email=google_info['email']).first()
+        if user:
+            user.google_id = google_info['google_id']
+            if google_info.get('picture'):
+                user.profile_picture = google_info['picture']
+            db.session.commit()
+            return user
+        
+        return User.create_google_user(google_info)

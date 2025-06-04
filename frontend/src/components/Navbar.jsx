@@ -1,20 +1,30 @@
-import { faBars, faClose } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faClose, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { clearAuthData, isAuthenticated } from '../../../utils/apicall';
 import "../styles/navbar.css";
+import { authState, clearAuthData, isAuthenticated } from '../utils/apiCalls/auth';
+import { Button } from './ui/button';
 
-function Navbar() {
+function Navbar({ showWhenAuthenticated = false }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [authenticated, setAuthenticated] = useState(isAuthenticated);
 
-  // Re-check authentication status when location changes
   useEffect(() => {
+    const unsubscribe = authState.subscribe((isAuth) => {
+      setAuthenticated(isAuth);
+    });
+    
     setAuthenticated(isAuthenticated());
-  }, [location]);
+    return unsubscribe;
+  }, []);
+
+  // Don't render navbar for authenticated users unless explicitly allowed
+  if (authenticated && !showWhenAuthenticated) {
+    return null;
+  }
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
@@ -24,14 +34,16 @@ function Navbar() {
     setMenuOpen(false);
   };
 
-  const handleLogout = () => {
-    clearAuthData();
-    setAuthenticated(false);
-    navigate('/login');
-    closeMenu();
+  const handleLogout = async () => {
+    try {
+      clearAuthData();
+      closeMenu();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  // Helper function to check if link is active
   const isActive = (path) => {
     if (path === '/') {
       return location.pathname === '/';
@@ -43,74 +55,52 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-brand">
         <Link to="/">
-          <i className="fas fa-project-diagram"></i>
           <span>SynergySphere</span>
         </Link>
       </div>
 
-      <button className="navbar-toggle" onClick={toggleMenu} aria-label="Toggle menu">
-       { menuOpen?(<FontAwesomeIcon icon={faClose} />):(<FontAwesomeIcon icon={faBars} />)}
-      </button>
-
-      <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-        {authenticated && (
-          <>
+      <div className="navbar-right">
+        <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
+          <Button asChild variant="ghost" className={isActive("/about") ? "bg-accent" : ""}>
             <Link
-              to="/solutions/tasks"
-              className={isActive("/solutions/tasks") ? "active" : ""}
+              to="/about"
               onClick={closeMenu}
             >
-              <i className="fas fa-tasks"></i>
-              <span>Tasks</span>
+              <i className="fas fa-info-circle"></i>
+              <span>About</span>
             </Link>
-            <Link
-              to="/solutions/projects"
-              className={isActive("/solutions/projects") ? "active" : ""}
-              onClick={closeMenu}
-            >
-              <i className="fas fa-folder-open"></i>
-              <span>Projects</span>
-            </Link>
-          </>
-        )}
+          </Button>
 
-        <Link
-          to="/about"
-          className={isActive("/about") ? "active" : ""}
-          onClick={closeMenu}
-        >
-          <i className="fas fa-info-circle"></i>
-          <span>About</span>
-        </Link>
-
-        {authenticated ? (
-          <button
-            onClick={handleLogout}
-            className="logout-button"
-          >
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </button>
-        ) : (
-          <>
+          <Button asChild variant="outline" className={isActive("/register") ? "bg-accent" : ""}>
             <Link
               to="/register"
-              className={isActive("/register") ? "active" : ""}
               onClick={closeMenu}
             >
               <i className="fas fa-user-plus"></i>
               <span>Register</span>
             </Link>
+          </Button>
+          
+          <Button asChild variant="default" className={isActive("/login") ? "bg-primary/90" : ""}>
             <Link
               to="/login"
-              className={isActive("/login") ? "active" : ""}
               onClick={closeMenu}
             >
               <i className="fas fa-sign-in-alt"></i>
               <span>Login</span>
             </Link>
-          </>
-        )}
+          </Button>
+        </div>
+
+        <Button 
+          className="navbar-toggle" 
+          onClick={toggleMenu} 
+          aria-label="Toggle menu"
+          variant="ghost"
+          size="icon"
+        >
+          <FontAwesomeIcon icon={menuOpen ? faClose : faBars} />
+        </Button>
       </div>
     </nav>
   );

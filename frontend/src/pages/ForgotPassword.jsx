@@ -1,83 +1,138 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { authAPI, loadingState } from '../../../utils/apicall';
 import LoadingIndicator from '../components/LoadingIndicator';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import '../styles/login.css';
+import { authAPI, loadingState } from '../utils/apiCalls';
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
+  const [formData, setFormData] = useState({
+    email: ''
+  });
+  const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  // Check loading state from the API
   useEffect(() => {
     const checkLoadingState = () => {
       setIsLoading(loadingState.isLoading('auth-forgot-password'));
     };
     
-    // Set initial state
     checkLoadingState();
     
-    // Set up an interval to check the loading state
     const interval = setInterval(checkLoadingState, 100);
     
     return () => clearInterval(interval);
   }, []);
 
+  const validateForm = () => {
+    const newErrors = {};
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
-    setEmail(e.target.value);
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
     setMessage('');
     
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
-      const response = await authAPI.forgotPassword(email);
-      setMessage(response.message);
+      const response = await authAPI.forgotPassword(formData.email.trim().toLowerCase());
+      setMessage(response.message || 'If the email exists, a password reset link has been sent');
       setSubmitted(true);
     } catch (error) {
-      setError(error.message || 'Failed to process your request. Please try again.');
+      setErrors({ 
+        general: error.message || 'Failed to process your request. Please try again.' 
+      });
     }
   };
 
   return (
-    <LoadingIndicator loading={isLoading}>
-      <div className="login-container">
-        <h1 className="login-title">Forgot Password</h1>
-        
-        {error && <div className="error-message">{error}</div>}
-        {message && <div className="success-message">{message}</div>}
-        
-        {!submitted ? (
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="forgot-email">Email:</label>
-              <input 
-                type="email" 
-                id="forgot-email" 
-                name="email" 
-                value={email}
-                onChange={handleChange}
-                required 
-                placeholder="Enter your registered email"
-              />
-            </div>
-            <button type="submit" disabled={isLoading}>Request Password Reset</button>
-          </form>
-        ) : (
-          <div className="form-submitted">
-            <p>Check your email for further instructions.</p>
+    <div className="login-split-page">
+      <div className="login-right">
+        <LoadingIndicator loading={isLoading}>
+          <div className="login-container">
+            <h1 className="login-title">Forgot Password</h1>
+            
+            {errors.general && <div className="error-message">{errors.general}</div>}
+            {message && <div className="success-message">{message}</div>}
+            
+            {!submitted ? (
+              <form className="login-form" onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label htmlFor="forgot-email">Email:</label>
+                  <Input
+                    type="email" 
+                    id="forgot-email" 
+                    name="email" 
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={errors.email ? 'error' : ''}
+                    placeholder="Enter your registered email"
+                    autoComplete="email"
+                    required 
+                  />
+                  {errors.email && <span className="field-error">{errors.email}</span>}
+                </div>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  className="w-full"
+                >
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                </Button>
+              </form>
+            ) : (
+              <div className="form-submitted" style={{ textAlign: 'center', padding: '2rem 0' }}>
+                <p style={{ marginBottom: '1rem' }}>
+                  If an account with that email exists, we've sent you a password reset link.
+                </p>
+                <p style={{ marginBottom: '2rem', color: '#666' }}>
+                  Please check your email and follow the instructions to reset your password.
+                </p>
+                <Button 
+                  onClick={() => {
+                    setSubmitted(false);
+                    setMessage('');
+                    setFormData({ email: '' });
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Send Another Reset Link
+                </Button>
+              </div>
+            )}
+            
+            <p className="login-link-text">
+              <Link to="/login">Return to Login</Link>
+            </p>
           </div>
-        )}
-        
-        <p className="login-link-text">
-          <Link to="/login">Return to Login</Link>
-        </p>
+        </LoadingIndicator>
       </div>
-    </LoadingIndicator>
+    </div>
   );
 }

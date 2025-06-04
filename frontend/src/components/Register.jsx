@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Register.css';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -30,7 +32,7 @@ const Register = () => {
       <form className="register-form" onSubmit={handleSubmit}>
         <div>
           <label htmlFor="register-firstname">First Name:</label>
-          <input 
+          <Input
             type="text" 
             id="register-firstname" 
             name="firstname" 
@@ -41,7 +43,7 @@ const Register = () => {
         </div>
         <div>
           <label htmlFor="register-lastname">Last Name:</label>
-          <input 
+          <Input
             type="text" 
             id="register-lastname" 
             name="lastname" 
@@ -52,7 +54,7 @@ const Register = () => {
         </div>
         <div>
           <label htmlFor="register-email">Email:</label>
-          <input 
+          <Input
             type="email" 
             id="register-email" 
             name="email" 
@@ -63,7 +65,7 @@ const Register = () => {
         </div>
         <div>
           <label htmlFor="register-password">Password:</label>
-          <input 
+          <Input
             type="password" 
             id="register-password" 
             name="password" 
@@ -72,11 +74,17 @@ const Register = () => {
             required 
           />
         </div>
-        <button type="submit">Create an account</button>
+        <Button 
+          type="submit"
+          className="w-full"
+          size="lg"
+        >
+          Create an account
+        </Button>
       </form>
-      <p className="register-link-text">
+      <p className="register-link-text text-center mt-4 text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link to="/login" id="login-link">
+        <Link to="/login" id="login-link" className="text-primary hover:text-primary/80 font-medium">
           Login
         </Link>
       </p>

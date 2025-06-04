@@ -1,0 +1,130 @@
+.task-create-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.task-create-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.task-create-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 0.5rem;
+}
+
+.task-create-subtitle {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+}
+
+.task-create-form-container {
+  background-color: var(--color-surface);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px var(--color-shadow);
+}
+
+.task-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.task-create-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  gap: 1rem;
+  color: var(--color-text-secondary);
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius-sm, 4px);
+  background-color: var(--color-input-bg);
+  color: var(--color-input-text);
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.error-alert {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius, 8px);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.no-projects-alert {
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--color-warning, #f59e0b);
+  color: var(--color-warning, #f59e0b);
+  padding: 2rem;
+  border-radius: var(--border-radius, 8px);
+  text-align: center;
+}
+
+.no-projects-alert p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .task-create-container {
+    padding: 1rem;
+  }
+
+  .task-create-form-container {
+    padding: 1.5rem;
+  }
+}

@@ -1,0 +1,175 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: 0 2px 10px var(--color-shadow);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 1101;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.navbar-brand a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-brand a:hover {
+  color: var(--color-accent);
+}
+
+.navbar-brand i {
+  font-size: 1.75rem;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.navbar-links a {
+  /* All button styles removed - handled by shadcn Button */
+}
+
+.navbar-links a i {
+  /* Keep icon styles only */
+  font-size: 1.2rem;
+}
+
+.navbar-links a:hover {
+  /* Remove - handled by shadcn Button */
+}
+
+.navbar-links a.active {
+  /* Remove - handled by shadcn Button */
+}
+
+.navbar-search {
+  position: relative;
+  width: 250px;
+}
+
+.navbar-search input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border-radius: 20px;
+  border: none;
+  background-color: var(--color-input-bg);
+  color: var(--color-text);
+  transition: all 0.3s ease;
+  outline: none;
+  font-size: 1rem;
+}
+
+.navbar-search input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.navbar-search input:focus {
+  background-color: var(--color-primary-light, #f3f4f6);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.navbar-search i {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-primary);
+  pointer-events: none;
+}
+
+.navbar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin-left: 1rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.navbar-toggle:hover {
+  background: var(--color-primary-light, #f3f4f6);
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Increased gap for theme toggle */
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 1rem 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+
+  .navbar-toggle {
+    display: block;
+  }
+
+  .navbar-links {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    background-color: var(--color-surface);
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    box-shadow: 0 4px 6px var(--color-shadow);
+    transform: translateY(-150%);
+    transition: transform 0.3s ease;
+    z-index: 1201;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .navbar-links.open {
+    transform: translateY(0);
+  }
+
+  .navbar-links a i {
+    font-size: 1.4rem;
+  }
+
+  .navbar-links a {
+    flex-direction: column;
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+  }
+
+  .navbar-search {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .navbar-brand {
+    flex: 1;
+  }
+}

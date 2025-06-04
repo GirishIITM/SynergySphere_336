@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { isAuthenticated } from '../../../utils/apicall';
+import { authState, isAuthenticated } from '../utils/apiCalls/auth';
 
 /**
  * PrivateRoute component that redirects to login if user is not authenticated
@@ -9,9 +10,19 @@ import { isAuthenticated } from '../../../utils/apicall';
  */
 const PrivateRoute = ({ children }) => {
   const location = useLocation();
+  const [authenticated, setAuthenticated] = useState(isAuthenticated);
   
-  // Force re-evaluation of authentication state
-  const authenticated = isAuthenticated();
+  useEffect(() => {
+    // Subscribe to authentication state changes
+    const unsubscribe = authState.subscribe((isAuth) => {
+      setAuthenticated(isAuth);
+    });
+    
+    // Initial check
+    setAuthenticated(isAuthenticated());
+    
+    return unsubscribe;
+  }, []);
   
   if (!authenticated) {
     // Redirect to login page with the return URL

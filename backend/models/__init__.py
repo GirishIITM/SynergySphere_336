@@ -1,7 +1,20 @@
-from datetime import datetime
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
+from .user import User
+from .project import Project, Membership
+from .task import Task, TaskAttachment
+from .message import Message
+from .notification import Notification
+from .verification import OTPVerification, PasswordResetToken
+from .token_blocklist import TokenBlocklist
 
-db = SQLAlchemy()
-bcrypt = Bcrypt()
-
+__all__ = [
+    'User', 
+    'Project', 
+    'Membership', 
+    'Task', 
+    'TaskAttachment',
+    'Message', 
+    'Notification', 
+    'OTPVerification', 
+    'PasswordResetToken', 
+    'TokenBlocklist'
+]
