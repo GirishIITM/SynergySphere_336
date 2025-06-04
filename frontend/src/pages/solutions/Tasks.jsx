@@ -20,7 +20,8 @@ import {
   TrendingUp,
   Star,
   Zap,
-  Eye
+  Eye,
+  LayoutDashboard
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -55,8 +56,17 @@ const Tasks = () => {
       setLoading(isLoading);
     });
 
+    // Add focus listener to refresh data when returning to this view
+    // Reason: Ensures data stays synchronized when switching between list and board views
+    const handleFocus = () => {
+      fetchTasks();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
     return () => {
       loadingUnsubscribe();
+      window.removeEventListener('focus', handleFocus);
     };
   }, [filters, pagination.offset, priorityMode, selectedProject]);
 
@@ -83,7 +93,14 @@ const Tasks = () => {
         allTasks = await taskAPI.getAllTasks(params);
       }
       
-      setTasks(Array.isArray(allTasks) ? allTasks : []);
+      // Transform tasks to include isFavorite field (defaulting to false)
+      // Reason: Ensure consistent data structure between list and board views
+      const tasksWithFavorites = (Array.isArray(allTasks) ? allTasks : []).map(task => ({
+        ...task,
+        isFavorite: task.isFavorite || false
+      }));
+      
+      setTasks(tasksWithFavorites);
       setError('');
     } catch (err) {
       setError('Failed to fetch tasks: ' + (err.message || 'Unknown error'));
@@ -136,6 +153,40 @@ const Tasks = () => {
       setError('');
     } catch (err) {
       setError('Failed to recalculate priorities: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  const handleToggleFavorite = async (taskId) => {
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      const newFavoriteStatus = !task.isFavorite;
+      
+      // Update local state immediately for responsive UI
+      const updatedTasks = tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, isFavorite: newFavoriteStatus }
+          : t
+      );
+      setTasks(updatedTasks);
+
+      // Update via API
+      // Reason: Persist favorite status to backend so it's consistent across views
+      try {
+        await taskAPI.updateTaskFavorite(taskId, newFavoriteStatus);
+      } catch (apiError) {
+        console.warn('Backend favorite update not available, using local state only:', apiError);
+      }
+    } catch (error) {
+      console.error('Failed to toggle task favorite:', error);
+      // Revert the change on error
+      const revertedTasks = tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, isFavorite: !t.isFavorite }
+          : t
+      );
+      setTasks(revertedTasks);
     }
   };
 
@@ -231,6 +282,16 @@ const Tasks = () => {
           >
             <Star className="h-4 w-4" />
             {priorityMode ? 'Priority View' : 'Enable Priority'}
+          </Button>
+          <Button 
+            variant="outline"
+            asChild
+            className="flex items-center gap-2"
+          >
+            <Link to="/solutions/tasks/board">
+              <LayoutDashboard className="h-4 w-4" />
+              Board View
+            </Link>
           </Button>
           <Button asChild size="lg" className="shadow-md">
             <Link to="/solutions/tasks/create">
@@ -421,36 +482,57 @@ const Tasks = () => {
                             Overdue
                           </Badge>
                         )}
+                        {task.isFavorite && (
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                            <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                            Favorite
+                          </Badge>
+                        )}
                       </div>
                     </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link to={`/solutions/tasks/${task.id}`}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link to={`/solutions/tasks/edit/${task.id}`}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Task
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => handleDelete(task.id, task.project_id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Task
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleFavorite(task.id)}
+                        className="p-1 h-8 w-8"
+                        title={task.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        {task.isFavorite ? (
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        ) : (
+                          <Star className="h-4 w-4 text-gray-400 hover:text-yellow-400" />
+                        )}
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link to={`/solutions/tasks/${task.id}`}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to={`/solutions/tasks/edit/${task.id}`}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Task
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => handleDelete(task.id, task.project_id)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete Task
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </CardHeader>
 

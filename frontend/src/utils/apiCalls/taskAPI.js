@@ -36,6 +36,10 @@ export const taskAPI = {
     return apiRequest(`/tasks/${id}/status`, 'PUT', { status }, 'tasks-update-status');
   },
 
+  updateTaskFavorite: (id, isFavorite) => {
+    return apiRequest(`/tasks/${id}/favorite`, 'PUT', { is_favorite: isFavorite }, 'tasks-update-favorite');
+  },
+
   deleteTask: (id, project_id) => {
     return apiRequest(`/tasks/${id}`, 'DELETE', { project_id }, 'tasks-delete');
   },

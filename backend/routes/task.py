@@ -126,12 +126,9 @@ def get_all_tasks():
     tasks = Task.query.filter_by(owner_id=user_id).all()
     tasks_data = []
     for task in tasks:
-        status_mapping = {
-            'pending': 'Not Started',
-            'in_progress': 'In Progress',
-            'completed': 'Completed'
-        }
-        readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+        # Return raw status values for consistency with frontend
+        # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
+        raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
         
         # Get assignee name
         assignee_name = None
@@ -144,14 +141,16 @@ def get_all_tasks():
             'title': task.title,
             'description': task.description,
             'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': readable_status,
+            'status': raw_status,
             'project_id': task.project_id,
             'owner_id': task.owner_id,
             'assignee_id': task.owner_id,
             'assignee': assignee_name,
+            'assigned_to_name': assignee_name,
             'created_at': task.created_at.isoformat() if task.created_at else None,
             'project_name': task.project.name if task.project else None,
-            'budget': task.budget
+            'budget': task.budget,
+            'is_favorite': task.is_favorite
         }
         tasks_data.append(task_data)
     return jsonify(tasks_data)
@@ -403,6 +402,33 @@ def update_task_status(task_id):
     db.session.commit()
     return jsonify({'msg': 'Task status updated'})
 
+@task_bp.route('/tasks/<int:task_id>/favorite', methods=['PUT'])
+@jwt_required()
+@invalidate_cache_on_change(['tasks'])
+def update_task_favorite(task_id):
+    """Update the favorite status of a task"""
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+    
+    if not data or 'is_favorite' not in data:
+        return jsonify({'msg': 'is_favorite field is required'}), 400
+        
+    task = Task.query.get_or_404(task_id)
+    project = task.project
+    
+    # Check if user has access to this task
+    if not any(member.id == user_id for member in project.members):
+        return jsonify({'msg': 'Not authorized'}), 403
+    
+    # Update favorite status
+    task.is_favorite = bool(data['is_favorite'])
+    
+    db.session.commit()
+    return jsonify({
+        'msg': 'Task favorite status updated',
+        'is_favorite': task.is_favorite
+    })
+
 @task_bp.route('/tasks/<int:task_id>', methods=['GET'])
 @jwt_required()
 @cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
@@ -414,12 +440,9 @@ def get_task(task_id):
     if not any(member.id == user_id for member in project.members):
         return jsonify({'success': False, 'message': 'Not authorized'}), 403
     
-    status_mapping = {
-        'pending': 'Not Started',
-        'in_progress': 'In Progress',
-        'completed': 'Completed'
-    }
-    readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+    # Return raw status values for consistency with frontend
+    # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
+    raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
     
     # Get assignee name
     assignee_name = None
@@ -452,11 +475,12 @@ def get_task(task_id):
         'title': task.title,
         'description': task.description,
         'due_date': task.due_date.isoformat() if task.due_date else None,
-        'status': readable_status,
+        'status': raw_status,
         'project_id': task.project_id,
         'owner_id': task.owner_id,
         'assignee_id': task.owner_id,
         'assignee': assignee_name,
+        'assigned_to_name': assignee_name,
         'created_at': task.created_at.isoformat() if task.created_at else None,
         'project_name': task.project.name if task.project else None,
         'budget': task.budget,
@@ -470,7 +494,8 @@ def get_task(task_id):
         'percent_complete': task.percent_complete,
         'parent_task_id': task.parent_task_id,
         'dependency_count': task.dependency_count,
-        'is_overdue': task.is_overdue()
+        'is_overdue': task.is_overdue(),
+        'is_favorite': task.is_favorite
     }
     return jsonify({'success': True, 'data': task_data})
 
@@ -492,12 +517,9 @@ def get_project_tasks(project_id):
         
         tasks_data = []
         for task in tasks:
-            status_mapping = {
-                'pending': 'Not Started',
-                'in_progress': 'In Progress',
-                'completed': 'Completed'
-            }
-            readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+            # Return raw status values for consistency with frontend
+            # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
+            raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
             
             # Get assignee name
             assignee_name = None
@@ -510,14 +532,16 @@ def get_project_tasks(project_id):
                 'title': task.title,
                 'description': task.description,
                 'due_date': task.due_date.isoformat() if task.due_date else None,
-                'status': readable_status,
+                'status': raw_status,
                 'project_id': task.project_id,
                 'owner_id': task.owner_id,
                 'assignee_id': task.owner_id,
                 'assignee': assignee_name,
+                'assigned_to_name': assignee_name,
                 'created_at': task.created_at.isoformat() if task.created_at else None,
                 'project_name': task.project.name if task.project else None,
-                'budget': task.budget
+                'budget': task.budget,
+                'is_favorite': task.is_favorite
             }
             tasks_data.append(task_data)
         

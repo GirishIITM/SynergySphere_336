@@ -28,6 +28,7 @@ import TaskCreate from './pages/solutions/TaskCreate';
 import TaskDetail from './pages/solutions/TaskDetail';
 import TaskEdit from './pages/solutions/TaskEdit.jsx';
 import Tasks from './pages/solutions/Tasks';
+import TaskBoard from './pages/solutions/TaskBoard';
 import VerifyOTP from './pages/VerifyOTP';
 import { authState, isAuthenticated } from './utils/apiCalls/auth';
 import Inbox from './pages/solutions/InBox';
@@ -251,6 +252,16 @@ function App() {
                   <AdminPanelLayout>
                     <ContentLayout title="Edit Task">
                       <TaskEdit />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/solutions/tasks/board' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Task Board">
+                      <TaskBoard />
                     </ContentLayout>
                   </AdminPanelLayout>
                 </PrivateRoute>
