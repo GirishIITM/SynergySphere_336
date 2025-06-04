@@ -81,6 +81,20 @@
 - [ ] Add unit tests for TaskBoard component
 - [x] Status changes in one view update backend and reflect in other view ✅
 
+#### 10. Revamp Tasks Page Search and Filter Box - 2025-01-16
+- [x] Update Tasks.jsx filter layout to match Projects.jsx design ✅
+- [x] Implement horizontal filter layout with proper spacing ✅
+- [x] Use Search icon with left padding for search input ✅
+- [x] Convert status and project filters to consistent select styling ✅
+- [x] Remove redundant Card wrapper from filters section ✅
+- [x] Ensure responsive design for mobile devices ✅
+- [x] Test filter functionality with new design ✅
+- [x] Implement backend search and filter functionality ✅
+- [x] Update backend /tasks endpoint to handle search, project_id, and status filters ✅
+- [x] Add pagination support to backend tasks endpoint ✅
+- [x] Update frontend taskAPI to handle new response structure ✅
+- [x] Update Tasks.jsx to properly handle pagination data ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
@@ -104,7 +118,7 @@
 
 ### 🔥 New Enhancement Tasks for Expenses Feature
 
-#### 10. Advanced Expense Management Enhancements - 2024-12-28
+#### 11. Advanced Expense Management Enhancements - 2024-12-28
 - [ ] Add expense receipt/attachment upload functionality
 - [ ] Implement expense approval workflow for large expenses
 - [ ] Add recurring expense templates
@@ -114,7 +128,7 @@
 - [ ] Add expense tags for better organization
 - [ ] Create expense comparison between projects
 
-#### 11. Enhanced Budget Management - 2024-12-28
+#### 12. Enhanced Budget Management - 2024-12-28
 - [ ] Add budget categories and sub-budgets
 - [ ] Implement budget forecasting based on spending trends
 - [ ] Add budget approval workflow for modifications
@@ -122,7 +136,7 @@
 - [ ] Add quarterly/yearly budget planning
 - [ ] Implement budget variance analysis and reporting
 
-#### 12. Financial Analytics Enhancements - 2024-12-28
+#### 13. Financial Analytics Enhancements - 2024-12-28
 - [ ] Add expense trending analysis with predictions
 - [ ] Create cost-per-task analytics
 - [ ] Implement ROI tracking for projects
@@ -148,6 +162,13 @@
 - [ ] Add project forecasting based on current progress
 - [ ] Implement automated deadline adjustment suggestions
 - [ ] Create resource allocation optimization recommendations
+
+### 🔧 Bug Fixes - Discovered During Work
+#### Fix Board View Not Updating - 2025-01-16
+- [x] Fix TaskBoard API response handling to support new { tasks: [], pagination: {} } structure ✅
+- [x] Update fetchTasks function in TaskBoardPage to properly extract tasks array ✅
+- [ ] Test board view updates after drag and drop operations
+- [ ] Verify synchronization between board and list views
 
 ### 🧪 Testing Tasks
 - [ ] Write unit tests for finance service

@@ -63,7 +63,10 @@ const TaskBoardPage = () => {
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const allTasks = await taskAPI.getAllTasks({});
+      const response = await taskAPI.getAllTasks({});
+      
+      // Handle new API response structure with tasks and pagination
+      const allTasks = response.tasks || response || [];
       
       // Transform tasks to include isFavorite field (defaulting to false)
       // Note: You'll need to add this field to your backend model and API

@@ -123,37 +123,96 @@ def add_attachment(task_id):
 @cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_all_tasks():
     user_id = int(get_jwt_identity())
-    tasks = Task.query.filter_by(owner_id=user_id).all()
-    tasks_data = []
-    for task in tasks:
-        # Return raw status values for consistency with frontend
-        # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
-        raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
+    
+    # Parse query parameters for filtering
+    search = request.args.get('search', '').strip()
+    project_id = request.args.get('project_id')
+    status = request.args.get('status')
+    limit = min(int(request.args.get('limit', 50)), 100)
+    offset = int(request.args.get('offset', 0))
+    
+    try:
+        # Base query: Get tasks from projects where user is a member
+        from models.project import Membership
+        query = db.session.query(Task).join(Project).join(Membership).filter(
+            Membership.user_id == user_id
+        )
         
-        # Get assignee name
-        assignee_name = None
-        if task.owner_id:
-            assignee = User.query.get(task.owner_id)
-            assignee_name = assignee.full_name if assignee else 'Unknown User'
+        # Apply search filter
+        if search:
+            search_pattern = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Task.title.ilike(search_pattern),
+                    Task.description.ilike(search_pattern)
+                )
+            )
         
-        task_data = {
-            'id': task.id,
-            'title': task.title,
-            'description': task.description,
-            'due_date': task.due_date.isoformat() if task.due_date else None,
-            'status': raw_status,
-            'project_id': task.project_id,
-            'owner_id': task.owner_id,
-            'assignee_id': task.owner_id,
-            'assignee': assignee_name,
-            'assigned_to_name': assignee_name,
-            'created_at': task.created_at.isoformat() if task.created_at else None,
-            'project_name': task.project.name if task.project else None,
-            'budget': task.budget,
-            'is_favorite': task.is_favorite
-        }
-        tasks_data.append(task_data)
-    return jsonify(tasks_data)
+        # Apply project filter
+        if project_id:
+            query = query.filter(Task.project_id == project_id)
+        
+        # Apply status filter
+        if status:
+            # Map frontend status values to enum values
+            status_mapping = {
+                'pending': 'pending',
+                'in_progress': 'in_progress', 
+                'completed': 'completed'
+            }
+            mapped_status = status_mapping.get(status)
+            if mapped_status:
+                query = query.filter(Task.status == mapped_status)
+        
+        # Get total count for pagination
+        total_count = query.count()
+        
+        # Apply pagination and ordering
+        tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+        
+        tasks_data = []
+        for task in tasks:
+            # Return raw status values for consistency with frontend
+            # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
+            raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
+            
+            # Get assignee name
+            assignee_name = None
+            if task.owner_id:
+                assignee = User.query.get(task.owner_id)
+                assignee_name = assignee.full_name if assignee else 'Unknown User'
+            
+            task_data = {
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'status': raw_status,
+                'project_id': task.project_id,
+                'owner_id': task.owner_id,
+                'assignee_id': task.owner_id,
+                'assignee': assignee_name,
+                'assigned_to_name': assignee_name,
+                'created_at': task.created_at.isoformat() if task.created_at else None,
+                'project_name': task.project.name if task.project else None,
+                'budget': task.budget,
+                'is_favorite': task.is_favorite
+            }
+            tasks_data.append(task_data)
+        
+        return jsonify({
+            'tasks': tasks_data,
+            'pagination': {
+                'total': total_count,
+                'limit': limit,
+                'offset': offset,
+                'has_more': offset + limit < total_count
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Get all tasks error: {e}")
+        return jsonify({'msg': 'An error occurred while fetching tasks'}), 500
 
 @task_bp.route('/tasks', methods=['POST'])
 @jwt_required()

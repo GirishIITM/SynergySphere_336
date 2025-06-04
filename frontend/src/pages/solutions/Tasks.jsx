@@ -73,6 +73,7 @@ const Tasks = () => {
   const fetchTasks = async () => {
     try {
       let allTasks;
+      let paginationData = pagination;
       
       if (priorityMode && selectedProject) {
         // Fetch prioritized tasks for the selected project
@@ -90,7 +91,18 @@ const Tasks = () => {
           if (!params[key] || params[key] === 'all') delete params[key];
         });
 
-        allTasks = await taskAPI.getAllTasks(params);
+        const response = await taskAPI.getAllTasks(params);
+        
+        // Handle new API response structure
+        const tasksData = response.tasks || [];
+        paginationData = response.pagination || {
+          total: 0,
+          limit: pagination.limit,
+          offset: pagination.offset,
+          has_more: false
+        };
+
+        allTasks = tasksData;
       }
       
       // Transform tasks to include isFavorite field (defaulting to false)
@@ -101,6 +113,16 @@ const Tasks = () => {
       }));
       
       setTasks(tasksWithFavorites);
+      
+      // Update pagination data (only for normal mode)
+      if (!priorityMode) {
+        setPagination(prev => ({
+          ...prev,
+          total: paginationData.total,
+          has_more: paginationData.has_more
+        }));
+      }
+      
       setError('');
     } catch (err) {
       setError('Failed to fetch tasks: ' + (err.message || 'Unknown error'));
@@ -356,72 +378,42 @@ const Tasks = () => {
       {/* Filters - Only show in normal mode */}
       {!priorityMode && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search Tasks</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by title or description..."
-                    value={filters.search}
-                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Project</label>
-                <Select
-                  value={filters.project_id}
-                  onValueChange={(value) => handleFilterChange('project_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Projects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Projects</SelectItem>
-                    {projects.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select
-                  value={filters.status}
-                  onValueChange={(value) => handleFilterChange('status', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Not Started</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Search tasks..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
-              <div className="flex items-end">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setFilters({ search: '', project_id: 'all', status: 'all', owner: '' })}
-                  className="w-full"
+              <div className="flex gap-2">
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
                 >
-                  Clear Filters
-                </Button>
+                  <option value="">All Status</option>
+                  <option value="pending">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+
+                <select
+                  value={filters.project_id}
+                  onChange={(e) => handleFilterChange('project_id', e.target.value)}
+                  className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
+                >
+                  <option value="">All Projects</option>
+                  {projects.map(project => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </CardContent>

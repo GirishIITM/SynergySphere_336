@@ -13,7 +13,44 @@ export const taskAPI = {
     if (params.offset) queryParams.append('offset', params.offset);
     
     const endpoint = queryParams.toString() ? `/tasks?${queryParams}` : '/tasks';
-    return apiRequest(endpoint, 'GET', null, 'tasks-get-all');
+    return apiRequest(endpoint, 'GET', null, 'tasks-get-all')
+      .then(result => {
+        // Handle new API response structure with tasks and pagination
+        if (result && result.tasks && Array.isArray(result.tasks)) {
+          return {
+            tasks: result.tasks,
+            pagination: result.pagination || {
+              has_more: false,
+              limit: 20,
+              offset: 0,
+              total: result.tasks.length
+            }
+          };
+        }
+        // Fallback for old response structure (direct array)
+        const tasks = Array.isArray(result) ? result : [];
+        return {
+          tasks: tasks,
+          pagination: {
+            has_more: false,
+            limit: 20,
+            offset: 0,
+            total: tasks.length
+          }
+        };
+      })
+      .catch(error => {
+        console.error('Error fetching tasks:', error);
+        return {
+          tasks: [],
+          pagination: {
+            has_more: false,
+            limit: 20,
+            offset: 0,
+            total: 0
+          }
+        };
+      });
   },
 
   getTask: (id) => {
