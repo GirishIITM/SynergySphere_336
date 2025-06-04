@@ -3,10 +3,10 @@
 SynergySphere is an advanced, intelligent team collaboration platform designed to help teams operate at their best—staying organized, communicating seamlessly, and making informed decisions. Built by Team 336.
 
 ## Application Flow
-![Screenshot From 2025-05-18 17-20-38](https://github.com/user-attachments/assets/610b2a5a-b836-46d2-8ebc-11882fcf4349)
+<!-- Updated: Use PDF instead of image -->
 
-## Database Models
-![diagram (1)](https://github.com/user-attachments/assets/77d447ee-bddc-4730-974e-9bcaf2534487)
+![SynergySphere Application Flow](./frontend/src/assets/synpdia.jpg)
+
 
 ## 🌟 Project Vision
 
@@ -35,13 +35,13 @@ SynergySphere isn't just another project management tool—it's the intelligent 
 - **User Authentication**: Secure registration and login with JWT tokens
 - **Project Management**: Create, view, and manage projects with team collaboration
 - **Team Collaboration**: Add team members to projects and assign tasks
-- **Task Management**: Assign tasks with due dates, statuses (To-Do, In Progress, Done), and priorities
-- **Threaded Discussions**: Communicate within each project context
+- **Task Management**: Assign tasks with due dates, statuses (To-Do, In Progress, Done), priorities, and budgets
+- **Threaded Discussions**: Communicate within each project and task context (including task-level chat)
 - **Progress Visualization**: See task status and project progress at a glance
 - **Notifications**: Get alerts for important events and deadlines
 - **Mobile & Desktop Ready**: Fully responsive UI for all devices
 
-### 🧠 Advanced Intelligence Features
+### 🧠 Advanced Intelligence & Financial Features
 
 #### Smart Task Prioritization
 - **Dynamic Priority Scoring**: AI-powered priority calculation based on deadlines, dependencies, and project importance
@@ -56,21 +56,25 @@ SynergySphere isn't just another project management tool—it's the intelligent 
 - **Risk Level Assessment**: Color-coded risk indicators (Low, Medium, High, Critical, Overdue)
 - **Progress Rate Monitoring**: Track daily progress rates to predict completion times
 
-#### Comprehensive Project Analytics
+#### Comprehensive Project & Task Analytics
 - **Project Health Scoring**: Multi-factor health assessment with actionable recommendations
 - **Team Activity Analytics**: Visualize team productivity and workload distribution
 - **Progress Timeline Tracking**: Historical progress visualization with trend analysis
 - **Resource Utilization Metrics**: Monitor and optimize team resource allocation
-- **Interactive Charts**: Beautiful, responsive charts powered by Recharts
+- **Interactive Charts**: Responsive charts powered by Recharts
 - **Custom Timeframe Analysis**: Filter analytics by 7 days, 30 days, 3 months, or 1 year
 
 #### Advanced Financial Management
-- **Budget Creation & Tracking**: Set project budgets with real-time spending monitoring
-- **Expense Management**: Categorized expense tracking with detailed reporting
+- **Budget Creation & Tracking**: Set project and task budgets with real-time spending monitoring
+- **Expense Management**: Categorized expense tracking with detailed reporting, receipts/attachments, and approval workflow
 - **Financial Analytics**: Visual spending analysis with pie charts and trend graphs
 - **Budget Status Monitoring**: Automatic alerts for budget overruns (75%, 90% thresholds)
 - **Monthly Spending Analysis**: Track spending patterns over time
 - **Category-wise Expense Breakdown**: Detailed expense categorization (Development, Design, Marketing, etc.)
+- **Task-level Budget & Expense Tracking**: Manage and analyze budgets and expenses at the individual task level
+- **Expense Attachments**: Upload receipts and files for expenses
+- **Expense Approval Workflow**: Approve or reject large expenses
+- **Recurring Expenses & Templates**: Support for recurring expenses and templates
 
 #### Enhanced Dashboard Experience
 - **At-Risk Tasks Widget**: Immediate visibility of tasks requiring attention
@@ -87,7 +91,6 @@ SynergySphere isn't just another project management tool—it's the intelligent 
   <img src="https://vitejs.dev/logo.svg" alt="Vite" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="JavaScript" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="Python" width="50" height="50"/>
-  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/flask/flask-original.svg" alt="Flask" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/postgresql/postgresql-original-wordmark.svg" alt="PostgreSQL" width="50" height="50"/>
   <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/docker/docker-original.svg" alt="Docker" width="50" height="50"/>
 </p>
@@ -122,12 +125,12 @@ SynergySphere isn't just another project management tool—it's the intelligent 
 
 - **Login/Sign Up**: Email/password fields, sign-up and forgot password options
 - **Enhanced Dashboard**: Project overview with analytics, at-risk tasks, and quick actions
-- **Project Detail**: Task management with priority sorting and advanced filtering
+- **Project Detail**: Task management with priority sorting, advanced filtering, and budget/expense tabs
 - **Analytics Dashboard**: Comprehensive project insights with interactive charts
-- **Finance Management**: Budget tracking and expense management with visual analytics
+- **Finance Management**: Budget tracking and expense management with visual analytics, receipts, and approvals
 - **At-Risk Tasks Monitor**: Dedicated view for tasks requiring immediate attention
-- **Task Board**: Advanced task management with priority indicators and progress tracking
-- **Task Detail**: Comprehensive task information with progress updates
+- **Task Board**: Advanced task management with priority indicators, progress tracking, and budget/expense info
+- **Task Detail**: Comprehensive task information with progress, budget, and expense updates, plus chat
 - **User Profile**: Enhanced profile management with productivity insights
 - **Mobile First**: All screens fully responsive across all device sizes
 
@@ -221,7 +224,7 @@ Visit [https://voluble-tapioca-bc2df4.netlify.app](https://voluble-tapioca-bc2df
 ### Core Endpoints
 - **Authentication**: `POST /auth/register`, `POST /auth/login`
 - **Projects**: CRUD endpoints for projects with team management
-- **Tasks**: Advanced task management with priority and progress tracking
+- **Tasks**: Advanced task management with priority, progress, budget, and expense tracking
 - **Users**: User management and profile endpoints
 
 ### Advanced Feature Endpoints
@@ -229,6 +232,9 @@ Visit [https://voluble-tapioca-bc2df4.netlify.app](https://voluble-tapioca-bc2df
 - **Finance**: `POST /finance/projects/{id}/budget`, `/expenses`
 - **Task Advanced**: `GET /task_advanced/tasks/at_risk`, `/projects/{id}/tasks/prioritized`
 - **Priority Management**: `POST /task_advanced/users/{id}/priority_scores`
+- **Task Chat**: `GET /projects/{projectId}/tasks/{taskId}/messages`, `POST /projects/{projectId}/tasks/{taskId}/messages`
+- **Expense Attachments**: `POST /expenses/{id}/attachment`
+- **Expense Approval**: `PUT /expenses/{id}/approve`
 
 ---
 
@@ -248,11 +254,17 @@ Visit [https://voluble-tapioca-bc2df4.netlify.app](https://voluble-tapioca-bc2df
 - Real-time budget tracking with visual analytics
 - Automated expense categorization
 - Spending pattern analysis with forecasting
+- Task-level budget and expense management
+- Expense receipt uploads and approval workflow
 
 ### 4. Proactive Project Management
 - At-risk task identification before problems occur
 - Progress rate monitoring with trend analysis
 - Automated recommendations for project optimization
+
+### 5. Enhanced Communication
+- Task-level chat and threaded discussions
+- Real-time updates and notifications
 
 ---
 
