@@ -1,11 +1,8 @@
 import {
-  Calendar,
   CheckSquare,
-  Clock,
   FolderKanban,
   LayoutDashboard,
   Target,
-  TrendingUp,
   Users,
   AlertTriangle
 } from 'lucide-react';
@@ -72,27 +69,6 @@ const Dashboard = () => {
       changeType: dashboardData.statistics.overdue_tasks > 0 ? "negative" : "positive"
     }
   ] : [];
-
-  const recentActivity = [
-    {
-      icon: CheckSquare,
-      title: "Task completed",
-      description: "User registration feature completed",
-      time: "2 minutes ago"
-    },
-    {
-      icon: FolderKanban,
-      title: "New project created", 
-      description: "E-commerce platform project started",
-      time: "1 hour ago"
-    },
-    {
-      icon: Users,
-      title: "Team member added",
-      description: "John Doe joined the development team",
-      time: "3 hours ago"
-    }
-  ];
 
   const StatCard = ({ title, value, icon, description, className = "" }) => {
     const Icon = icon;
@@ -278,91 +254,6 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
-          {statsData.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={index}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    {stat.title}
-                  </CardTitle>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <div className="flex items-center space-x-1 text-xs text-muted-foreground">
-                    <TrendingUp className="h-3 w-3" />
-                    <span className="text-green-600">{stat.change}</span>
-                    <span>from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Clock className="h-5 w-5" />
-                <span>Recent Activity</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <Icon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {activity.title}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {activity.description}
-                        </p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                          {activity.time}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5" />
-                <span>Quick Actions</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <FolderKanban className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium">Create New Project</span>
-                </button>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <CheckSquare className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium">Add New Task</span>
-                </button>
-                <button className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm font-medium">Invite Team Member</span>
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </LoadingIndicator>
     </div>
   );
