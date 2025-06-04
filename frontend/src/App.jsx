@@ -30,6 +30,8 @@ import TaskEdit from './pages/solutions/TaskEdit.jsx';
 import Tasks from './pages/solutions/Tasks';
 import VerifyOTP from './pages/VerifyOTP';
 import { authState, isAuthenticated } from './utils/apiCalls/auth';
+import Inbox from './pages/solutions/InBox';
+
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -139,6 +141,16 @@ function App() {
                   <AdminPanelLayout>
                     <ContentLayout title="Projects">
                       <Projects />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/solutions/InBox' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="InBox">
+                      <Inbox />
                     </ContentLayout>
                   </AdminPanelLayout>
                 </PrivateRoute>
