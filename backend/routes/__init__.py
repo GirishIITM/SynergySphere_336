@@ -11,6 +11,9 @@ def register_blueprints(app):
     from .dashboard import dashboard_bp
     from .analytics import analytics_bp
     
+    # Import Socket.IO events (they auto-register with @socketio.on decorators)
+    from . import task_chat
+    
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(profile_bp)

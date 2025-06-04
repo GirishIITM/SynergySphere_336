@@ -527,3 +527,168 @@ def get_project_tasks(project_id):
         logger.error(f"Get project tasks error: {e}")
         return jsonify({'msg': 'An error occurred while fetching project tasks'}), 500
 
+@task_bp.route('/tasks/<int:task_id>/messages', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=30, user_specific=True)
+def get_task_messages(task_id):
+    """
+    Get messages for a specific task.
+    
+    Query Parameters:
+        limit (int): Maximum number of messages (default: 50)
+        offset (int): Number of messages to skip (default: 0)
+    
+    Returns:
+        JSON: Task messages with pagination info
+    """
+    try:
+        user_id = int(get_jwt_identity())
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        
+        from services.task_chat_service import TaskChatService
+        
+        messages, error, has_more = TaskChatService.get_task_messages(
+            task_id, user_id, limit, offset
+        )
+        
+        if error:
+            return jsonify({'error': error}), 403 if 'access denied' in error else 400
+            
+        return jsonify({
+            'task_id': task_id,
+            'messages': messages,
+            'has_more': has_more,
+            'count': len(messages)
+        })
+        
+    except Exception as e:
+        logger.error(f"Get task messages error: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve messages'}), 500
+
+@task_bp.route('/tasks/<int:task_id>/messages', methods=['POST'])
+@jwt_required()
+@invalidate_cache_on_change(['task_messages'])
+def post_task_message(task_id):
+    """
+    Post a new message to a task chat.
+    
+    Request Body:
+        content (str): Message content
+        
+    Returns:
+        JSON: Created message details
+    """
+    try:
+        user_id = int(get_jwt_identity())
+        data = request.get_json()
+        content = data.get('content', '').strip()
+        
+        if not content:
+            return jsonify({'error': 'Message content is required'}), 400
+            
+        from services.task_chat_service import TaskChatService
+        
+        message, error = TaskChatService.create_task_message(
+            task_id, user_id, content
+        )
+        
+        if error:
+            return jsonify({'error': error}), 403 if 'access denied' in error else 400
+            
+        # Broadcast via Socket.IO if available
+        try:
+            from extensions import socketio
+            from models import User
+            
+            user = User.query.get(user_id)
+            message_data = {
+                'id': message.id,
+                'content': content,
+                'user_id': user_id,
+                'username': user.username,
+                'full_name': user.full_name,
+                'task_id': task_id,
+                'created_at': message.created_at.isoformat(),
+                'message_type': 'task_message'
+            }
+            
+            room_name = f'task_{task_id}'
+            socketio.emit('new_task_message', message_data, room=room_name)
+            
+        except Exception as socket_error:
+            logger.warning(f"Socket.IO broadcast failed: {str(socket_error)}")
+            
+        return jsonify({
+            'id': message.id,
+            'content': content,
+            'user_id': user_id,
+            'task_id': task_id,
+            'created_at': message.created_at.isoformat(),
+            'message': 'Message posted successfully'
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Post task message error: {str(e)}")
+        return jsonify({'error': 'Failed to post message'}), 500
+
+@task_bp.route('/tasks/<int:task_id>/chat/participants', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=300, user_specific=True)  # Cache for 5 minutes
+def get_task_chat_participants(task_id):
+    """
+    Get list of users who can participate in task chat.
+    
+    Returns:
+        JSON: List of participants with their details
+    """
+    try:
+        user_id = int(get_jwt_identity())
+        
+        from services.task_chat_service import TaskChatService
+        
+        participants, error = TaskChatService.get_task_chat_participants(task_id, user_id)
+        
+        if error:
+            return jsonify({'error': error}), 403 if 'access denied' in error else 400
+            
+        return jsonify({
+            'task_id': task_id,
+            'participants': participants,
+            'count': len(participants)
+        })
+        
+    except Exception as e:
+        logger.error(f"Get task participants error: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve participants'}), 500
+
+@task_bp.route('/tasks/<int:task_id>/chat/stats', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=60, user_specific=True)  # Cache for 1 minute
+def get_task_chat_stats(task_id):
+    """
+    Get chat statistics for a task.
+    
+    Returns:
+        JSON: Chat statistics including message count
+    """
+    try:
+        user_id = int(get_jwt_identity())
+        
+        from services.task_chat_service import TaskChatService
+        
+        message_count, error = TaskChatService.get_task_message_count(task_id, user_id)
+        
+        if error:
+            return jsonify({'error': error}), 403 if 'access denied' in error else 400
+            
+        return jsonify({
+            'task_id': task_id,
+            'message_count': message_count,
+            'has_chat': message_count > 0
+        })
+        
+    except Exception as e:
+        logger.error(f"Get task chat stats error: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve chat stats'}), 500
+
