@@ -1,0 +1,497 @@
+{
+  "name": "👤 Profile Management",
+  "description": "Profile endpoints used by the frontend",
+  "item": [
+    {
+      "name": "Get Profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["profile"]
+        },
+        "description": "Get current user profile information"
+      }
+    },
+    {
+      "name": "Update Profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"updated_username\",\n  \"about\": \"Updated about section\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["profile"]
+        },
+        "description": "Update user profile information"
+      }
+    },
+    {
+      "name": "Upload Profile Image",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "profile_image",
+              "type": "file",
+              "src": [],
+              "description": "Profile image file"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/profile/upload-image",
+          "host": ["{{baseUrl}}"],
+          "path": ["profile", "upload-image"]
+        },
+        "description": "Upload profile image"
+      }
+    },
+    {
+      "name": "Update About",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"about\": \"This is my updated about section\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["profile"]
+        },
+        "description": "Update about section only"
+      }
+    },
+    {
+      "name": "Update Username",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"new_username\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["profile"]
+        },
+        "description": "Update username only"
+      }
+    }
+  ]
+},
+{
+  "name": "📁 Project Management",
+  "description": "Project endpoints used by the frontend",
+  "item": [
+    {
+      "name": "Get All Projects",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has projects array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.projects) {",
+              "        pm.expect(jsonData.projects).to.be.an('array');",
+              "        if (jsonData.projects.length > 0) {",
+              "            pm.collectionVariables.set('projectId', jsonData.projects[0].id);",
+              "        }",
+              "    } else if (Array.isArray(jsonData)) {",
+              "        pm.expect(jsonData).to.be.an('array');",
+              "        if (jsonData.length > 0) {",
+              "            pm.collectionVariables.set('projectId', jsonData[0].id);",
+              "        }",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"],
+          "query": [
+            {
+              "key": "include_tasks",
+              "value": "true",
+              "disabled": true
+            },
+            {
+              "key": "search",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "status",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "limit",
+              "value": "20",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get all projects with optional filters"
+      }
+    },
+    {
+      "name": "Get Project by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}"]
+        },
+        "description": "Get specific project details"
+      }
+    },
+    {
+      "name": "Create Project (JSON)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.project && jsonData.project.id) {",
+              "        pm.collectionVariables.set('projectId', jsonData.project.id);",
+              "    } else if (jsonData.id) {",
+              "        pm.collectionVariables.set('projectId', jsonData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Project\",\n  \"description\": \"A test project created via API\",\n  \"deadline\": \"2024-12-31T23:59:59.000Z\",\n  \"member_emails\": [\"member@example.com\"],\n  \"member_permissions\": {\n    \"member@example.com\": false\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"]
+        },
+        "description": "Create new project with JSON data"
+      }
+    },
+    {
+      "name": "Create Project (FormData with Image)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.project && jsonData.project.id) {",
+              "        pm.collectionVariables.set('projectId', jsonData.project.id);",
+              "    } else if (jsonData.id) {",
+              "        pm.collectionVariables.set('projectId', jsonData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Test Project with Image",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "A test project with image upload",
+              "type": "text"
+            },
+            {
+              "key": "deadline",
+              "value": "2024-12-31T23:59:59.000Z",
+              "type": "text"
+            },
+            {
+              "key": "member_emails",
+              "value": "[\"member@example.com\"]",
+              "type": "text",
+              "description": "JSON string of member emails"
+            },
+            {
+              "key": "member_permissions",
+              "value": "{\"member@example.com\": false}",
+              "type": "text",
+              "description": "JSON string of member permissions"
+            },
+            {
+              "key": "project_image",
+              "type": "file",
+              "src": [],
+              "description": "Project image file"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects"]
+        },
+        "description": "Create new project with image upload"
+      }
+    },
+    {
+      "name": "Update Project",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Project Name\",\n  \"description\": \"Updated project description\",\n  \"deadline\": \"2024-12-31T23:59:59.000Z\",\n  \"status\": \"active\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}"]
+        },
+        "description": "Update existing project"
+      }
+    },
+    {
+      "name": "Delete Project",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}"]
+        },
+        "description": "Delete project"
+      }
+    },
+    {
+      "name": "Add Project Member",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"newmember@example.com\",\n  \"isEditor\": false\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/members",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "members"]
+        },
+        "description": "Add member to project"
+      }
+    },
+    {
+      "name": "Update Project Member",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"isEditor\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/members/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "members", "1"]
+        },
+        "description": "Update project member permissions"
+      }
+    },
+    {
+      "name": "Remove Project Member",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/members/1",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "members", "1"]
+        },
+        "description": "Remove member from project"
+      }
+    },
+    {
+      "name": "Search Users",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/search?q=test",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "search"],
+          "query": [
+            {
+              "key": "q",
+              "value": "test",
+              "description": "Search query"
+            },
+            {
+              "key": "search",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Search for users to add to projects"
+      }
+    }
+  ]
+} 

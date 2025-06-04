@@ -24,3 +24,5 @@ class Project(db.Model):
     members = db.relationship('User', secondary='membership', back_populates='projects')
     tasks = db.relationship('Task', back_populates='project')
     messages = db.relationship('Message', back_populates='project')
+    budgets = db.relationship('Budget', back_populates='project')
+    expenses = db.relationship('Expense', back_populates='project')

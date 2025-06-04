@@ -10,6 +10,12 @@ def register_blueprints(app):
     from .cache_management import cache_bp
     from .dashboard import dashboard_bp
     
+    # New advanced feature blueprints
+    from .task_advanced import task_advanced_bp
+    from .message_advanced import message_advanced_bp
+    from .finance import finance_bp
+    from .analytics import analytics_bp
+    
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(profile_bp)
@@ -19,3 +25,9 @@ def register_blueprints(app):
     app.register_blueprint(notification_bp)
     app.register_blueprint(cache_bp, url_prefix='/cache')
     app.register_blueprint(dashboard_bp)
+    
+    # Register new advanced feature blueprints
+    app.register_blueprint(task_advanced_bp, url_prefix='/task_advanced')
+    app.register_blueprint(message_advanced_bp)
+    app.register_blueprint(finance_bp, url_prefix='/finance')
+    app.register_blueprint(analytics_bp, url_prefix='/analytics')

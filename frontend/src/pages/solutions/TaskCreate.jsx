@@ -4,12 +4,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@radix-ui/react-dropdown-menu';
 import {
   ArrowLeft,
-  Save
+  Save,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Trash2
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Avatar, AvatarFallback } from '../../components/ui/avatar';
 import { loadingState } from '../../utils/apiCalls';
 import { getCurrentUser } from '../../utils/apiCalls/auth';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';

@@ -8,7 +8,9 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
 import About from './pages/About';
+import Analytics from './pages/Analytics';
 import Dashboard from './pages/Dashboard';
+import Finance from './pages/Finance';
 import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -19,6 +21,8 @@ import Settings from './pages/Settings';
 import ProjectCreate from './pages/solutions/ProjectCreate';
 import ProjectEdit from './pages/solutions/ProjectEdit';
 import Projects from './pages/solutions/Projects';
+import ProjectAnalytics from './pages/solutions/ProjectAnalytics';
+import ProjectFinance from './pages/solutions/ProjectFinance';
 import TaskCreate from './pages/solutions/TaskCreate';
 import TaskEdit from './pages/solutions/TaskEdit.jsx';
 import Tasks from './pages/solutions/Tasks';
@@ -153,6 +157,46 @@ function App() {
                   <AdminPanelLayout>
                     <ContentLayout title="Edit Project">
                       <ProjectEdit />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/solutions/projects/:projectId/finance' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Project Finance">
+                      <ProjectFinance />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/solutions/projects/:projectId/analytics' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Project Analytics">
+                      <ProjectAnalytics />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/analytics' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Analytics">
+                      <Analytics />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+
+              <Route path='/finance' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="Finance">
+                      <Finance />
                     </ContentLayout>
                   </AdminPanelLayout>
                 </PrivateRoute>

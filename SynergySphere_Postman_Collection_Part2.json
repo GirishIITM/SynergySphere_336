@@ -1,0 +1,520 @@
+{
+  "name": "04 - Task Management",
+  "item": [
+    {
+      "name": "Create Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.collectionVariables.set('taskId', jsonData.task.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Test Task\",\n  \"description\": \"A test task for API testing\",\n  \"deadline\": \"2024-12-31\",\n  \"priority\": \"high\",\n  \"assigned_to\": {{userId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "tasks"]
+        }
+      }
+    },
+    {
+      "name": "Get All Tasks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        }
+      }
+    },
+    {
+      "name": "Create Task (General)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"General Task\",\n  \"description\": \"A general task not tied to a project\",\n  \"deadline\": \"2024-12-31\",\n  \"priority\": \"medium\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        }
+      }
+    },
+    {
+      "name": "Update Task",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated Task Title\",\n  \"description\": \"Updated task description\",\n  \"status\": \"in_progress\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        }
+      }
+    },
+    {
+      "name": "Update Task Status",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "Add Task Attachment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}/attachment",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}", "attachment"]
+        }
+      }
+    },
+    {
+      "name": "Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "05 - Advanced Task Features",
+  "item": [
+    {
+      "name": "Get Prioritized Tasks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/tasks/prioritized",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "tasks", "prioritized"]
+        }
+      }
+    },
+    {
+      "name": "Get At-Risk Tasks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/at_risk",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "at_risk"]
+        }
+      }
+    },
+    {
+      "name": "Update Task Progress",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"progress\": 75\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}/progress",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}", "progress"]
+        }
+      }
+    },
+    {
+      "name": "Set User Priority Scores",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"priority_scores\": {\n    \"high\": 10,\n    \"medium\": 5,\n    \"low\": 1\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/priority_scores",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "priority_scores"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "06 - Messages",
+  "item": [
+    {
+      "name": "Get Project Messages",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "messages"]
+        }
+      }
+    },
+    {
+      "name": "Send Project Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Hello team! This is a test message.\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "messages"]
+        }
+      }
+    },
+    {
+      "name": "Get Task Messages",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/tasks/{{taskId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "tasks", "{{taskId}}", "messages"]
+        }
+      }
+    },
+    {
+      "name": "Send Task Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"Update on this task: making good progress!\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/tasks/{{taskId}}/messages",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "tasks", "{{taskId}}", "messages"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "07 - Notifications",
+  "item": [
+    {
+      "name": "Get Notifications",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/notifications",
+          "host": ["{{baseUrl}}"],
+          "path": ["notifications"]
+        }
+      }
+    },
+    {
+      "name": "Mark Notification as Read",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/notifications/1/read",
+          "host": ["{{baseUrl}}"],
+          "path": ["notifications", "1", "read"]
+        }
+      }
+    }
+  ]
+},
+{
+  "name": "08 - Dashboard & Analytics",
+  "item": [
+    {
+      "name": "Dashboard Overview",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/dashboard/overview",
+          "host": ["{{baseUrl}}"],
+          "path": ["dashboard", "overview"]
+        }
+      }
+    },
+    {
+      "name": "Dashboard Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/dashboard/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["dashboard", "stats"]
+        }
+      }
+    },
+    {
+      "name": "Project Statistics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "stats"]
+        }
+      }
+    },
+    {
+      "name": "User Dashboard Analytics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/dashboard",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "dashboard"]
+        }
+      }
+    },
+    {
+      "name": "User Productivity Analytics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/users/{{userId}}/productivity",
+          "host": ["{{baseUrl}}"],
+          "path": ["users", "{{userId}}", "productivity"]
+        }
+      }
+    },
+    {
+      "name": "Project Health Analytics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "health"]
+        }
+      }
+    },
+    {
+      "name": "Project Resources Analytics",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/projects/{{projectId}}/resources",
+          "host": ["{{baseUrl}}"],
+          "path": ["projects", "{{projectId}}", "resources"]
+        }
+      }
+    }
+  ]
+} 

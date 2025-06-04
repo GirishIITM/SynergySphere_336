@@ -333,3 +333,42 @@ def update_task_status(task_id):
     db.session.commit()
     return jsonify({'msg': 'Task status updated'})
 
+@task_bp.route('/tasks/<int:task_id>', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
+def get_task(task_id):
+    user_id = int(get_jwt_identity())
+    task = Task.query.get_or_404(task_id)
+    project = task.project
+    
+    if not any(member.id == user_id for member in project.members):
+        return jsonify({'msg': 'Not authorized'}), 403
+    
+    status_mapping = {
+        'pending': 'Not Started',
+        'in_progress': 'In Progress',
+        'completed': 'Completed'
+    }
+    readable_status = status_mapping.get(task.status.value if hasattr(task.status, 'value') else str(task.status), 'Not Started')
+    
+    # Get assignee name
+    assignee_name = None
+    if task.owner_id:
+        assignee = User.query.get(task.owner_id)
+        assignee_name = assignee.full_name if assignee else 'Unknown User'
+    
+    task_data = {
+        'id': task.id,
+        'title': task.title,
+        'description': task.description,
+        'due_date': task.due_date.isoformat() if task.due_date else None,
+        'status': readable_status,
+        'project_id': task.project_id,
+        'owner_id': task.owner_id,
+        'assignee_id': task.owner_id,
+        'assignee': assignee_name,
+        'created_at': task.created_at.isoformat() if task.created_at else None,
+        'project_name': task.project.name if task.project else None
+    }
+    return jsonify(task_data)
+

@@ -1,0 +1,269 @@
+{
+  "name": "✅ Task Management",
+  "description": "Task endpoints used by the frontend",
+  "item": [
+    {
+      "name": "Get All Tasks",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has tasks', function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.tasks && Array.isArray(jsonData.tasks)) {",
+              "        pm.expect(jsonData.tasks).to.be.an('array');",
+              "        if (jsonData.tasks.length > 0) {",
+              "            pm.collectionVariables.set('taskId', jsonData.tasks[0].id);",
+              "        }",
+              "    } else if (Array.isArray(jsonData)) {",
+              "        pm.expect(jsonData).to.be.an('array');",
+              "        if (jsonData.length > 0) {",
+              "            pm.collectionVariables.set('taskId', jsonData[0].id);",
+              "        }",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "{{projectId}}",
+              "disabled": true
+            },
+            {
+              "key": "status",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "assignee",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "search",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "owner",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "limit",
+              "value": "20",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get all tasks with optional filters"
+      }
+    },
+    {
+      "name": "Get Task by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        },
+        "description": "Get specific task details"
+      }
+    },
+    {
+      "name": "Create Task",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.task && jsonData.task.id) {",
+              "        pm.collectionVariables.set('taskId', jsonData.task.id);",
+              "    } else if (jsonData.id) {",
+              "        pm.collectionVariables.set('taskId', jsonData.id);",
+              "    }",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": {{projectId}},\n  \"title\": \"Test Task\",\n  \"description\": \"A test task created via API\",\n  \"due_date\": \"2024-12-31T23:59:59.000Z\",\n  \"status\": \"todo\",\n  \"assigned_to\": {{userId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks"]
+        },
+        "description": "Create new task"
+      }
+    },
+    {
+      "name": "Update Task",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": {{projectId}},\n  \"title\": \"Updated Task Title\",\n  \"description\": \"Updated task description\",\n  \"due_date\": \"2024-12-31T23:59:59.000Z\",\n  \"status\": \"in_progress\",\n  \"assigned_to\": {{userId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        },
+        "description": "Update existing task"
+      }
+    },
+    {
+      "name": "Update Task Status Only",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"completed\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}", "status"]
+        },
+        "description": "Update only task status"
+      }
+    },
+    {
+      "name": "Delete Task",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": {{projectId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/tasks/{{taskId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tasks", "{{taskId}}"]
+        },
+        "description": "Delete task"
+      }
+    }
+  ]
+},
+{
+  "name": "📊 Dashboard",
+  "description": "Dashboard endpoints used by the frontend",
+  "item": [
+    {
+      "name": "Get Dashboard Overview",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/dashboard/overview",
+          "host": ["{{baseUrl}}"],
+          "path": ["dashboard", "overview"]
+        },
+        "description": "Get dashboard overview data"
+      }
+    },
+    {
+      "name": "Get Dashboard Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/dashboard/stats",
+          "host": ["{{baseUrl}}"],
+          "path": ["dashboard", "stats"]
+        },
+        "description": "Get dashboard statistics"
+      }
+    }
+  ]
+} 
