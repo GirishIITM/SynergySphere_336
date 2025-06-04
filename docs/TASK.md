@@ -25,7 +25,19 @@
 - [ ] Create TaskDetailWithChat component
 - [ ] Integrate chat panel in task detail view
 
-#### 4. Implement TaskDetail with Budget and Expenses - 2024-12-28
+#### 4. Implement Real-time Task Chat with Socket.IO - 2025-01-15
+- [ ] Add Flask-SocketIO dependency to requirements.txt
+- [ ] Integrate Socket.IO into Flask app (app.py and extensions.py)
+- [ ] Create task_chat.py route for Socket.IO events
+- [ ] Add real-time messaging events (join_task_room, send_task_message, leave_task_room)
+- [ ] Update Message model methods for real-time broadcasting
+- [ ] Create TaskChatPanel frontend component with Socket.IO integration
+- [ ] Add message persistence and real-time updates
+- [ ] Implement typing indicators for task chat
+- [ ] Add message delivery status and read receipts
+- [ ] Create unit tests for Socket.IO chat functionality
+
+#### 5. Implement TaskDetail with Budget and Expenses - 2024-12-28
 - [x] Create TaskDetail backend API endpoint ✅
 - [x] Create TaskDetail frontend component ✅
 - [x] Integrate task budget display and editing ✅
@@ -35,22 +47,22 @@
 - [ ] Add budget vs actual spending charts
 - [x] Create tests for TaskDetail functionality ✅
 
-#### 5. Add View Details Button to Task Cards - 2024-12-28
+#### 6. Add View Details Button to Task Cards - 2024-12-28
 - [ ] Add "View Details" button to each task card in Tasks.jsx
 - [ ] Ensure proper navigation to TaskDetail page
 - [ ] Add appropriate icon and styling for the button
 - [ ] Test navigation functionality
 
-#### 6. Remove Redundant Quick Action and Recent Activity from Dashboard - 2025-01-15
+#### 7. Remove Redundant Quick Action and Recent Activity from Dashboard - 2025-01-15
 - [x] Remove duplicate stats display section at bottom of dashboard ✅
 - [x] Remove redundant static Recent Activity section ✅
 - [x] Remove redundant static Quick Actions section at bottom ✅
 - [x] Keep only the working Quick Actions and dynamic Recent Projects/Tasks sections ✅
 
-#### 7. Remove View At-Risk Tasks Button from Recent Tasks in Dashboard - 2025-01-15
-- [ ] Remove "View At-Risk Tasks" button from Recent Tasks card
-- [ ] Remove "At-Risk Tasks Section" card from dashboard
-- [ ] Clean up unused AlertTriangle import if no longer needed
+#### 8. Remove View At-Risk Tasks Button from Recent Tasks in Dashboard - 2025-01-15
+- [x] Remove "View At-Risk Tasks" button from Recent Tasks card ✅
+- [x] Remove "At-Risk Tasks Section" card from dashboard ✅
+- [x] Clean up unused AlertTriangle import if no longer needed ✅
 
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
@@ -75,7 +87,7 @@
 
 ### 🔥 New Enhancement Tasks for Expenses Feature
 
-#### 8. Advanced Expense Management Enhancements - 2024-12-28
+#### 9. Advanced Expense Management Enhancements - 2024-12-28
 - [ ] Add expense receipt/attachment upload functionality
 - [ ] Implement expense approval workflow for large expenses
 - [ ] Add recurring expense templates
@@ -85,7 +97,7 @@
 - [ ] Add expense tags for better organization
 - [ ] Create expense comparison between projects
 
-#### 9. Enhanced Budget Management - 2024-12-28
+#### 10. Enhanced Budget Management - 2024-12-28
 - [ ] Add budget categories and sub-budgets
 - [ ] Implement budget forecasting based on spending trends
 - [ ] Add budget approval workflow for modifications
@@ -93,7 +105,7 @@
 - [ ] Add quarterly/yearly budget planning
 - [ ] Implement budget variance analysis and reporting
 
-#### 10. Financial Analytics Enhancements - 2024-12-28
+#### 11. Financial Analytics Enhancements - 2024-12-28
 - [ ] Add expense trending analysis with predictions
 - [ ] Create cost-per-task analytics
 - [ ] Implement ROI tracking for projects
