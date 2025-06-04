@@ -110,18 +110,27 @@ def create_app(config_class=None):
             database_url = app.config.get('SQLALCHEMY_DATABASE_URI')
             if use_postgresql and 'postgresql' in database_url:
                 print("Using PostgreSQL database...")
-                db.create_all()
-                print("PostgreSQL tables created/verified")
                 
-                # Update existing schema
-                from utils.postgresql_migrator import update_existing_schema
-                update_existing_schema()
+                # Check PostgreSQL connection first
+                connection_ok = check_postgresql_connection()
                 
-                if check_postgresql_connection() and not skip_migration:
-                    print("PostgreSQL connection verified")
-                    migrate_sqlite_to_postgresql()
+                if connection_ok:
+                    print("PostgreSQL connection verified - continuing with PostgreSQL")
+                    db.create_all()
+                    print("PostgreSQL tables created/verified")
+                    
+                    # Update existing schema
+                    from utils.postgresql_migrator import update_existing_schema
+                    update_existing_schema()
+                    
+                    # Only run migration if skip_migration is False
+                    if not skip_migration:
+                        print("Running SQLite to PostgreSQL migration...")
+                        migrate_sqlite_to_postgresql()
+                    else:
+                        print("Migration skipped (SKIP_MIGRATION=True)")
                 else:
-                    print("PostgreSQL connection issues - falling back to SQLite")
+                    print("PostgreSQL connection failed - falling back to SQLite")
                     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
                     db.create_all()
             else:
