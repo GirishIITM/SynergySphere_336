@@ -250,4 +250,65 @@ class DeadlineService:
             
             db.session.commit()
         
-        return True 
+        return True
+    
+    @staticmethod
+    def schedule_dynamic_reminders(task_id: int) -> Dict[str, Any]:
+        """
+        Schedule dynamic reminders for a task based on its deadline and priority.
+        
+        Args:
+            task_id (int): Task ID to schedule reminders for
+            
+        Returns:
+            Dict[str, Any]: Summary of scheduled reminders
+        """
+        try:
+            from tasks.deadline_tasks import update_task_priority_reminders
+            
+            # Schedule reminder updates in background
+            update_task_priority_reminders.delay(task_id)
+            
+            return {
+                'task_id': task_id,
+                'status': 'scheduled',
+                'timestamp': get_utc_now().isoformat()
+            }
+        except Exception as e:
+            return {
+                'task_id': task_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }
+    
+    @staticmethod
+    def trigger_bulk_reminders(user_id: int) -> Dict[str, Any]:
+        """
+        Trigger bulk reminder check for a user using Celery task.
+        
+        Args:
+            user_id (int): User ID to check reminders for
+            
+        Returns:
+            Dict[str, Any]: Task execution summary
+        """
+        try:
+            from tasks.deadline_tasks import bulk_reminder_check
+            
+            # Execute bulk reminder check in background
+            task_result = bulk_reminder_check.delay(user_id)
+            
+            return {
+                'user_id': user_id,
+                'task_id': task_result.id,
+                'status': 'queued',
+                'timestamp': get_utc_now().isoformat()
+            }
+        except Exception as e:
+            return {
+                'user_id': user_id,
+                'status': 'error',
+                'error': str(e),
+                'timestamp': get_utc_now().isoformat()
+            }

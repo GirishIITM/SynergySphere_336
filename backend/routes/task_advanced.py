@@ -183,4 +183,45 @@ def recalculate_priority_scores(user_id):
         
     except Exception as e:
         print(f"Error recalculating priority scores: {e}")
-        return jsonify({'error': 'Failed to recalculate priority scores'}), 500 
+        return jsonify({'error': 'Failed to recalculate priority scores'}), 500
+
+@task_advanced_bp.route('/users/<int:user_id>/reminders/check', methods=['POST'])
+@jwt_required()
+def trigger_reminder_check(user_id):
+    """Manually trigger reminder check for a user."""
+    try:
+        # Verify the requesting user matches the user_id
+        requesting_user_id = int(get_jwt_identity())
+        if requesting_user_id != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        from services.deadline_service import DeadlineService
+        result = DeadlineService.trigger_bulk_reminders(user_id)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        print(f"Error triggering reminder check: {e}")
+        return jsonify({'error': 'Failed to trigger reminder check'}), 500
+
+@task_advanced_bp.route('/tasks/<int:task_id>/reminders/schedule', methods=['POST'])
+@jwt_required()
+def schedule_task_reminders(task_id):
+    """Schedule reminders for a specific task."""
+    user_id = int(get_jwt_identity())
+    
+    try:
+        task = Task.query.get_or_404(task_id)
+        project = task.project
+        
+        if not any(member.id == user_id for member in project.members):
+            return jsonify({'msg': 'Not authorized'}), 403
+        
+        from services.deadline_service import DeadlineService
+        result = DeadlineService.schedule_dynamic_reminders(task_id)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        print(f"Error scheduling task reminders: {e}")
+        return jsonify({'error': 'Failed to schedule reminders'}), 500

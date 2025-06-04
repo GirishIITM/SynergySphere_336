@@ -82,13 +82,20 @@ def create_task(project_id):
     db.session.add(task)
     db.session.commit()
     
+    # Send assignment notification if assigning to someone else
     if assignee and assignee.id != user_id:
-        message = f"You have been assigned task '{task.title}' in project '{project.name}'"
-        notification = Notification(user_id=assignee.id, message=message)
-        db.session.add(notification)
-        if hasattr(assignee, 'notify_email') and assignee.notify_email:
-            send_email("Task Assigned", [assignee.email], "", message)
-        db.session.commit()
+        try:
+            from tasks.notification_tasks import send_task_assignment_notification
+            send_task_assignment_notification.delay(task.id, assignee.id, user_id)
+        except Exception as e:
+            # Fallback to direct notification if Celery is not available
+            logger.warning(f"Celery task failed, using direct notification: {e}")
+            message = f"You have been assigned task '{task.title}' in project '{project.name}'"
+            notification = Notification(user_id=assignee.id, message=message)
+            db.session.add(notification)
+            if hasattr(assignee, 'notify_email') and assignee.notify_email:
+                send_email("Task Assigned", [assignee.email], "", message)
+            db.session.commit()
     return jsonify({'msg': 'Task created', 'task_id': task.id}), 201
 
 @task_bp.route('/tasks/<int:task_id>/attachment', methods=['POST'])
@@ -231,14 +238,26 @@ def create_task_direct():
     db.session.add(task)
     db.session.commit()
     
+    # Schedule dynamic reminders for the new task
+    if due_date:
+        from services.deadline_service import DeadlineService
+        DeadlineService.schedule_dynamic_reminders(task.id)
+    
+    # Send assignment notification if assigning to someone else
     if assignee_id and assignee_id != user_id:
-        assignee = User.query.get(assignee_id)
-        message = f"You have been assigned task '{task.title}' in project '{project.name}'"
-        notification = Notification(user_id=assignee.id, message=message)
-        db.session.add(notification)
-        if hasattr(assignee, 'notify_email') and assignee.notify_email:
-            send_email("Task Assigned", [assignee.email], "", message)
-        db.session.commit()
+        try:
+            from tasks.notification_tasks import send_task_assignment_notification
+            send_task_assignment_notification.delay(task.id, assignee_id, user_id)
+        except Exception as e:
+            # Fallback to direct notification if Celery is not available
+            logger.warning(f"Celery task failed, using direct notification: {e}")
+            message = f"You have been assigned task '{task.title}' in project '{project.name}'"
+            notification = Notification(user_id=assignee_id, message=message)
+            db.session.add(notification)
+            assignee = User.query.get(assignee_id)
+            if assignee and hasattr(assignee, 'notify_email') and assignee.notify_email:
+                send_email("Task Assigned", [assignee.email], "", message)
+            db.session.commit()
     
     return jsonify({'msg': 'Task created', 'task_id': task.id}), 201
 
@@ -262,6 +281,7 @@ def update_task_direct(task_id):
         task.title = data['title']
     if 'description' in data:
         task.description = data['description']
+    due_date_changed = False
     if 'due_date' in data:
         if data['due_date']:
             try:
@@ -274,10 +294,13 @@ def update_task_direct(task_id):
                     # If no timezone info, assume local time
                     date_str += 'Z'
                 parsed_date = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+                old_due_date = task.due_date
                 task.due_date = ensure_utc(parsed_date)
+                due_date_changed = old_due_date != task.due_date
             except ValueError:
                 return jsonify({'msg': 'Invalid date format. Use ISO format with timezone.'}), 400
         else:
+            due_date_changed = task.due_date is not None
             task.due_date = None
     
     if 'status' in data:
@@ -310,6 +333,12 @@ def update_task_direct(task_id):
             task.budget = None
     
     db.session.commit()
+    
+    # Reschedule reminders if due date changed
+    if due_date_changed and task.due_date:
+        from services.deadline_service import DeadlineService
+        DeadlineService.schedule_dynamic_reminders(task.id)
+    
     return jsonify({'msg': 'Task updated'})
 
 @task_bp.route('/tasks/<int:task_id>', methods=['DELETE'])

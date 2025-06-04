@@ -12,6 +12,7 @@ from models import User, TokenBlocklist
 from routes import register_blueprints
 from utils.gmail import initialize_gmail_credentials
 from utils.postgresql_migrator import migrate_sqlite_to_postgresql, check_postgresql_connection
+from celery_app import make_celery
 
 load_dotenv()
 
@@ -51,6 +52,9 @@ def create_app(config_class=None):
     
     # Initialize scheduler
     scheduler.init_app(app)
+    
+    # Initialize Celery
+    celery = make_celery(app)
     
     # Cloudinary
     cloudinary.config(
@@ -171,6 +175,9 @@ def create_app(config_class=None):
 
 # Create the app instance
 app = create_app()
+
+# Create the celery instance - this will be imported by celery_worker.py
+celery = make_celery(app)
 
 atexit.register(lambda: scheduler.shutdown() if scheduler.running else None)
 
