@@ -125,3 +125,80 @@ def get_welcome_email_template(username):
     </body>
     </html>
     """
+
+def get_deadline_reminder_template(username, project_name, deadline, days_before):
+    """Generate HTML template for deadline reminder email"""
+    if deadline:
+        deadline_str = deadline.strftime("%B %d, %Y at %I:%M %p")
+    else:
+        deadline_str = "Not specified"
+    
+    if days_before == 1:
+        urgency_class = "urgent"
+        urgency_text = "TOMORROW"
+        icon = "⚠️"
+    elif days_before <= 3:
+        urgency_class = "warning"
+        urgency_text = f"in {days_before} days"
+        icon = "📅"
+    else:
+        urgency_class = "info"
+        urgency_text = f"in {days_before} days"
+        icon = "📋"
+    
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background-color: #2196F3; color: white; padding: 20px; text-align: center; }}
+            .content {{ padding: 20px; background-color: #f9f9f9; }}
+            .footer {{ text-align: center; padding: 20px; color: #666; }}
+            .urgent {{ background-color: #f44336; color: white; }}
+            .warning {{ background-color: #ff9800; color: white; }}
+            .info {{ background-color: #2196F3; color: white; }}
+            .deadline-box {{ padding: 20px; margin: 20px 0; border-radius: 5px; text-align: center; }}
+            .project-info {{ background-color: #fff; padding: 15px; border-radius: 5px; margin: 15px 0; }}
+            .countdown {{ font-size: 2em; font-weight: bold; margin: 10px 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>{icon} Project Deadline Reminder</h1>
+            </div>
+            <div class="content">
+                <h2>Hello {username}!</h2>
+                <p>This is a friendly reminder about an upcoming project deadline.</p>
+                
+                <div class="project-info">
+                    <h3>Project: {project_name}</h3>
+                    <p><strong>Deadline:</strong> {deadline_str}</p>
+                </div>
+                
+                <div class="deadline-box {urgency_class}">
+                    <div class="countdown">Due {urgency_text.upper()}</div>
+                </div>
+                
+                <div style="background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                    <p><strong>Action Items:</strong></p>
+                    <ul>
+                        <li>Review project progress and remaining tasks</li>
+                        <li>Coordinate with team members if needed</li>
+                        <li>Ensure all deliverables are on track</li>
+                        <li>Contact project stakeholders if there are any concerns</li>
+                    </ul>
+                </div>
+                
+                <p>If you need to discuss the deadline or require any assistance, please reach out to your team members or project manager.</p>
+            </div>
+            <div class="footer">
+                <p>This is an automated reminder from SynergySphere.</p>
+                <p>You can manage your notification preferences in your account settings.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
