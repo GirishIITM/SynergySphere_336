@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
+import TaskChatPanel from '../../components/TaskChatPanel';
 import './TaskDetail.css';
 import { 
   Calendar,
@@ -32,6 +33,7 @@ const TaskDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
   const [newExpense, setNewExpense] = useState({
     amount: '',
     description: '',
@@ -42,6 +44,9 @@ const TaskDetail = () => {
     'Development', 'Design', 'Marketing', 'Equipment', 
     'Software', 'Travel', 'Consulting', 'Other'
   ];
+
+  // Get authentication token for chat
+  const authToken = localStorage.getItem('access_token');
 
   useEffect(() => {
     loadTaskDetails();
@@ -454,6 +459,14 @@ const TaskDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Task Chat Panel */}
+          <TaskChatPanel 
+            taskId={parseInt(taskId)}
+            authToken={authToken}
+            isCollapsed={chatCollapsed}
+            onToggleCollapse={setChatCollapsed}
+          />
         </div>
       </div>
     </div>
