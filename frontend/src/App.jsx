@@ -144,6 +144,16 @@ function App() {
                 </PrivateRoute>
               } />
 
+              <Route path='/solutions/InBox' element={
+                <PrivateRoute>
+                  <AdminPanelLayout>
+                    <ContentLayout title="InBox">
+                      <InBox />
+                    </ContentLayout>
+                  </AdminPanelLayout>
+                </PrivateRoute>
+              } />
+              
               <Route path='/solutions/projects/create' element={
                 <PrivateRoute>
                   <AdminPanelLayout>
