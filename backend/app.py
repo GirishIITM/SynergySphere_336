@@ -11,6 +11,7 @@ from models import User, TokenBlocklist
 from routes import register_blueprints
 from utils.gmail import initialize_gmail_credentials
 from utils.postgresql_migrator import migrate_sqlite_to_postgresql, check_postgresql_connection
+from celery_config import make_celery
 
 load_dotenv()
 
@@ -119,6 +120,10 @@ def create_app(config_class=None):
             UserSearchCache.invalidate_user_cache()
         except Exception as e:
             current_app.logger.error(f"Cache invalidation error: {e}")
+    
+    # Initialize Celery
+    celery = make_celery(app)
+    app.celery = celery
     
     return app
 

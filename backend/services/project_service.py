@@ -4,6 +4,7 @@ from utils.email import send_email
 from utils.cloudinary_upload import upload_project_image, validate_image_file
 from datetime import datetime, timezone
 from sqlalchemy import case
+from services.deadline_service import DeadlineService
 
 class ProjectService:
     @staticmethod
@@ -63,6 +64,10 @@ class ProjectService:
                 project.project_image = upload_result['secure_url']
         
         db.session.commit()
+        
+        # Schedule deadline notifications if deadline is set
+        if project.deadline:
+            DeadlineService.schedule_project_notifications(project.id, project.deadline)
         
         ProjectService._send_member_notifications(project, added_members)
         
@@ -308,6 +313,9 @@ class ProjectService:
         if project.owner_id != user_id:
             raise PermissionError('Only owner can delete project')
         
+        # Cancel deadline notifications before deleting
+        DeadlineService.cancel_project_notifications(project_id)
+        
         # Delete related data in proper order to avoid constraint violations
         # First delete tasks
         Task.query.filter_by(project_id=project_id).delete()
@@ -356,6 +364,8 @@ class ProjectService:
         if 'description' in data:
             project.description = data.get('description')
         
+        old_deadline = project.deadline
+        
         if 'deadline' in data:
             if data['deadline']:
                 try:
@@ -373,5 +383,15 @@ class ProjectService:
                 project.deadline = None
         
         db.session.commit()
+        
+        # Handle deadline notification scheduling
+        if 'deadline' in data:
+            if old_deadline != project.deadline:
+                if project.deadline:
+                    # Reschedule notifications with new deadline
+                    DeadlineService.reschedule_project_notifications(project_id, project.deadline)
+                else:
+                    # Cancel notifications if deadline was removed
+                    DeadlineService.cancel_project_notifications(project_id)
         
         return ProjectService.format_project_data(project, user_id)

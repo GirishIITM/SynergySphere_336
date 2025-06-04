@@ -49,9 +49,8 @@ def check_and_migrate():
             print("Setting up PostgreSQL schema...")
             db.create_all()
             
-            # Update existing schema
-            from utils.postgresql_migrator import update_existing_schema
-            update_existing_schema()
+            # Update existing schema directly
+            update_postgresql_schema()
             return False
         
         # For SQLite, ensure schema exists and update if needed
@@ -69,6 +68,72 @@ def check_and_migrate():
         except Exception as create_error:
             print(f"Failed to create schema: {create_error}")
         return True
+
+def update_postgresql_schema():
+    """Update PostgreSQL schema for missing columns"""
+    try:
+        from sqlalchemy import text
+        
+        # Add missing columns to user table if they don't exist
+        try:
+            db.engine.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN IF NOT EXISTS full_name VARCHAR(100)
+            """))
+            print("Added full_name column to user table")
+        except Exception:
+            pass  # Column might already exist
+        
+        try:
+            db.engine.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN IF NOT EXISTS about TEXT
+            """))
+            print("Added about column to user table")
+        except Exception:
+            pass
+        
+        try:
+            db.engine.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN IF NOT EXISTS google_id VARCHAR(100)
+            """))
+            print("Added google_id column to user table")
+        except Exception:
+            pass
+        
+        try:
+            db.engine.execute(text("""
+                ALTER TABLE "user" 
+                ADD COLUMN IF NOT EXISTS deadline_notification_hours INTEGER DEFAULT 1
+            """))
+            print("Added deadline_notification_hours column to user table")
+        except Exception:
+            pass
+        
+        # Add updated_at column to project table if it doesn't exist
+        try:
+            db.engine.execute(text("""
+                ALTER TABLE project 
+                ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            """))
+            
+            # Set updated_at = created_at for existing records
+            db.engine.execute(text("""
+                UPDATE project 
+                SET updated_at = created_at 
+                WHERE updated_at IS NULL
+            """))
+            print("Added updated_at column to project table")
+        except Exception:
+            pass
+            
+        db.session.commit()
+        print("PostgreSQL schema updates completed")
+        
+    except Exception as e:
+        print(f"PostgreSQL schema update error: {e}")
+        db.session.rollback()
 
 def update_sqlite_schema():
     """Update SQLite schema for missing columns"""
@@ -103,18 +168,21 @@ def update_sqlite_schema():
             print("Added updated_at column to project table")
         
         # Check user table for missing columns
-        cursor.execute("PRAGMA table_info(user)")
-        user_columns = [column[1] for column in cursor.fetchall()]
-        
-        if 'full_name' not in user_columns:
-            cursor.execute("ALTER TABLE user ADD COLUMN full_name VARCHAR(100)")
-            # Set default values for existing users
-            cursor.execute("UPDATE user SET full_name = username WHERE full_name IS NULL")
-        
-        if 'about' not in user_columns:
             cursor.execute("ALTER TABLE user ADD COLUMN about TEXT")
-            
+            _columns = [column[1] for column in cursor.fetchall()]
         if 'google_id' not in user_columns:
+            cursor.execute("ALTER TABLE user ADD COLUMN google_id VARCHAR(100)")
+            cursor.execute("ALTER TABLE user ADD COLUMN full_name VARCHAR(100)")
+        if 'deadline_notification_hours' not in user_columns:ault values for existing users
+            cursor.execute("ALTER TABLE user ADD COLUMN deadline_notification_hours INTEGER DEFAULT 1")xecute("UPDATE user SET full_name = username WHERE full_name IS NULL")
+        
+        conn.commit()user_columns:
+        conn.close()COLUMN about TEXT")
+                    
+
+
+
+        print(f"SQLite schema update error: {e}")    except Exception as e:        if 'google_id' not in user_columns:
             cursor.execute("ALTER TABLE user ADD COLUMN google_id VARCHAR(100)")
         
         conn.commit()

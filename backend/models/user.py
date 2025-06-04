@@ -12,6 +12,7 @@ class User(db.Model):
     about = db.Column(db.Text, nullable=True)  # Add about field
     notify_email = db.Column(db.Boolean, default=True)
     notify_in_app = db.Column(db.Boolean, default=True)
+    deadline_notification_hours = db.Column(db.Integer, default=1)  # Hours before deadline to notify
     created_at = db.Column(db.DateTime, default=get_utc_now)
 
     

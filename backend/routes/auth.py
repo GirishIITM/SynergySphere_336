@@ -13,6 +13,7 @@ from utils.google_oauth_service import GoogleOAuthService
 from utils.password_service import PasswordService
 from utils.cloudinary_upload import delete_cloudinary_image
 from utils.route_cache import cache_route, invalidate_cache_on_change
+from services.deadline_service import DeadlineService
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -397,87 +398,46 @@ def get_settings():
         print(f"Get settings error: {e}")
         return jsonify({"msg": "An error occurred while fetching settings"}), 500
 
-@auth_bp.route("/settings", methods=["PUT"])
-@invalidate_cache_on_change(['users', 'profile'])
+@auth_bp.route('/settings', methods=['PUT'])
+@jwt_required()
+@invalidate_cache_on_change(['profile', 'users'])
 def update_settings():
-    try:
-        user_id = int(get_jwt_identity())
-        user = User.query.get_or_404(user_id)
-        
-        # Handle both JSON and FormData
-        if request.content_type and 'multipart/form-data' in request.content_type:
-            # Handle file upload
-            if 'profile_image' not in request.files:
-                return jsonify({"msg": "No profile image file provided"}), 400
-            
-            file = request.files['profile_image']
-            if file.filename == '':
-                return jsonify({"msg": "No file selected"}), 400
-            
-            # Import cloudinary upload function
-            from utils.cloudinary_upload import upload_profile_image, delete_cloudinary_image
-            
-            # Delete old profile picture if it exists
-            if user.profile_picture and 'cloudinary.com' in user.profile_picture:
-                delete_cloudinary_image(user.profile_picture)
-            
-            # Upload new image
-            upload_result = upload_profile_image(file, user_id)
-            if not upload_result:
-                return jsonify({"msg": "Failed to upload image"}), 500
-            
-            user.profile_picture = upload_result['secure_url']
-        
+    """Update user notification settings and preferences"""
+    user_id = int(get_jwt_identity())
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+    
+    old_deadline_hours = user.deadline_notification_hours
+    
+    if 'notify_email' in data:
+        user.notify_email = bool(data['notify_email'])
+    if 'notify_in_app' in data:
+        user.notify_in_app = bool(data['notify_in_app'])
+    if 'deadline_notification_hours' in data:
+        hours = data['deadline_notification_hours']
+        if isinstance(hours, (int, float)) and 0.5 <= hours <= 168:  # 30 min to 7 days
+            user.deadline_notification_hours = hours
         else:
-            # Handle JSON data
-            data = request.get_json()
-            if not data:
-                return jsonify({"msg": "No data provided"}), 400
-            
-            if "full_name" in data:
-                full_name = sanitize_string(data["full_name"])
-                if len(full_name.strip()) >= 1:
-                    user.full_name = full_name
-            
-            if "username" in data:
-                username = sanitize_string(data["username"])
-                if len(username.strip()) >= 1:
-                    existing_user = User.query.filter(User.username == username, User.id != user_id).first()
-                    if not existing_user:
-                        user.username = username
-            
-            if "about" in data:
-                about = sanitize_string(data["about"]) if data["about"] else ""
-                user.about = about
-            
-            if "notify_email" in data:
-                user.notify_email = bool(data["notify_email"])
-            if "notify_in_app" in data:
-                user.notify_in_app = bool(data["notify_in_app"])
-            
-            if "profile_picture" in data:
-                if user.profile_picture and 'cloudinary.com' in user.profile_picture:
-                    delete_cloudinary_image(user.profile_picture)
-                user.profile_picture = data["profile_picture"]
-        
-        db.session.commit()
-        return jsonify({
-            "msg": "Settings updated successfully",
-            "user": {
-                "id": user.id,
-                "full_name": getattr(user, 'full_name', user.username),
-                "name": getattr(user, 'full_name', user.username),
-                "username": user.username,
-                "email": user.email,
-                "about": getattr(user, 'about', ''),
-                "notify_email": getattr(user, 'notify_email', True),
-                "notify_in_app": getattr(user, 'notify_in_app', True),
-                "profile_picture": user.profile_picture,
-                "created_at": user.created_at.isoformat() if user.created_at else None
-            }
-        }), 200
-        
-    except Exception as e:
-        print(f"Update settings error: {e}")
-        db.session.rollback()
-        return jsonify({"msg": "An error occurred while updating settings"}), 500
+            return jsonify({'msg': 'Invalid deadline notification hours. Must be between 0.5 and 168 hours'}), 400
+    
+    db.session.commit()
+    
+    # Reschedule deadline notifications if timing preference changed
+    if 'deadline_notification_hours' in data and old_deadline_hours != user.deadline_notification_hours:
+        DeadlineService.reschedule_user_notifications(user_id)
+    
+    return jsonify({
+        'msg': 'Settings updated successfully',
+        'settings': {
+            'notify_email': user.notify_email,
+            'notify_in_app': user.notify_in_app,
+            'deadline_notification_hours': user.deadline_notification_hours
+        }
+    }), 200
+
+@auth_bp.route('/settings/deadline-options', methods=['GET'])
+@jwt_required()
+def get_deadline_notification_options():
+    """Get available deadline notification timing options"""
+    options = DeadlineService.get_notification_timing_options()
+    return jsonify({'options': options}), 200

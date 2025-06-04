@@ -91,7 +91,7 @@ def migrate_sqlite_to_postgresql():
                     continue
                 
                 columns_str = ', '.join(common_columns)
-                placeholders = ', '.join([f'${i+1}' for i in range(len(common_columns))])
+                placeholders = ', '.join([':' + col for col in common_columns])
                 
                 # Insert data into PostgreSQL using ON CONFLICT DO NOTHING for upsert
                 insert_sql = f"INSERT INTO {table} ({columns_str}) VALUES ({placeholders}) ON CONFLICT DO NOTHING"
@@ -100,7 +100,7 @@ def migrate_sqlite_to_postgresql():
                 migrated_count = 0
                 for row in rows:
                     try:
-                        row_data = tuple(row[col] for col in common_columns)
+                        row_data = {col: row[col] for col in common_columns}
                         postgresql_conn.execute(text(insert_sql), row_data)
                         migrated_count += 1
                     except SQLAlchemyError as e:
@@ -201,6 +201,8 @@ def update_existing_schema():
                     missing_columns.append("ADD COLUMN about TEXT")
                 if 'google_id' not in columns:
                     missing_columns.append("ADD COLUMN google_id VARCHAR(100) UNIQUE")
+                if 'deadline_notification_hours' not in columns:
+                    missing_columns.append("ADD COLUMN deadline_notification_hours INTEGER DEFAULT 1")
                 
                 if missing_columns:
                     print(f"Adding missing columns to user table: {missing_columns}")
