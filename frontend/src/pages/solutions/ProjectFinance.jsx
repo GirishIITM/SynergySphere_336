@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
+import { taskAPI } from '../../utils/apiCalls/taskAPI';
 import { getCurrentUser } from '../../utils/apiCalls/auth';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Pie } from 'recharts';
@@ -26,6 +27,7 @@ import { PieChart as RechartsPieChart, Cell, ResponsiveContainer, BarChart, Bar,
 const ProjectFinance = () => {
   const { projectId } = useParams();
   const [project, setProject] = useState(null);
+  const [projectTasks, setProjectTasks] = useState([]);
   const [financials, setFinancials] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +48,7 @@ const ProjectFinance = () => {
     amount: '',
     description: '',
     category: '',
+    task_id: '',
     date: new Date().toISOString().split('T')[0]
   });
 
@@ -65,6 +68,7 @@ const ProjectFinance = () => {
 
   useEffect(() => {
     fetchProjectData();
+    fetchProjectTasks();
     fetchFinancials();
     fetchExpenses();
   }, [projectId]);
@@ -76,6 +80,15 @@ const ProjectFinance = () => {
     } catch (err) {
       console.error('Error fetching project:', err);
       setError('Failed to load project data');
+    }
+  };
+
+  const fetchProjectTasks = async () => {
+    try {
+      const tasksData = await taskAPI.getTasksByProject(projectId);
+      setProjectTasks(tasksData?.tasks || []);
+    } catch (err) {
+      console.error('Error fetching project tasks:', err);
     }
   };
 
@@ -143,11 +156,25 @@ const ProjectFinance = () => {
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
+    
+    // Check if tasks are available
+    if (projectTasks.length === 0) {
+      setError('No tasks available. Please create a task first before adding expenses.');
+      return;
+    }
+    
+    // Validate that a task is selected
+    if (!expenseForm.task_id) {
+      setError('Please select a task for this expense');
+      return;
+    }
+    
     try {
       await financeAPI.addExpense(projectId, {
         amount: parseFloat(expenseForm.amount),
         description: expenseForm.description,
         category: expenseForm.category,
+        task_id: parseInt(expenseForm.task_id),
         date: expenseForm.date
       });
       setExpenseDialogOpen(false);
@@ -155,8 +182,10 @@ const ProjectFinance = () => {
         amount: '',
         description: '',
         category: '',
+        task_id: '',
         date: new Date().toISOString().split('T')[0]
       });
+      setError(''); // Clear any previous errors
       fetchExpenses();
       fetchFinancials();
     } catch (err) {
@@ -167,11 +196,25 @@ const ProjectFinance = () => {
 
   const handleUpdateExpense = async (e) => {
     e.preventDefault();
+    
+    // Check if tasks are available
+    if (projectTasks.length === 0) {
+      setError('No tasks available. Please create a task first before updating this expense.');
+      return;
+    }
+    
+    // Validate that a task is selected
+    if (!expenseForm.task_id) {
+      setError('Please select a task for this expense');
+      return;
+    }
+    
     try {
       await financeAPI.updateExpense(editingExpense.id, {
         amount: parseFloat(expenseForm.amount),
         description: expenseForm.description,
         category: expenseForm.category,
+        task_id: parseInt(expenseForm.task_id),
         date: expenseForm.date
       });
       setExpenseDialogOpen(false);
@@ -180,8 +223,10 @@ const ProjectFinance = () => {
         amount: '',
         description: '',
         category: '',
+        task_id: '',
         date: new Date().toISOString().split('T')[0]
       });
+      setError(''); // Clear any previous errors
       fetchExpenses();
       fetchFinancials();
     } catch (err) {
@@ -223,7 +268,8 @@ const ProjectFinance = () => {
         amount: expense.amount.toString(),
         description: expense.description || '',
         category: expense.category || '',
-        date: expense.date ? expense.date.split('T')[0] : new Date().toISOString().split('T')[0]
+        task_id: expense.task_id ? expense.task_id.toString() : '',
+        date: expense.date || new Date().toISOString().split('T')[0]
       });
     } else {
       setEditingExpense(null);
@@ -231,6 +277,7 @@ const ProjectFinance = () => {
         amount: '',
         description: '',
         category: '',
+        task_id: '',
         date: new Date().toISOString().split('T')[0]
       });
     }
@@ -596,6 +643,28 @@ const ProjectFinance = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Task *</label>
+              <Select 
+                value={expenseForm.task_id} 
+                onValueChange={(value) => setExpenseForm(prev => ({ ...prev, task_id: value }))}
+                required
+              >
+                <SelectTrigger className={!expenseForm.task_id ? 'border-red-300' : ''}>
+                  <SelectValue placeholder="Select a task (required)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projectTasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id.toString()}>{task.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {projectTasks.length === 0 && (
+                <p className="text-sm text-amber-600 mt-1">
+                  No tasks available. Create a task first before adding expenses.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Date</label>

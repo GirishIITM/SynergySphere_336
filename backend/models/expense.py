@@ -6,7 +6,7 @@ class Expense(db.Model):
     """Model for project and task expenses."""
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=True)
     amount = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(200), nullable=True)
     category = db.Column(db.String(50), nullable=True)

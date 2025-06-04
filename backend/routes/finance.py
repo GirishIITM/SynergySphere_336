@@ -81,6 +81,8 @@ def add_expense(project_id):
         return jsonify(expense.to_dict()), 201
     except PermissionError as e:
         return jsonify({'msg': str(e)}), 403
+    except ValueError as e:
+        return jsonify({'msg': str(e)}), 400
     except Exception as e:
         return jsonify({'msg': 'Error adding expense'}), 500
 
@@ -100,6 +102,8 @@ def update_expense(expense_id):
         return jsonify(expense.to_dict()), 200
     except PermissionError as e:
         return jsonify({'msg': str(e)}), 403
+    except ValueError as e:
+        return jsonify({'msg': str(e)}), 400
     except Exception as e:
         return jsonify({'msg': 'Error updating expense'}), 500
 
