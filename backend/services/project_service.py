@@ -56,6 +56,14 @@ class ProjectService:
         
         db.session.commit()
         
+        # Schedule deadline reminders if project has a deadline
+        if deadline:
+            try:
+                from services.deadline_service import DeadlineService
+                DeadlineService.schedule_project_reminders(project.id)
+            except Exception as e:
+                print(f"Warning: Failed to schedule project reminders: {e}")
+        
         ProjectService._send_member_notifications(project, added_members)
         
         return project, added_members, invalid_emails
@@ -333,6 +341,9 @@ class ProjectService:
         if not data:
             raise ValueError('No data provided for update')
         
+        deadline_changed = False
+        old_deadline = project.deadline
+        
         if 'name' in data:
             if not data['name'].strip():
                 raise ValueError('Project name cannot be empty')
@@ -344,13 +355,35 @@ class ProjectService:
         if 'deadline' in data:
             if data['deadline']:
                 try:
-                    deadline = datetime.fromisoformat(data['deadline'].replace('Z', '+00:00'))
-                    project.deadline = deadline
+                    new_deadline = datetime.fromisoformat(data['deadline'].replace('Z', '+00:00'))
+                    if project.deadline != new_deadline:
+                        deadline_changed = True
+                        project.deadline = new_deadline
                 except ValueError:
                     raise ValueError('Invalid deadline format. Use ISO format')
             else:
+                if project.deadline is not None:
+                    deadline_changed = True
                 project.deadline = None
         
         db.session.commit()
+        
+        # Handle deadline reminders if deadline changed
+        if deadline_changed:
+            try:
+                from services.deadline_service import DeadlineService
+                if project.deadline:
+                    # Reschedule reminders for new deadline
+                    DeadlineService.reschedule_project_reminders(project.id)
+                    
+                    # Send project update notification to members
+                    from tasks.notification_tasks import send_project_update_notification
+                    send_project_update_notification.delay(project.id, 'deadline_changed')
+                else:
+                    # Cancel reminders if deadline was removed
+                    DeadlineService.cancel_project_reminders(project.id)
+                    
+            except Exception as e:
+                print(f"Warning: Failed to update project reminders: {e}")
         
         return ProjectService.format_project_data(project, user_id)

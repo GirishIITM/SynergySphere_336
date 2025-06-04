@@ -112,3 +112,65 @@ def send_project_update_notification(self, project_id, update_type, user_ids=Non
     except Exception as exc:
         logger.error(f"Error sending project update notification: {exc}")
         raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))
+
+@celery_app.task(bind=True, max_retries=3)
+def send_project_deadline_reminder(self, project_id, reminder_type='due_soon'):
+    """
+    Send deadline reminder for a project to all members.
+    
+    Args:
+        project_id (int): ID of the project
+        reminder_type (str): Type of reminder ('due_soon', 'overdue', 'at_risk')
+    """
+    try:
+        from flask import current_app
+        with current_app.app_context():
+            project = Project.query.get(project_id)
+            if not project or not project.deadline:
+                logger.warning(f"Project {project_id} not found or has no deadline")
+                return
+            
+            # Generate reminder message based on type
+            messages = {
+                'due_soon': f"⏰ Project Deadline Reminder: '{project.name}' is due soon ({project.deadline.strftime('%Y-%m-%d %H:%M')})",
+                'overdue': f"🚨 OVERDUE: Project '{project.name}' deadline has passed ({project.deadline.strftime('%Y-%m-%d %H:%M')})",
+                'at_risk': f"⚠️ AT RISK: Project '{project.name}' may miss its deadline",
+                'final_reminder': f"🔔 Final Reminder: Project '{project.name}' deadline is approaching ({project.deadline.strftime('%Y-%m-%d %H:%M')})"
+            }
+            
+            message = messages.get(reminder_type, messages['due_soon'])
+            
+            # Send to all project members
+            from models.project import Membership
+            memberships = Membership.query.filter_by(project_id=project_id).all()
+            
+            for membership in memberships:
+                user = User.query.get(membership.user_id)
+                if not user:
+                    continue
+                
+                # Create in-app notification
+                notification = Notification(user_id=user.id, message=message)
+                db.session.add(notification)
+                
+                # Send email if enabled
+                if hasattr(user, 'notify_email') and user.notify_email:
+                    email_subject = f"Project Deadline Reminder - {project.name}"
+                    email_body = f"""
+                    Hello {user.full_name or user.username},
+                    
+                    {message}
+                    
+                    Project Description: {project.description or 'No description provided'}
+                    
+                    Please log in to SynergySphere to check project progress and tasks.
+                    """
+                    
+                    send_email(email_subject, [user.email], "", email_body)
+            
+            db.session.commit()
+            logger.info(f"Project deadline reminder sent for project {project_id}")
+        
+    except Exception as exc:
+        logger.error(f"Error sending project deadline reminder: {exc}")
+        raise self.retry(exc=exc, countdown=60 * (2 ** self.request.retries))

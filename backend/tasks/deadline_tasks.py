@@ -290,3 +290,80 @@ def update_task_priority_reminders(task_id):
     except Exception as exc:
         logger.error(f"Error updating task priority reminders: {exc}")
         raise
+
+@celery_app.task
+def check_project_deadlines():
+    """
+    Check all projects with deadlines and send reminders.
+    This task runs periodically via Celery Beat.
+    """
+    try:
+        from models import Project
+        current_time = get_utc_now()
+        
+        # Get all projects with deadlines
+        projects_with_deadlines = Project.query.filter(
+            Project.deadline.isnot(None)
+        ).all()
+        
+        reminder_count = 0
+        
+        for project in projects_with_deadlines:
+            try:
+                deadline = ensure_utc(project.deadline)
+                time_until_deadline = deadline - current_time
+                
+                # Skip projects that are overdue by more than 7 days
+                if time_until_deadline.total_seconds() < -7 * 24 * 3600:
+                    continue
+                
+                should_remind = False
+                reminder_type = 'due_soon'
+                reminder_delay = timedelta(hours=24)
+                
+                if time_until_deadline.total_seconds() <= 0:
+                    # Project is overdue
+                    should_remind = True
+                    reminder_type = 'overdue'
+                    reminder_delay = timedelta(hours=24)  # Daily reminders for overdue
+                    
+                elif time_until_deadline.total_seconds() <= 4 * 3600:
+                    # Project due within 4 hours
+                    should_remind = True
+                    reminder_type = 'final_reminder'
+                    reminder_delay = timedelta(hours=1)  # Hourly reminders
+                    
+                elif time_until_deadline.total_seconds() <= 24 * 3600:
+                    # Project due within 24 hours
+                    should_remind = True
+                    reminder_type = 'due_soon'
+                    reminder_delay = timedelta(hours=6)  # Every 6 hours
+                    
+                elif time_until_deadline.total_seconds() <= 3 * 24 * 3600:
+                    # Project due within 3 days
+                    should_remind = True
+                    reminder_type = 'due_soon'
+                    reminder_delay = timedelta(hours=12)  # Every 12 hours
+                
+                if should_remind:
+                    # Check if we've sent a reminder recently
+                    recent_reminder = Notification.query.filter(
+                        Notification.message.contains(f"Project '{project.name}'"),
+                        Notification.created_at >= current_time - reminder_delay
+                    ).first()
+                    
+                    if not recent_reminder:
+                        from tasks.notification_tasks import send_project_deadline_reminder
+                        send_project_deadline_reminder.delay(project.id, reminder_type)
+                        reminder_count += 1
+                        
+            except Exception as project_error:
+                logger.error(f"Error processing project deadline {project.id}: {project_error}")
+                continue
+        
+        logger.info(f"Scheduled {reminder_count} project deadline reminders")
+        return reminder_count
+        
+    except Exception as exc:
+        logger.error(f"Error in check_project_deadlines: {exc}")
+        raise
