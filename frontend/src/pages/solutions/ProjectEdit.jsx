@@ -47,10 +47,18 @@ const ProjectEdit = () => {
       const projectData = response.project || response;
 
       setProject(projectData);
+      
+      let formattedDeadline = '';
+      if (projectData.deadline) {
+        const deadlineDate = new Date(projectData.deadline);
+        const localISOTime = new Date(deadlineDate.getTime() - (deadlineDate.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+        formattedDeadline = localISOTime;
+      }
+      
       setFormData({
         name: projectData.name || '',
         description: projectData.description || '',
-        deadline: projectData.deadline ? projectData.deadline.slice(0, 16) : ''
+        deadline: formattedDeadline
       });
       setError('');
     } catch (err) {
@@ -112,15 +120,22 @@ const ProjectEdit = () => {
       setError('');
       setSuccess('');
 
+      // Convert datetime-local value to ISO string for backend
+      let deadlineToSend = formData.deadline;
+      if (formData.deadline) {
+        const localDate = new Date(formData.deadline);
+        deadlineToSend = localDate.toISOString();
+      }
+
       await projectAPI.updateProject(id, {
         name: formData.name,
         description: formData.description,
-        deadline: formData.deadline
+        deadline: deadlineToSend
       });
 
       setSuccess('Project updated successfully! Redirecting...');
 
-      // navigate('/solutions/projects');
+      navigate('/solutions/projects');
 
     } catch (err) {
       const errorMessage = err.message || 'Failed to update project';

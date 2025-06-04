@@ -15,7 +15,15 @@ class ProjectService:
         deadline = None
         if 'deadline' in data and data['deadline']:
             try:
-                deadline = datetime.fromisoformat(data['deadline'].replace('Z', '+00:00'))
+                # Handle both ISO format with and without timezone info
+                deadline_str = data['deadline']
+                if deadline_str.endswith('Z'):
+                    deadline = datetime.fromisoformat(deadline_str.replace('Z', '+00:00'))
+                elif '+' in deadline_str or deadline_str.endswith('Z'):
+                    deadline = datetime.fromisoformat(deadline_str)
+                else:
+                    # If no timezone info, parse as UTC
+                    deadline = datetime.fromisoformat(deadline_str).replace(tzinfo=timezone.utc)
             except ValueError:
                 raise ValueError('Invalid deadline format. Use ISO format')
         
@@ -265,12 +273,19 @@ class ProjectService:
                     'joined_at': membership.id
                 })
         
+        formatted_deadline = None
+        if project.deadline:
+            deadline_aware = project.deadline
+            if deadline_aware.tzinfo is None:
+                deadline_aware = deadline_aware.replace(tzinfo=timezone.utc)
+            formatted_deadline = deadline_aware.isoformat()
+        
         return {
             'id': project.id,
             'name': project.name,
             'description': project.description,
             'project_image': project.project_image,
-            'deadline': project.deadline.isoformat() if project.deadline else None,
+            'deadline': formatted_deadline,
             'created_at': project.created_at.isoformat(),
             'is_owner': project.owner_id == user_id,
             'user_can_edit': user_membership.is_editor,
@@ -344,7 +359,13 @@ class ProjectService:
         if 'deadline' in data:
             if data['deadline']:
                 try:
-                    deadline = datetime.fromisoformat(data['deadline'].replace('Z', '+00:00'))
+                    deadline_str = data['deadline']
+                    if deadline_str.endswith('Z'):
+                        deadline = datetime.fromisoformat(deadline_str.replace('Z', '+00:00'))
+                    elif '+' in deadline_str or '-' in deadline_str[-6:]:
+                        deadline = datetime.fromisoformat(deadline_str)
+                    else:
+                        deadline = datetime.fromisoformat(deadline_str).replace(tzinfo=timezone.utc)
                     project.deadline = deadline
                 except ValueError:
                     raise ValueError('Invalid deadline format. Use ISO format')
