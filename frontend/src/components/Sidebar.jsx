@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import "../styles/sidebar.css";
 
@@ -6,9 +6,22 @@ const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+    // Initialize from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && systemPrefersDark);
+    setDarkMode(shouldBeDark);
+    document.documentElement.classList.toggle('theme-dark', shouldBeDark);
+    document.documentElement.classList.toggle('dark', shouldBeDark);
+  }, []);
+
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('theme-dark');
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('theme', newDarkMode ? 'dark' : 'light');
+    document.documentElement.classList.toggle('theme-dark', newDarkMode);
+    document.documentElement.classList.toggle('dark', newDarkMode);
   };
 
   return (

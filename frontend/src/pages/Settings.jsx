@@ -53,6 +53,7 @@ const Settings = () => {
     
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('theme-dark', newTheme === 'dark');
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
   const handleNotificationChange = (key, value) => {
@@ -115,6 +116,7 @@ const Settings = () => {
     localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
     localStorage.setItem('theme', 'light');
     document.documentElement.classList.remove('theme-dark');
+    document.documentElement.classList.remove('dark');
   };
 
   return (

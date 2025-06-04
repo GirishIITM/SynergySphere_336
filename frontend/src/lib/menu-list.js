@@ -57,6 +57,12 @@ export function getMenuList(pathname) {
               active: pathname === "/solutions/tasks/create"
             }
           ]
+        },
+        {
+          href: "/solutions/inbox",
+          label: "inbox",
+          icon: CheckSquare,
+          active: pathname.includes("/solutions/inbox"),
         }
       ]
     },
