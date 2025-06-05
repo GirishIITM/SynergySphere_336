@@ -344,27 +344,60 @@ const Projects = () => {
                             <Calendar className="w-3 h-3" />
                             Due: {formatDate(project.deadline)}
                           </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => navigate(`/solutions/projects/${project.id}`)}
-                          >
-                            View Details
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => navigate(`/solutions/projects/${project.id}`)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => navigate(`/solutions/projects/${project.id}/analytics`)}
+                            >
+                              📊
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => navigate(`/solutions/projects/${project.id}/finance`)}
+                            >
+                              💰
+                            </Button>
+                          </div>
                         </div>
                       </CardFooter>
                     )}
                     
                     {!project.deadline && (
                       <CardFooter className="pt-0 pb-4">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => navigate(`/solutions/projects/${project.id}`)}
-                          className="w-full"
-                        >
-                          View Details
-                        </Button>
+                        <div className="flex gap-1 w-full">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => navigate(`/solutions/projects/${project.id}`)}
+                            className="flex-1"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => navigate(`/solutions/projects/${project.id}/analytics`)}
+                          >
+                            📊
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => navigate(`/solutions/projects/${project.id}/finance`)}
+                          >
+                            💰
+                          </Button>
+                        </div>
                       </CardFooter>
                     )}
                   </Card>

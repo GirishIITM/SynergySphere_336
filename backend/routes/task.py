@@ -275,7 +275,16 @@ def create_task_direct():
     
     assignee = None
     if 'assigned_to' in data and data['assigned_to']:
-        assignee = User.query.get(data['assigned_to'])
+        # Handle both user ID and email for assignee
+        assigned_to_value = data['assigned_to']
+        try:
+            # Try to convert to int (user ID)
+            assignee_id = int(assigned_to_value)
+            assignee = User.query.get(assignee_id)
+        except (ValueError, TypeError):
+            # If conversion fails, treat as email
+            assignee = User.query.filter_by(email=assigned_to_value).first()
+        
         if not assignee:
             return jsonify({'msg': 'Assignee not found'}), 404
         if not any(member.id == assignee.id for member in project.members):
@@ -379,7 +388,28 @@ def update_task_direct(task_id):
     if 'owner_id' in data:
         task.owner_id = data['owner_id']
     if 'assigned_to' in data:
-        task.owner_id = data['assigned_to']
+        # Handle both user ID and email for assignee
+        assigned_to_value = data['assigned_to']
+        try:
+            # Try to convert to int (user ID)
+            assignee_id = int(assigned_to_value)
+            # Verify user exists
+            assignee = User.query.get(assignee_id)
+            if assignee:
+                task.owner_id = assignee_id
+            else:
+                return jsonify({'msg': 'Assignee not found'}), 404
+        except (ValueError, TypeError):
+            # If conversion fails, treat as email
+            assignee = User.query.filter_by(email=assigned_to_value).first()
+            if assignee:
+                task.owner_id = assignee.id
+            else:
+                return jsonify({'msg': 'Assignee not found'}), 404
+        
+        # Verify assignee is a project member
+        if not any(member.id == task.owner_id for member in project.members):
+            return jsonify({'msg': 'Assignee must be project member'}), 400
     
     # Add budget field support
     if 'budget' in data:
