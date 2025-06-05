@@ -55,7 +55,21 @@ export const projectAPI = {
   },
 
   getProjectMembers: (id) => {
-    return apiRequest(`/projects/${id}/members`, 'GET', null, 'projects-get-members');
+    return apiRequest(`/projects/${id}/members`, 'GET', null, 'projects-get-members')
+      .then(result => {
+        // Ensure we return an array
+        if (Array.isArray(result)) {
+          return { members: result };
+        }
+        if (result && Array.isArray(result.members)) {
+          return result;
+        }
+        return { members: [] };
+      })
+      .catch(error => {
+        console.error('Error fetching project members:', error);
+        return { members: [] };
+      });
   },
 
   createProject: (projectData) => {

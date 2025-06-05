@@ -153,6 +153,42 @@ const TaskDetail = () => {
     });
   };
 
+  /**
+   * Render messages for the task.
+   */
+  const renderMessages = (messages) => {
+    if (!messages || messages.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No messages yet. Start the conversation!</p>
+        </div>
+      );
+    }
+
+    return messages.map((message) => (
+      <div key={message.id} className="flex gap-3 mb-4">
+        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+          {(message.user_name || 'U').charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium text-sm">
+              {message.user_name || 'Unknown User'}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {message.created_at 
+                ? new Date(message.created_at).toLocaleString()
+                : 'Just now'
+              }
+            </span>
+          </div>
+          <p className="text-sm">{message.content}</p>
+        </div>
+      </div>
+    ));
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

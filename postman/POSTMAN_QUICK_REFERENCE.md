@@ -46,6 +46,7 @@ DELETE /tasks/{id}        - Delete task
 ### 5. Team Collaboration
 ```
 POST /projects/{id}/members           - Add team member
+GET /projects/{id}/members           - Get project members
 GET /projects/{id}/messages          - Get project messages
 POST /projects/{id}/messages         - Send message
 GET /notifications                   - Check notifications
@@ -138,4 +139,4 @@ POST /cache/warm            - Warm up cache
 
 ---
 
-**💡 Tip**: Always start with the Login request to set up authentication for all other endpoints! 
+**💡 Tip**: Always start with the Login request to set up authentication for all other endpoints!

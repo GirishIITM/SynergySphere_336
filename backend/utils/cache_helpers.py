@@ -1,5 +1,6 @@
 from utils.redis_utils import RedisCache
-from models import User
+from models import User, Project
+from models.project import Membership
 from extensions import db
 import hashlib
 import json

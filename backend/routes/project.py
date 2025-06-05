@@ -173,11 +173,17 @@ def search_users():
         limit = min(int(request.args.get('limit', 20)), 50)
         offset = int(request.args.get('offset', 0))
         
+        print(f"Searching users with query: '{search_query}', limit: {limit}")  # Debug log
+        
         result = UserService.search_users(search_query, limit, offset)
+        print(f"Search result: {result}")  # Debug log
+        
         return jsonify(result), 200
         
     except Exception as e:
         print(f"Search users error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'msg': 'An error occurred while searching users'}), 500
 
 @project_bp.route('/projects/<int:project_id>', methods=['DELETE'])
@@ -219,3 +225,47 @@ def update_project(project_id):
     except Exception as e:
         print(f"Update project error: {e}")
         return jsonify({'msg': 'An error occurred while updating project'}), 500
+
+@project_bp.route('/projects/<int:project_id>/members', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=300, user_specific=True)  # Cache for 5 minutes
+def get_project_members(project_id):
+    """Get all members of a project"""
+    user_id = int(get_jwt_identity())
+    
+    try:
+        # Check if user has access to this project using service
+        project = ProjectService.get_project_by_id_or_404(project_id)
+        
+        user_membership = ProjectService.get_project_membership(user_id, project_id)
+        
+        if not user_membership:
+            return jsonify({'msg': 'Not a member of this project'}), 403
+        
+        # Get all project members using service
+        members = []
+        memberships = ProjectService.get_project_members(project_id)
+        
+        for membership in memberships:
+            user = ProjectService.get_user_by_id(membership.user_id)
+            if user:
+                members.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'full_name': getattr(user, 'full_name', user.username),
+                    'profile_picture': getattr(user, 'profile_picture', None),
+                    'is_owner': user.id == project.owner_id,
+                    'can_edit': membership.is_editor,
+                    'isEditor': membership.is_editor,  # For frontend compatibility
+                    'joined_at': membership.created_at.isoformat() if membership.created_at else None
+                })
+        
+        return jsonify({
+            'members': members,
+            'total_count': len(members)
+        }), 200
+        
+    except Exception as e:
+        print(f"Get project members error: {e}")
+        return jsonify({'msg': 'An error occurred while fetching project members'}), 500

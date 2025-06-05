@@ -8,7 +8,7 @@ import { Textarea } from './ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
-import { MessageCircle, Send, AtSign, X } from 'lucide-react';
+import { MessageCircle, Send, AtSign, X, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const TaskComments = ({ taskId }) => {
@@ -22,6 +22,9 @@ const TaskComments = ({ taskId }) => {
     const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
     const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
     const [isSearchingMembers, setIsSearchingMembers] = useState(false);
+    const [reloading, setReloading] = useState(false);
+    const [projectMembers, setProjectMembers] = useState([]);
+    const [loadingMembers, setLoadingMembers] = useState(false);
     const textareaRef = useRef(null);
     const mentionListRef = useRef(null);
 
@@ -34,16 +37,28 @@ const TaskComments = ({ taskId }) => {
     useEffect(() => {
         if (projectId && taskId) {
             fetchComments();
+            fetchProjectMembers();
         }
     }, [projectId, taskId]);
 
     useEffect(() => {
-        if (mentionSearch && projectId) {
-            searchProjectMembers(mentionSearch);
+        if (mentionSearch !== null) {
+            if (mentionSearch.trim() === '') {
+                // Show all project members when @ is typed with no search
+                setFilteredMembers(projectMembers);
+            } else {
+                // Filter project members based on search
+                const filteredProjectMembers = projectMembers.filter(user =>
+                    user.username?.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+                    user.email?.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+                    (user.full_name && user.full_name.toLowerCase().includes(mentionSearch.toLowerCase()))
+                );
+                setFilteredMembers(filteredProjectMembers);
+            }
         } else {
             setFilteredMembers([]);
         }
-    }, [mentionSearch, projectId]);
+    }, [mentionSearch, projectMembers]);
 
     const fetchTaskDetails = async () => {
         try {
@@ -56,29 +71,40 @@ const TaskComments = ({ taskId }) => {
         }
     };
 
-    const searchProjectMembers = async (query) => {
-        if (!query.trim()) {
-            setFilteredMembers([]);
-            return;
-        }
+    const fetchProjectMembers = async () => {
+        if (!projectId) return;
 
         try {
-            setIsSearchingMembers(true);
-            const response = await projectAPI.searchUsers({ q: query, limit: 10 });
-            setFilteredMembers(response.users || []);
-        } catch (err) {
-            console.error('User search error:', err);
-            setFilteredMembers([]);
+            setLoadingMembers(true);
+            const members = await messageAPI.getProjectMembers(projectId);
+            
+            // Format members for mention functionality
+            const formattedMembers = members.map(member => ({
+                id: member.id,
+                username: member.username || member.email?.split('@')[0] || 'user',
+                email: member.email,
+                full_name: member.full_name || member.username,
+                profile_picture: member.profile_picture
+            }));
+            
+            setProjectMembers(formattedMembers);
+            console.log('Loaded project members:', formattedMembers);
+        } catch (error) {
+            console.error('Error fetching project members:', error);
+            setProjectMembers([]);
         } finally {
-            setIsSearchingMembers(false);
+            setLoadingMembers(false);
         }
     };
 
-    const fetchComments = async () => {
-        if (!projectId || !taskId) return;
+    const fetchComments = async (isReload = false) => {
+        if (isReload) {
+            setReloading(true);
+        } else {
+            setIsLoading(true);
+        }
 
         try {
-            setIsLoading(true);
             const response = await messageAPI.getTaskMessages(projectId, taskId);
             setComments(response || []);
         } catch (error) {
@@ -86,6 +112,7 @@ const TaskComments = ({ taskId }) => {
             setComments([]);
         } finally {
             setIsLoading(false);
+            setReloading(false);
         }
     };
 
@@ -103,6 +130,10 @@ const TaskComments = ({ taskId }) => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleReload = () => {
+        fetchComments(true);
     };
 
     const handleTextareaChange = (e) => {
@@ -134,7 +165,7 @@ const TaskComments = ({ taskId }) => {
         }
 
         setShowMentions(false);
-        setMentionSearch('');
+        setMentionSearch(null);
     };
 
     const handleKeyDown = (e) => {
@@ -187,10 +218,9 @@ const TaskComments = ({ taskId }) => {
     };
 
     const getUserInitials = (user) => {
-        if (user.full_name) {
-            return user.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
-        }
-        return user.username?.substring(0, 2).toUpperCase() || 'U';
+        // Handle both comment objects and user objects
+        const name = user.user_name || user.full_name || user.username || 'Unknown User';
+        return name.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
     };
 
     const getTextMetrics = (text, textarea) => {
@@ -216,10 +246,25 @@ const TaskComments = ({ taskId }) => {
     return (
         <Card className="mt-6">
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5" />
-                    Comments ({comments.length})
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                        <MessageCircle className="h-5 w-5" />
+                        Task Comments
+                        {loadingMembers && (
+                            <div className="text-xs text-muted-foreground">(Loading members...)</div>
+                        )}
+                    </CardTitle>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleReload}
+                        disabled={reloading}
+                        className="flex items-center gap-2"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${reloading ? 'animate-spin' : ''}`} />
+                        {reloading ? 'Reloading...' : 'Reload'}
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
                 {/* Comments List */}
@@ -234,15 +279,15 @@ const TaskComments = ({ taskId }) => {
                             comments.map((comment) => (
                                 <div key={comment.id} className="flex gap-3">
                                     <Avatar className="h-8 w-8">
-                                        <AvatarImage src={comment.user?.profile_picture} />
+                                        <AvatarImage src={comment.profile_picture} />
                                         <AvatarFallback className="text-xs">
-                                            {getUserInitials(comment.user || { username: 'Unknown' })}
+                                            {getUserInitials(comment)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="font-medium text-sm">
-                                                {comment.user?.full_name || comment.user?.username || 'Unknown User'}
+                                                {comment.user_name || 'Unknown User'}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
                                                 {comment.created_at ?
@@ -252,7 +297,9 @@ const TaskComments = ({ taskId }) => {
                                             </span>
                                         </div>
                                         <div className="text-sm break-words">
-                                            {renderCommentContent(comment.content)}
+                                            <div dangerouslySetInnerHTML={{ 
+                                                __html: renderCommentContent(comment.content) 
+                                            }} />
                                         </div>
                                     </div>
                                 </div>
@@ -278,15 +325,15 @@ const TaskComments = ({ taskId }) => {
                         {showMentions && filteredMembers.length > 0 && (
                             <div
                                 ref={mentionListRef}
-                                className="fixed z-50 w-64 bg-background border rounded-md shadow-lg max-h-40 overflow-y-auto"
+                                className="absolute z-50 w-64 bg-background border rounded-md shadow-lg max-h-40 overflow-y-auto mt-1"
                                 style={{
                                     top: mentionPosition.top,
-                                    left: mentionPosition.left
+                                    left: Math.min(mentionPosition.left, 200) // Prevent overflow
                                 }}
                             >
                                 {filteredMembers.map((member, index) => (
                                     <div
-                                        key={member.id}
+                                        key={`${member.id}-${member.username}`}
                                         className={`px-3 py-2 cursor-pointer hover:bg-accent ${index === selectedMentionIndex ? 'bg-accent' : ''
                                             }`}
                                         onClick={() => selectMention(member)}
@@ -317,6 +364,9 @@ const TaskComments = ({ taskId }) => {
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <AtSign className="h-3 w-3" />
                             <span>Use @ to mention team members</span>
+                            {projectMembers.length > 0 && (
+                                <span>({projectMembers.length} members loaded)</span>
+                            )}
                         </div>
                         <Button type="submit" disabled={!newComment.trim() || isLoading} size="sm">
                             <Send className="h-4 w-4 mr-2" />
