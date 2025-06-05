@@ -18,12 +18,21 @@ class SocketService {
       const socketUrl = 'http://localhost:5000';
       const token = localStorage.getItem('access_token');
       
+      if (!token) {
+        console.warn('No access token found, cannot connect to Socket.IO');
+        return null;
+      }
+      
       this.socket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         timeout: 20000,
-        forceNew: true,
+        forceNew: false,
         autoConnect: true,
         withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        maxReconnectionDelay: 5000,
         auth: {
           token: token
         },
@@ -41,14 +50,9 @@ class SocketService {
         console.log('Socket disconnected:', reason);
         this.isConnected = false;
         
-        // Auto-reconnect on disconnect unless it was manual
-        if (reason !== 'io client disconnect') {
-          setTimeout(() => {
-            if (!this.isConnected) {
-              console.log('Attempting to reconnect...');
-              this.connect();
-            }
-          }, 3000);
+        // Only attempt manual reconnect for certain disconnect reasons
+        if (reason === 'io server disconnect' || reason === 'transport close') {
+          console.log('Server initiated disconnect, will attempt reconnect...');
         }
       });
 
@@ -56,11 +60,10 @@ class SocketService {
         console.error('Socket connection error:', error);
         this.isConnected = false;
         
-        // Fallback to polling if websocket fails
-        if (this.socket.io.opts.transports.includes('websocket')) {
-          console.log('Websocket failed, trying polling transport...');
-          this.socket.io.opts.transports = ['polling'];
-          setTimeout(() => this.connect(), 1000);
+        // Check if it's an authentication error
+        if (error.message && error.message.includes('Authentication')) {
+          console.error('Authentication failed, please login again');
+          // Could trigger a logout or token refresh here
         }
       });
 
@@ -96,6 +99,17 @@ class SocketService {
       this.socket.on('new_message', (messageData) => {
         console.log('New message:', messageData);
         window.dispatchEvent(new CustomEvent('newMessage', { detail: messageData }));
+      });
+
+      // Handle user tagging notifications
+      this.socket.on('user_tagged', (data) => {
+        console.log('User tagged notification:', data);
+        this.showNotification({
+          title: 'You were mentioned',
+          message: data.message,
+          type: 'mention',
+          data: data
+        });
       });
 
       return this.socket;

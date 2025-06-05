@@ -21,6 +21,7 @@ click-repl==0.3.0
 cloudinary==1.36.0
 disutils==1.4.32.post2
 dotenv==0.9.9
+eventlet==0.34.3
 flask==3.1.1
 flask-apscheduler==1.13.1
 flask-bcrypt==1.0.1
@@ -69,7 +70,7 @@ python-dotenv==1.0.0
 python-engineio==4.12.2
 python-socketio==5.13.0
 pytz==2025.2
-redis==4.5.5
+# redis==4.5.5  # Redis functionality commented out
 requests==2.31.0
 requests-oauthlib==2.0.0
 rsa==4.9.1
@@ -83,7 +84,7 @@ tzdata==2025.2
 tzlocal==5.3.1
 uritemplate==4.1.1
 urllib3==2.4.0
-valkey==6.0.2
+# valkey==6.0.2  # Valkey/Redis functionality commented out
 vine==5.1.0
 wcwidth==0.2.13
 werkzeug==3.1.3

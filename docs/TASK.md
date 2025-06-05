@@ -8,7 +8,7 @@
 - [ ] Fix missing analytics module import error
 - [ ] Ensure all route blueprints are properly implemented
 - [ ] Fix PowerShell command syntax for Windows users
-- [ ] Verify Redis/Valkey connection handling
+- [x] Verify Redis/Valkey connection handling - Commented out all Redis functionality ✅
 - [ ] Fix dashboard overview endpoint (404 error)
 
 #### 11. Fix CORS and 404 Errors for Finance Endpoints - 2025-01-16
@@ -44,9 +44,13 @@
 - [ ] Integrate chat panel in task detail view
 
 #### 4. Implement Real-time Task Chat with Socket.IO - 2025-01-15
-- [ ] Add Flask-SocketIO dependency to requirements.txt
-- [ ] Integrate Socket.IO into Flask app (app.py and extensions.py)
-- [ ] Create task_chat.py route for Socket.IO events
+- [x] Add Flask-SocketIO dependency to requirements.txt ✅
+- [x] Integrate Socket.IO into Flask app (app.py and extensions.py) ✅
+- [x] Create socket_events.py route for Socket.IO events ✅
+- [x] Fix Socket.IO WebSocket connection errors by switching to eventlet async mode ✅
+- [x] Fix authentication issues in Socket.IO connection handler ✅
+- [x] Improve frontend Socket.IO connection reliability and error handling ✅
+- [x] Add user tagging notifications via Socket.IO ✅
 - [ ] Add real-time messaging events (join_task_room, send_task_message, leave_task_room)
 - [ ] Update Message model methods for real-time broadcasting
 - [ ] Create TaskChatPanel frontend component with Socket.IO integration
@@ -247,6 +251,18 @@
 - [x] Update task assignment notifications to include project context ✅
 - [x] Update member addition notifications to include project context ✅
 - [x] Update existing migration script to add project_id to notification table ✅
+
+## Discovered During Work
+
+#### 25. Fix Socket.IO WebSocket Connection Issues - 2025-01-18 ✅
+- [x] Fix "write() before start_response" AssertionError in WebSocket connections ✅
+- [x] Resolve "Invalid user ID in token: 1" authentication errors ✅
+- [x] Switch Socket.IO async_mode from 'threading' to 'eventlet' for better WebSocket support ✅
+- [x] Add eventlet==0.34.3 dependency to requirements.txt ✅
+- [x] Improve user ID parsing in JWT token validation to handle string/integer conversion ✅
+- [x] Enhance frontend Socket.IO connection configuration with better reconnection logic ✅
+- [x] Add proper error handling and authentication checks in Socket.IO client ✅
+- [x] Add user_tagged event handler for mention notifications ✅
 - [x] Create migration logic to populate existing notifications with project context ✅
 
 #### 23. Fix CORS Cache-Control Header Issue - 2025-01-18

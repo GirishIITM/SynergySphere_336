@@ -38,6 +38,10 @@ def handle_connect(auth):
             )
             user_id = decoded_token.get('sub')
             
+            # Convert user_id to integer if it's a string
+            if isinstance(user_id, str) and user_id.isdigit():
+                user_id = int(user_id)
+            
             if not user_id:
                 logger.warning("No user ID found in token")
                 emit('connect_error', {'message': 'Invalid token format'})

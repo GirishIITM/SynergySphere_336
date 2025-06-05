@@ -43,20 +43,20 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
     GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 
-    # Redis/Valkey configuration
-    REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
-    REDIS_HOST = os.getenv('REDIS_HOST', 'valkey-22d89841-linuxgaruda52-2ca9.g.aivencloud.com')
-    REDIS_PORT = int(os.getenv('REDIS_PORT', '14001'))
-    REDIS_DB = int(os.getenv('REDIS_DB', '0'))
-    REDIS_SSL = os.getenv('REDIS_SSL', 'false').lower() == 'true'
+    # Redis/Valkey configuration - commented out
+    # REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+    # REDIS_HOST = os.getenv('REDIS_HOST', 'valkey-22d89841-linuxgaruda52-2ca9.g.aivencloud.com')
+    # REDIS_PORT = int(os.getenv('REDIS_PORT', '14001'))
+    # REDIS_DB = int(os.getenv('REDIS_DB', '0'))
+    # REDIS_SSL = os.getenv('REDIS_SSL', 'false').lower() == 'true'
     
-    # Construct Redis URL
-    REDIS_URL = os.getenv('REDIS_URL')
-    if not REDIS_URL:
-        if REDIS_PASSWORD:
-            REDIS_URL = f"redis://default:{urllib.parse.quote(REDIS_PASSWORD, safe='')}@{REDIS_HOST}:{REDIS_PORT}"
-        else:
-            REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
+    # Construct Redis URL - commented out
+    # REDIS_URL = os.getenv('REDIS_URL')
+    # if not REDIS_URL:
+    #     if REDIS_PASSWORD:
+    #         REDIS_URL = f"redis://default:{urllib.parse.quote(REDIS_PASSWORD, safe='')}@{REDIS_HOST}:{REDIS_PORT}"
+    #     else:
+    #         REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
 
 class DevelopmentConfig(Config):
     """Development configuration."""

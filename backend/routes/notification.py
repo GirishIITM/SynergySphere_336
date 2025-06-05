@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Notification
 from extensions import db
-from utils.route_cache import invalidate_cache_on_change
+# from utils.route_cache import invalidate_cache_on_change  # Redis functionality commented out
 
 notification_bp = Blueprint('notification', __name__)
 
@@ -80,7 +80,7 @@ def mark_read(notif_id):
 
 @notification_bp.route('/notifications/mark-all-read', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['notifications'])
+# @invalidate_cache_on_change(['notifications'])  # Redis functionality commented out
 def mark_all_read():
     """Mark all notifications as read for the current user."""
     user_id = int(get_jwt_identity())

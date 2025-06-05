@@ -7,7 +7,8 @@ import os
 import atexit
 
 from config import get_config
-from extensions import db, jwt, bcrypt, mail, init_redis, socketio
+from extensions import db, jwt, bcrypt, mail, socketio
+# from extensions import init_redis  # Redis functionality commented out
 from models import User, TokenBlocklist
 from routes import register_blueprints
 from utils.gmail import initialize_gmail_credentials
@@ -54,10 +55,20 @@ def create_app(config_class=None):
     db.init_app(app)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    init_redis(app)
+    # init_redis(app)  # Redis functionality commented out
     
     # Initialize Socket.IO with CORS support
-    socketio.init_app(app, cors_allowed_origins=allowed_origins, async_mode='threading')
+    socketio.init_app(
+        app, 
+        cors_allowed_origins=allowed_origins, 
+        async_mode='eventlet',
+        logger=True,
+        engineio_logger=True,
+        transports=['websocket', 'polling'],
+        allow_upgrades=True,
+        ping_timeout=10,
+        ping_interval=5
+    )
     
     # Initialize scheduler
     scheduler.init_app(app)
@@ -192,30 +203,30 @@ def create_app(config_class=None):
             print(f"Database setup warning: {e}")
             print("App will continue with limited functionality")
         
-        # Cache warm-up (SAFE inside app context)
-        try:
-            from utils.cache_helpers import warm_up_user_cache
-            warm_up_user_cache()
-            print("Cache warm-up completed successfully")
-        except Exception as e:
-            print(f"Cache warm-up error: {e}")
+        # Cache warm-up (SAFE inside app context) - Redis functionality commented out
+        # try:
+        #     from utils.cache_helpers import warm_up_user_cache
+        #     warm_up_user_cache()
+        #     print("Cache warm-up completed successfully")
+        # except Exception as e:
+        #     print(f"Cache warm-up error: {e}")
         
         # Start scheduler
         if not scheduler.running:
             scheduler.start()
             print("Scheduler started for deadline monitoring")
     
-    # Cache invalidation listeners
-    @db.event.listens_for(User, 'after_insert')
-    @db.event.listens_for(User, 'after_update')
-    @db.event.listens_for(User, 'after_delete')
-    def invalidate_user_cache(mapper, connection, target):
-        """Invalidate user search cache on user changes"""
-        try:
-            from utils.cache_helpers import UserSearchCache
-            UserSearchCache.invalidate_user_cache()
-        except Exception as e:
-            current_app.logger.error(f"Cache invalidation error: {e}")
+    # Cache invalidation listeners - Redis functionality commented out
+    # @db.event.listens_for(User, 'after_insert')
+    # @db.event.listens_for(User, 'after_update')
+    # @db.event.listens_for(User, 'after_delete')
+    # def invalidate_user_cache(mapper, connection, target):
+    #     """Invalidate user search cache on user changes"""
+    #     try:
+    #         from utils.cache_helpers import UserSearchCache
+    #         UserSearchCache.invalidate_user_cache()
+    #     except Exception as e:
+    #         current_app.logger.error(f"Cache invalidation error: {e}")
     
     return app
 

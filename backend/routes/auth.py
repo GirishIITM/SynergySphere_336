@@ -7,8 +7,8 @@ from utils.validation import validate_required_fields, sanitize_email, sanitize_
 from utils.auth_utils import (
     validate_login_data, authenticate_user, create_auth_response
 )
-from utils.redis_otp_service import RedisOTPService
-from utils.redis_token_service import RedisTokenService
+# from utils.redis_otp_service import RedisOTPService  # Redis functionality commented out
+# from utils.redis_token_service import RedisTokenService  # Redis functionality commented out
 from utils.google_oauth_service import GoogleOAuthService
 from utils.password_service import PasswordService
 from utils.cloudinary_upload import delete_cloudinary_image
@@ -49,10 +49,28 @@ def register():
             else:
                 return jsonify({"msg": "Username already exists"}), 400
         
-        success, message = RedisOTPService.send_registration_otp(full_name, email)
-        status_code = 200 if success else 500
+        # Redis OTP functionality commented out - using fallback
+        # success, message = RedisOTPService.send_registration_otp(full_name, email)
+        # status_code = 200 if success else 500
         
-        return jsonify({"msg": message, "email": email}), status_code
+        # Fallback: Direct registration without OTP
+        from extensions import bcrypt
+        hashed_password = bcrypt.generate_password_hash(data["password"]).decode('utf-8')
+        
+        new_user = User(
+            full_name=full_name,
+            username=username,
+            email=email,
+            password=hashed_password
+        )
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            return jsonify({"msg": "Registration successful", "email": email}), 201
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"msg": "Registration failed"}), 500
         
     except Exception as e:
         print(f"Registration error: {e}")
@@ -60,39 +78,45 @@ def register():
 
 @auth_bp.route("/verify-otp", methods=["POST"])
 def verify_otp():
-    try:
-        data = request.get_json()
-        is_valid, msg = validate_required_fields(data, ["email", "otp", "full_name", "username", "password"])
-        if not is_valid:
-            return jsonify({"msg": msg}), 400
-        
-        success, message = RedisOTPService.verify_registration_otp(
-            data["email"], data["otp"], data["full_name"], data["username"], data["password"]
-        )
-        status_code = 201 if success else 400
-        
-        return jsonify({"msg": message}), status_code
-        
-    except Exception as e:
-        print(f"OTP verification error: {e}")
-        return jsonify({"msg": "An error occurred during verification"}), 500
+    # Redis OTP functionality commented out - OTP verification disabled
+    return jsonify({"msg": "OTP verification is currently disabled"}), 400
+    
+    # try:
+    #     data = request.get_json()
+    #     is_valid, msg = validate_required_fields(data, ["email", "otp", "full_name", "username", "password"])
+    #     if not is_valid:
+    #         return jsonify({"msg": msg}), 400
+    #     
+    #     success, message = RedisOTPService.verify_registration_otp(
+    #         data["email"], data["otp"], data["full_name"], data["username"], data["password"]
+    #     )
+    #     status_code = 201 if success else 400
+    #     
+    #     return jsonify({"msg": message}), status_code
+    #     
+    # except Exception as e:
+    #     print(f"OTP verification error: {e}")
+    #     return jsonify({"msg": "An error occurred during verification"}), 500
 
 @auth_bp.route("/resend-otp", methods=["POST"])
 def resend_otp():
-    try:
-        data = request.get_json()
-        if not data or "email" not in data:
-            return jsonify({"msg": "Email is required"}), 400
-        
-        username = data.get("username", "User")
-        success, message = RedisOTPService.resend_registration_otp(data["email"], username)
-        status_code = 200 if success else 400
-        
-        return jsonify({"msg": message}), status_code
-        
-    except Exception as e:
-        print(f"Resend OTP error: {e}")
-        return jsonify({"msg": "An error occurred while resending OTP"}), 500
+    # Redis OTP functionality commented out - OTP resend disabled
+    return jsonify({"msg": "OTP resend is currently disabled"}), 400
+    
+    # try:
+    #     data = request.get_json()
+    #     if not data or "email" not in data:
+    #         return jsonify({"msg": "Email is required"}), 400
+    #     
+    #     username = data.get("username", "User")
+    #     success, message = RedisOTPService.resend_registration_otp(data["email"], username)
+    #     status_code = 200 if success else 400
+    #     
+    #     return jsonify({"msg": message}), status_code
+    #     
+    # except Exception as e:
+    #     print(f"Resend OTP error: {e}")
+    #     return jsonify({"msg": "An error occurred while resending OTP"}), 500
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
@@ -143,7 +167,19 @@ def logout():
         
         current_app.logger.info(f"Attempting to logout token with JTI: {jti}, Type: {ttype}")
         
-        success = RedisTokenService.blacklist_token(jti, ttype)
+        # Redis token blacklisting commented out - using database fallback
+        # success = RedisTokenService.blacklist_token(jti, ttype)
+        
+        # Database fallback for token blacklisting
+        from models import TokenBlocklist
+        try:
+            token_record = TokenBlocklist(jti=jti)
+            db.session.add(token_record)
+            db.session.commit()
+            current_app.logger.info(f"Token {jti} blacklisted in database")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Failed to blacklist token in database: {e}")
         
         current_app.logger.info(f"Logout completed for token {jti}")
         return jsonify({"msg": f"{ttype.capitalize()} token revoked successfully"}), 200

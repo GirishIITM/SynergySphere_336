@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from utils.route_cache import CacheWarmer, clear_all_route_cache, RouteCacheManager
+# from utils.route_cache import CacheWarmer, clear_all_route_cache, RouteCacheManager  # Redis functionality commented out
 from models import User
 
 cache_bp = Blueprint('cache_management', __name__)
@@ -17,8 +17,8 @@ def get_cache_stats():
         if not user or not getattr(user, 'is_admin', False):
             return jsonify({'msg': 'Admin access required'}), 403
         
-        stats = CacheWarmer.get_cache_stats()
-        return jsonify(stats), 200
+        # Redis cache functionality commented out
+        return jsonify({'msg': 'Cache functionality is currently disabled'}), 503
         
     except Exception as e:
         print(f"Cache stats error: {e}")
@@ -36,11 +36,8 @@ def clear_cache():
         if not user or not getattr(user, 'is_admin', False):
             return jsonify({'msg': 'Admin access required'}), 403
         
-        success = clear_all_route_cache()
-        if success:
-            return jsonify({'msg': 'Cache cleared successfully'}), 200
-        else:
-            return jsonify({'msg': 'Failed to clear cache'}), 500
+        # Redis cache functionality commented out
+        return jsonify({'msg': 'Cache functionality is currently disabled'}), 503
         
     except Exception as e:
         print(f"Clear cache error: {e}")
@@ -58,8 +55,8 @@ def warm_cache():
         if not user or not getattr(user, 'is_admin', False):
             return jsonify({'msg': 'Admin access required'}), 403
         
-        CacheWarmer.warm_common_routes()
-        return jsonify({'msg': 'Cache warming initiated'}), 200
+        # Redis cache functionality commented out
+        return jsonify({'msg': 'Cache functionality is currently disabled'}), 503
         
     except Exception as e:
         print(f"Cache warming error: {e}")
@@ -85,8 +82,8 @@ def invalidate_cache():
         if not isinstance(patterns, list):
             patterns = [patterns]
         
-        RouteCacheManager.invalidate_related_cache(patterns)
-        return jsonify({'msg': f'Cache invalidated for patterns: {patterns}'}), 200
+        # Redis cache functionality commented out
+        return jsonify({'msg': 'Cache functionality is currently disabled'}), 503
         
     except Exception as e:
         print(f"Cache invalidation error: {e}")
