@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import { setupCacheClearingOnRefresh, addNoCacheHeaders } from './utils/cacheManager';
 import socketService from './utils/socketService';
+import { Toaster } from "@/components/ui/sonner"
 
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
@@ -328,6 +329,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </LoadingIndicator>
+          <Toaster richColors closeButton />
         </main>
       </div>
     </BrowserRouter>

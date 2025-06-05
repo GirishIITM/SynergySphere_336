@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { notificationAPI } from "../../utils/apiCalls/notificationAPI";
 import socketService from '../../utils/socketService';
+import { toast } from "sonner";
 import { 
   Sun, 
   Moon, 
@@ -53,6 +54,30 @@ export default function Inbox() {
         project_name: data.context?.project_name,
         notification_type: 'tagged'
       };
+      
+      // Show toast notification
+      const contextInfo = data.context?.task_title 
+        ? `in task "${data.context.task_title}"` 
+        : data.context?.project_name 
+          ? `in project "${data.context.project_name}"`
+          : '';
+      
+      toast.info("You've been tagged!", {
+        description: `${data.message} ${contextInfo}`,
+        duration: 5000,
+        action: {
+          label: "View",
+          onClick: () => {
+            if (data.context?.task_id) {
+              navigate(`/solutions/tasks/${data.context.task_id}?tab=comments`);
+            } else if (data.context?.project_id) {
+              navigate(`/solutions/projects/${data.context.project_id}`);
+            } else {
+              navigate('/solutions/InBox?tab=tagged');
+            }
+          }
+        }
+      });
       
       // Update tagged notifications
       setTaggedNotifications(prev => [newNotification, ...prev]);
