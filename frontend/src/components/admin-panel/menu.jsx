@@ -30,6 +30,9 @@ export function Menu({
       console.error("Logout API call failed:", error);
     } finally {
       clearAuthData();
+      // Reset theme to light mode
+      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove('theme-dark', 'dark');
       navigate("/login");
     }
   };
