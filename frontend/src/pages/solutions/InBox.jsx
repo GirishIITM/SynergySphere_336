@@ -18,7 +18,7 @@ import {
   CheckCircle,
   AlertCircle,
   User,
-  Project,
+  Briefcase,
   Calendar,
   ExternalLink
 } from "lucide-react";
@@ -182,7 +182,7 @@ export default function Inbox() {
                   
                   {notification.project_name && (
                     <div className="flex items-center gap-1">
-                      <Project className="w-3 h-3" />
+                      <Briefcase className="w-3 h-3" />
                       <span>{notification.project_name}</span>
                     </div>
                   )}
