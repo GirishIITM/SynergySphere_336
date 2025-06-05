@@ -54,6 +54,7 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
 
   useEffect(() => {
     if (initialTasksGrouped) {
+      console.log('TaskBoard: Updating local state from parent', initialTasksGrouped);
       setTasksGrouped(initialTasksGrouped);
     }
   }, [initialTasksGrouped]);
@@ -173,21 +174,24 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
       // Update task status via API
       await taskAPI.updateTaskStatus(draggedTask.id, newStatus);
       
-      console.log('TaskBoard: API call successful, updating local state');
+      console.log('TaskBoard: API call successful, notifying parent');
       
-      // Update local state - move task to new status group
+      // Create updated task object
       const updatedTask = { ...draggedTask, status: newStatus };
-      const updatedTasks = {
-        ...tasksGrouped,
-        [draggedTask.status]: tasksGrouped[draggedTask.status].filter(task => task.id !== draggedTask.id),
-        [newStatus]: [...tasksGrouped[newStatus], updatedTask]
-      };
-      setTasksGrouped(updatedTasks);
 
-      // Notify parent component if callback provided
+      // Notify parent component to handle state updates
       if (onTaskUpdate) {
         console.log('TaskBoard: Notifying parent component', updatedTask);
         onTaskUpdate(updatedTask);
+      } else {
+        // Fallback: update local state if no parent callback
+        console.log('TaskBoard: No parent callback, updating local state');
+        const updatedTasks = {
+          ...tasksGrouped,
+          [draggedTask.status]: tasksGrouped[draggedTask.status].filter(task => task.id !== draggedTask.id),
+          [newStatus]: [...tasksGrouped[newStatus], updatedTask]
+        };
+        setTasksGrouped(updatedTasks);
       }
 
       setDraggedTask(null);
