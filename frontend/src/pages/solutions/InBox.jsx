@@ -28,7 +28,7 @@ export default function Inbox() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [taggedNotifications, setTaggedNotifications] = useState([]);
-  const [tab, setTab] = useState("tagged");
+  const [tab, setTab] = useState("activity");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');

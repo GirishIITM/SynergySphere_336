@@ -195,6 +195,8 @@
 - [x] Add click functionality to navigate to TaskDetail page from inbox items ✅
 - [x] Implement proper message preview and context in inbox ✅
 - [x] Add notification categorization (tagged, assigned, general) ✅
+- [x] Fix default inbox tab to show "All Activity" instead of "Tagged" so general message notifications appear by default ✅
+- [x] Fix TypeError in mention detection where extract_mentions result was passed to find_mentioned_users instead of raw content ✅
 - [ ] Create tests for mention detection and notification functionality
 
 #### 22. Fix CORS and 500 Error for /notifications/tagged Endpoint - 2025-01-18 ✅

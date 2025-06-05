@@ -40,16 +40,13 @@ def post_message(project_id):
     current_user = message.user
     
     # Extract mentions and create mention notifications
-    mentions = extract_mentions(content)
+    mentioned_users = find_mentioned_users(content, project.members)
     mentioned_user_ids = []
-    if mentions:
-        # Find mentioned users who are project members
-        mentioned_users = find_mentioned_users(mentions, project.members)
-        if mentioned_users:
-            # Create mention notifications using the utility function
-            mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
-            mentioned_user_ids = [user.id for user in mentioned_users]
-            # Mention notifications are already added to session in the utility function
+    if mentioned_users:
+        # Create mention notifications using the utility function
+        mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
+        mentioned_user_ids = [user.id for user in mentioned_users]
+        # Mention notifications are already added to session in the utility function
     
     # Notify other members about the new project message (except sender and mentioned users)
     for member in project.members:

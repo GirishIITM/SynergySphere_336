@@ -68,14 +68,11 @@ def post_task_message(project_id, task_id):
     current_user = User.query.get(user_id)
     
     # Extract mentions and create mention notifications
-    mentions = extract_mentions(content)
-    if mentions:
-        # Find mentioned users who are project members
-        mentioned_users = find_mentioned_users(mentions, project.members)
-        if mentioned_users:
-            # Create mention notifications using the utility function
-            mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
-            # Mention notifications are already added to session in the utility function
+    mentioned_users = find_mentioned_users(content, project.members)
+    if mentioned_users:
+        # Create mention notifications using the utility function
+        mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
+        # Mention notifications are already added to session in the utility function
     
     # Create general activity notifications for all project members (except sender and mentioned users)
     mentioned_user_ids = [user.id for user in mentioned_users] if 'mentioned_users' in locals() else []
