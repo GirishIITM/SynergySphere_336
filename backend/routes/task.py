@@ -185,8 +185,8 @@ def get_all_tasks():
         # Get total count for pagination
         total_count = query.count()
         
-        # Apply pagination and ordering
-        tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+        # Apply pagination and ordering with favorites first
+        tasks = query.order_by(Task.is_favorite.desc(), Task.created_at.desc()).offset(offset).limit(limit).all()
         
         tasks_data = []
         for task in tasks:
@@ -587,8 +587,8 @@ def get_project_tasks(project_id):
         return jsonify({'msg': 'Not authorized'}), 403
     
     try:
-        # Get all tasks for this project
-        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
+        # Get all tasks for this project with favorites first
+        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.is_favorite.desc(), Task.created_at.desc()).all()
         
         tasks_data = []
         for task in tasks:
@@ -638,8 +638,8 @@ def get_project_tasks_grouped(project_id):
         return jsonify({'msg': 'Not authorized'}), 403
     
     try:
-        # Get all tasks for this project
-        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
+        # Get all tasks for this project with favorites first
+        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.is_favorite.desc(), Task.created_at.desc()).all()
         
         # Group tasks by status with favorites at the top of each group
         grouped_tasks = {
@@ -722,8 +722,8 @@ def get_all_tasks_grouped():
         if project_id:
             query = query.filter(Task.project_id == project_id)
         
-        # Get tasks with pagination
-        tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+        # Get tasks with pagination, favorites first
+        tasks = query.order_by(Task.is_favorite.desc(), Task.created_at.desc()).offset(offset).limit(limit).all()
         
         # Group tasks by status with favorites at the top of each group
         grouped_tasks = {
