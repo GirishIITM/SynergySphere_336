@@ -198,6 +198,17 @@
 - [ ] Create tests for mention detection and notification functionality
 
 #### 22. Fix CORS and 500 Error for /notifications/tagged Endpoint - 2025-01-18 ✅
+- [x] Identified missing project_id column in notification table ✅
+- [x] Updated migrate.py to include notification table migration in Flask migration function ✅
+- [x] Added comprehensive notification column migration (task_id, project_id, message_id, notification_type) ✅
+- [x] Fixed syntax differences between SQLite and PostgreSQL migrations ✅
+- [x] Added data population for existing notifications ✅
+
+#### 23. Fix Database Schema for Notifications - 2025-01-18
+- [x] Update migrate.py to handle missing notification table columns ✅
+- [x] Add Flask migration support for notification enhancements ✅
+- [x] Ensure compatibility with both SQLite and PostgreSQL ✅
+- [x] Add data migration for existing notification records ✅
 
 #### 24. Ensure All Messages for Users Show in Inbox - 2025-01-18 ✅
 - [x] Add project_id field to Notification model for better context ✅

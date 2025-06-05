@@ -408,6 +408,58 @@ def run_flask_migration():
                         """))
                         print("  ✅ Migrated existing tasks to use status_id")
             
+            # Check notification table and add enhanced columns if missing
+            if inspector.has_table('notification'):
+                notification_columns = [col['name'] for col in inspector.get_columns('notification')]
+                print(f"📋 Existing notification columns: {notification_columns}")
+                is_sqlite = 'sqlite' in str(db.engine.url)
+                
+                notification_required_columns = [
+                    ('task_id', 'INTEGER'),
+                    ('project_id', 'INTEGER'),
+                    ('message_id', 'INTEGER'),
+                    ('notification_type', 'VARCHAR(50) DEFAULT \'general\'')
+                ]
+                
+                with db.engine.begin() as conn:
+                    for column_name, column_def in notification_required_columns:
+                        if column_name not in notification_columns:
+                            try:
+                                # Adjust syntax for SQLite vs PostgreSQL
+                                if is_sqlite and column_name == 'notification_type':
+                                    conn.execute(text(f'ALTER TABLE notification ADD COLUMN {column_name} VARCHAR(50) DEFAULT "general"'))
+                                else:
+                                    conn.execute(text(f'ALTER TABLE notification ADD COLUMN {column_name} {column_def}'))
+                                print(f"  ✅ Added {column_name} to notification table")
+                            except Exception as e:
+                                print(f"  ❌ Error adding {column_name} to notification: {str(e)}")
+                    
+                    # Set default notification_type for existing notifications
+                    conn.execute(text("""
+                        UPDATE notification 
+                        SET notification_type = 'general' 
+                        WHERE notification_type IS NULL
+                    """))
+                    
+                    # Update existing notifications to link them to projects where possible
+                    # For task-related notifications, get project_id from task.project_id
+                    conn.execute(text("""
+                        UPDATE notification 
+                        SET project_id = (
+                            SELECT task.project_id 
+                            FROM task 
+                            WHERE task.id = notification.task_id
+                        )
+                        WHERE notification.task_id IS NOT NULL 
+                        AND notification.project_id IS NULL
+                    """))
+                    
+                    updated_count = conn.execute(text("SELECT changes()")).scalar() if is_sqlite else 0
+                    if updated_count > 0:
+                        print(f"  ✅ Updated {updated_count} existing notifications with project context")
+                    else:
+                        print("  ✅ Updated existing notifications with project context")
+            
             print("🎉 Flask migration completed successfully!")
             return True
             
@@ -468,6 +520,8 @@ def main():
         print("   • Enhanced messaging (task_id in message table)")
         print("   • Status system (status table with status_id in tasks)")
         print("   • Three default statuses: Pending, In Progress, Completed")
+        print("   • Enhanced notifications (task_id, project_id, message_id, notification_type)")
+        print("   • Notification categorization (tagged, assigned, general)")
     else:
         print("\n❌ Migration failed!")
         print("Please check the error messages above and try again.")
