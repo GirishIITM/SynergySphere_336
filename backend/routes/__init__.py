@@ -11,6 +11,8 @@ def register_blueprints(app):
     from .dashboard import dashboard_bp
     from .analytics import analytics_bp
     from .finance import finance_bp
+    from .message_advanced import message_advanced_bp
+    from .task_advanced import task_advanced_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -23,3 +25,5 @@ def register_blueprints(app):
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(analytics_bp, url_prefix='/analytics')
     app.register_blueprint(finance_bp, url_prefix='/finance')
+    app.register_blueprint(message_advanced_bp)
+    app.register_blueprint(task_advanced_bp, url_prefix='/task_advanced')

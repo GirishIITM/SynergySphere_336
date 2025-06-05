@@ -269,6 +269,14 @@ def create_task_direct():
         project_id=project_id,
         owner_id=assignee.id if assignee else user_id
     )
+    
+    # Add budget if provided
+    if 'budget' in data and data['budget']:
+        try:
+            task.budget = float(data['budget'])
+        except (ValueError, TypeError):
+            return jsonify({'msg': 'Invalid budget value'}), 400
+    
     db.session.add(task)
     db.session.commit()
     
@@ -346,9 +354,18 @@ def update_task_direct(task_id):
         return jsonify({'msg': 'Project assignment cannot be changed when editing a task'}), 400
     if 'owner_id' in data:
         task.owner_id = data['owner_id']
+    if 'assigned_to' in data:
+        task.owner_id = data['assigned_to']
     
-    # Tasks do not have budgets - only expenses can be added to tasks
-    # Budgets are managed at the project level
+    # Add budget field support
+    if 'budget' in data:
+        if data['budget']:
+            try:
+                task.budget = float(data['budget'])
+            except (ValueError, TypeError):
+                return jsonify({'msg': 'Invalid budget value'}), 400
+        else:
+            task.budget = None
     
     db.session.commit()
     

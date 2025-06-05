@@ -31,11 +31,11 @@
 
 #### 2. Add Budget Field to Task Creation - 2024-12-28
 - [x] Add budget field to Task model ✅ (Already implemented in task.py)
-- [ ] Update task creation endpoints to accept budget
-- [ ] Update frontend TaskCreate component to include budget input
-- [ ] Update task API calls to include budget field
-- [ ] Add validation for budget field
-- [ ] Update tests for task creation with budget
+- [x] Update task creation endpoints to accept budget ✅
+- [x] Update frontend TaskCreate component to include budget input ✅
+- [x] Update task API calls to include budget field ✅
+- [x] Add validation for budget field ✅
+- [x] Update tests for task creation with budget ✅
 
 #### 3. Enhanced Communication: Chat Within Tasks
 - [ ] Extend Message model with task_id field

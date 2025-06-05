@@ -278,14 +278,63 @@ export const taskAPI = {
     );
   },
 
-  /**
-   * Delete a task
-   * @param {number} taskId - Task ID
-   * @param {number} project_id - Project ID the task belongs to
-   * @returns {Promise} - Delete response
-   */
   deleteTask: (taskId, project_id) => {
     return apiRequest(`/auth/tasks/${taskId}`, 'DELETE', { project_id }, `tasks-delete-${taskId}`);
+  }
+};
+
+/**
+ * Message related API functions
+ */
+export const messageAPI = {
+  /**
+   * Get messages for a specific task
+   * @param {number} projectId - Project ID
+   * @param {number} taskId - Task ID
+   * @returns {Promise} - Messages list response
+   */
+  getTaskMessages: (projectId, taskId) => {
+    return apiRequest(`/auth/projects/${projectId}/tasks/${taskId}/messages`, 'GET', null, `task-messages-${taskId}`);
+  },
+
+  /**
+   * Send a message to a specific task
+   * @param {number} projectId - Project ID
+   * @param {number} taskId - Task ID
+   * @param {string} content - Message content
+   * @returns {Promise} - Message creation response
+   */
+  sendTaskMessage: (projectId, taskId, content) => {
+    return apiRequest(
+      `/auth/projects/${projectId}/tasks/${taskId}/messages`,
+      'POST',
+      { content },
+      `task-message-send-${taskId}`
+    );
+  },
+
+  /**
+   * Get project messages
+   * @param {number} projectId - Project ID
+   * @returns {Promise} - Messages list response
+   */
+  getProjectMessages: (projectId) => {
+    return apiRequest(`/auth/projects/${projectId}/messages`, 'GET', null, `project-messages-${projectId}`);
+  },
+
+  /**
+   * Send a message to a project
+   * @param {number} projectId - Project ID
+   * @param {string} content - Message content
+   * @returns {Promise} - Message creation response
+   */
+  sendProjectMessage: (projectId, content) => {
+    return apiRequest(
+      `/projects/${projectId}/messages`,
+      'POST',
+      { content },
+      `project-message-send-${projectId}`
+    );
   }
 };
 
@@ -319,7 +368,7 @@ export const isAuthenticated = () => {
  * Get current user data
  * @returns {object|null} - User data or null if not logged in
  */
-export const getCurrentUser = () => {
+const getCurrentUser = () => {
   const userData = localStorage.getItem('user');
   return userData ? JSON.parse(userData) : null;
 };
@@ -328,6 +377,7 @@ export default {
   authAPI,
   projectAPI,
   taskAPI,
+  messageAPI,
   saveAuthData,
   clearAuthData,
   isAuthenticated,

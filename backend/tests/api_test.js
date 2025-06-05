@@ -173,7 +173,8 @@ async function testCreateTask() {
     title: `Test Task ${Date.now()}`,
     description: 'This is a task created by automated API tests',
     due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now with time
-    status: 'Not Started'
+    status: 'Not Started',
+    budget: 1000.00
   });
   taskId = response.data.task_id;
   console.log(`Task created with ID: ${taskId}`);
@@ -186,7 +187,8 @@ async function testUpdateTask() {
     title: `Updated Task ${Date.now()}`,
     description: 'This task was updated by automated API tests',
     due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now with time
-    status: 'In Progress'
+    status: 'In Progress',
+    budget: 1500.00
   });
   console.log('Task updated successfully');
   return response.data;
