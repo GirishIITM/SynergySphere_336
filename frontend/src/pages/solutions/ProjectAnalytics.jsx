@@ -199,7 +199,7 @@ const ProjectAnalytics = () => {
                 {stats.budget_stats ? `${stats.budget_stats.usage_percentage.toFixed(1)}%` : 'N/A'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {stats.budget_stats ? `$${stats.budget_stats.spent_amount.toLocaleString()} spent` : 'No budget set'}
+                {stats.budget_stats ? `₹${stats.budget_stats.spent_amount.toLocaleString()} spent` : 'No budget set'}
               </p>
             </CardContent>
           </Card>

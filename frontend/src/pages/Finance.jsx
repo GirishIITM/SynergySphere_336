@@ -177,9 +177,9 @@ const Finance = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 0
     }).format(amount || 0);
   };
@@ -364,7 +364,7 @@ const Finance = () => {
                 <AreaChart data={monthlySpendingData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                  <YAxis tickFormatter={(value) => `₹${value.toLocaleString()}`} />
                   <Tooltip formatter={(value) => [formatCurrency(value), 'Spending']} />
                   <Area type="monotone" dataKey="amount" stroke="#0088FE" fill="#0088FE" fillOpacity={0.3} />
                 </AreaChart>
@@ -392,7 +392,7 @@ const Finance = () => {
               <BarChart data={categoryData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
-                <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+                <YAxis tickFormatter={(value) => `₹${value.toLocaleString()}`} />
                 <Tooltip formatter={(value) => [formatCurrency(value), 'Amount']} />
                 <Bar dataKey="amount" fill="#0088FE" />
               </BarChart>

@@ -133,6 +133,7 @@
 - Complete Global Finance Page
 - Fix Project Details Routing
 - Expenses: Complete Implementation
+- Change Currency Display from USD ($) to INR (₹) - 2025-01-18 ✅
 
 ### 🔥 New Enhancement Tasks for Expenses Feature
 
