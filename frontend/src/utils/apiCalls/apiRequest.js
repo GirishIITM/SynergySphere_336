@@ -1,4 +1,4 @@
-// export const API_BASE_URL = "https://odoo336-akhta2hvagf3czda.southindia-01.azurewebsites.net"
+// Use localhost for local development
 export const API_BASE_URL = "http://localhost:5000";
 
 export const loadingState = {

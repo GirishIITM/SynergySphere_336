@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { notificationAPI } from "../../utils/apiCalls/notificationAPI";
+import socketService from '../../utils/socketService';
 import { 
   Sun, 
   Moon, 
@@ -35,6 +36,47 @@ export default function Inbox() {
 
   useEffect(() => {
     loadNotifications();
+    
+    // Listen for real-time tagged notifications
+    const handleTaggedNotification = (data) => {
+      console.log('Received real-time tagged notification:', data);
+      
+      // Add new notification to the list
+      const newNotification = {
+        id: data.notification_id,
+        message: data.message,
+        is_read: false,
+        created_at: data.timestamp || new Date().toISOString(),
+        task_id: data.context?.task_id,
+        project_id: data.context?.project_id,
+        task_title: data.context?.task_title,
+        project_name: data.context?.project_name,
+        notification_type: 'tagged'
+      };
+      
+      // Update tagged notifications
+      setTaggedNotifications(prev => [newNotification, ...prev]);
+      
+      // Also add to general notifications if it's not already there
+      setNotifications(prev => [newNotification, ...prev]);
+    };
+
+    // Add event listener for tagged notifications
+    socketService.addEventListener('user_tagged', handleTaggedNotification);
+    
+    // Listen for notification updates from other parts of the app
+    const handleNotificationUpdate = (event) => {
+      if (event.detail?.type === 'tagged') {
+        loadNotifications(); // Refresh notifications
+      }
+    };
+    
+    window.addEventListener('notificationUpdate', handleNotificationUpdate);
+    
+    return () => {
+      socketService.removeEventListener('user_tagged', handleTaggedNotification);
+      window.removeEventListener('notificationUpdate', handleNotificationUpdate);
+    };
   }, []);
 
   /**
