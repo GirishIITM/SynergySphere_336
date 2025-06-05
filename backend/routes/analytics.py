@@ -19,7 +19,7 @@ from services.analytics_service import AnalyticsService
 analytics_bp = Blueprint('analytics', __name__)
 
 
-@analytics_bp.route('/analytics/productivity', methods=['GET'])
+@analytics_bp.route('/productivity', methods=['GET'])
 @jwt_required()
 def get_productivity_analytics():
     """
@@ -111,7 +111,7 @@ def get_productivity_analytics():
         return jsonify({'msg': 'Failed to fetch productivity analytics'}), 500
 
 
-@analytics_bp.route('/analytics/projects', methods=['GET'])
+@analytics_bp.route('/projects', methods=['GET'])
 @jwt_required()
 def get_project_analytics():
     """
@@ -204,7 +204,7 @@ def get_project_analytics():
         return jsonify({'msg': 'Failed to fetch project analytics'}), 500
 
 
-@analytics_bp.route('/analytics/team', methods=['GET'])
+@analytics_bp.route('/team', methods=['GET'])
 @jwt_required()
 def get_team_analytics():
     """
@@ -517,7 +517,7 @@ def get_resource_utilization(project_id):
         return jsonify({'msg': 'Failed to fetch resource utilization'}), 500
 
 
-@analytics_bp.route('/analytics/trends', methods=['GET'])
+@analytics_bp.route('/trends', methods=['GET'])
 @jwt_required()
 def get_trend_analysis():
     """Get trend analysis for user productivity and performance."""
@@ -554,7 +554,7 @@ def get_project_risk_assessment(project_id):
         return jsonify({'msg': 'Failed to fetch risk assessment'}), 500
 
 
-@analytics_bp.route('/analytics/performance-prediction', methods=['GET'])
+@analytics_bp.route('/performance-prediction', methods=['GET'])
 @jwt_required()
 def get_performance_prediction():
     """Get performance prediction based on historical data."""
