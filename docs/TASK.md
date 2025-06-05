@@ -127,6 +127,15 @@
 - [x] Clean up unused budget imports and functions ✅
 - [x] Update task API calls to not include budget parameter ✅
 
+#### 15. Update ProjectEdit Page to Match ProjectCreate Columns - 2025-01-18
+- [x] Add project image upload functionality to ProjectEdit ✅
+- [x] Add team member management to ProjectEdit (add/remove members) ✅
+- [x] Add member permission editing to ProjectEdit ✅
+- [x] Update form layout to match ProjectCreate structure ✅
+- [x] Maintain existing edit functionality while adding new features ✅
+- [x] Add getProjectMembers API method ✅
+- [x] Update updateProject API to handle FormData for file uploads ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

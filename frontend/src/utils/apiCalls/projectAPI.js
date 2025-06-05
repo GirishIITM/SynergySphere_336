@@ -54,6 +54,10 @@ export const projectAPI = {
     return apiRequest(`/projects/${id}`, 'GET', null, 'projects-get-single');
   },
 
+  getProjectMembers: (id) => {
+    return apiRequest(`/projects/${id}/members`, 'GET', null, 'projects-get-members');
+  },
+
   createProject: (projectData) => {
     const hasMemberEmails = projectData.member_emails && projectData.member_emails.length > 0;
     const hasMemberPermissions = projectData.member_permissions && Object.keys(projectData.member_permissions).length > 0;
@@ -112,6 +116,11 @@ export const projectAPI = {
   },
 
   updateProject: (id, data) => {
+    // Check if we have FormData (for file uploads or member updates)
+    if (data instanceof FormData) {
+      return apiRequest(`/projects/${id}`, 'PUT', data, 'projects-update', false);
+    }
+    
     const jsonData = {
       name: data.name,
       description: data.description || '',
