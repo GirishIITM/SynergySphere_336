@@ -20,16 +20,45 @@ class Notification(db.Model):
 
     def to_dict(self):
         """Convert notification to dictionary for JSON serialization."""
-        return {
-            'id': self.id,
-            'user_id': self.user_id,
-            'message': self.message,
-            'is_read': self.is_read,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'task_id': self.task_id,
-            'message_id': self.message_id,
-            'notification_type': self.notification_type,
-            'task_title': self.task.title if self.task else None,
-            'project_id': self.task.project_id if self.task else None,
-            'project_name': self.task.project.name if self.task and self.task.project else None
-        }
+        try:
+            # Safely get task-related information
+            task_title = None
+            project_id = None
+            project_name = None
+            
+            if self.task:
+                task_title = self.task.title
+                project_id = self.task.project_id
+                # Safely access the project relationship
+                if hasattr(self.task, 'project') and self.task.project:
+                    project_name = self.task.project.name
+            
+            return {
+                'id': self.id,
+                'user_id': self.user_id,
+                'message': self.message,
+                'is_read': self.is_read,
+                'created_at': self.created_at.isoformat() if self.created_at else None,
+                'task_id': self.task_id,
+                'message_id': self.message_id,
+                'notification_type': self.notification_type,
+                'task_title': task_title,
+                'project_id': project_id,
+                'project_name': project_name
+            }
+        except Exception as e:
+            # Fallback to basic notification data if relationship access fails
+            return {
+                'id': self.id,
+                'user_id': self.user_id,
+                'message': self.message,
+                'is_read': self.is_read,
+                'created_at': self.created_at.isoformat() if self.created_at else None,
+                'task_id': self.task_id,
+                'message_id': self.message_id,
+                'notification_type': self.notification_type,
+                'task_title': None,
+                'project_id': None,
+                'project_name': None,
+                'error': f'Relationship access error: {str(e)}'
+            }
