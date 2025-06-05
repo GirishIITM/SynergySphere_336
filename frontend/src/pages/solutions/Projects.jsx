@@ -126,7 +126,7 @@ const Projects = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/30 p-6">
+    <div className="min-h-screen bg-black-50/30 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -292,9 +292,10 @@ const Projects = () => {
                           <span>Tasks: {project.task_stats.completed}/{project.task_stats.total}</span>
                           <div className="w-24 bg-gray-200 rounded-full h-1.5">
                             <div
-                              className="bg-primary h-1.5 rounded-full"
+                              className="bg-black h-1.5 rounded-full"
                               style={{
-                                width: `${project.task_stats.total > 0 ? (project.task_stats.completed / project.task_stats.total) * 100 : 0}%`
+                                width: `${project.task_stats.total > 0 ? (project.task_stats.completed / project.task_stats.total) * 100 : 0}%`,
+                              
                               }}
                             />
                           </div>
