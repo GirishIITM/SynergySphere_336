@@ -14,6 +14,20 @@
 
 SynergySphere is more than project management—it's the collaboration engine that anticipates bottlenecks, keeps everyone synced in real-time, and turns scattered tasks into a single, flowing workspace. Whether you're on desktop or mobile, SynergySphere provides intelligent insights to help your team work smarter and achieve more together.
 
+## 🎥 Video Demo
+
+Watch our project demo video to see SynergySphere in action:
+
+[📺 SynergySphere Demo Video](https://drive.google.com/file/d/1Yx2Hs9kLMn4QwZrP8V_dQjgR2kZKvXpL/view?usp=sharing)
+
+The video demonstrates key features including:
+- Project and task management workflow
+- Real-time collaboration capabilities  
+- AI-powered analytics and insights
+- Financial management tools
+- Mobile responsiveness
+
+
 ## 💡 Why SynergySphere?
 
 SynergySphere addresses real team collaboration challenges:
