@@ -3,7 +3,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Project, Message, Notification
 from extensions import db
 from utils.email import send_email
-from utils.mention_utils import extract_mentions, find_mentioned_users, create_mention_notifications
+from utils.mention_utils import find_mentioned_users, create_mention_notifications
+from flask_sse import sse
+
 
 message_bp = Blueprint('message', __name__)
 
@@ -20,6 +22,25 @@ def get_messages(project_id):
         for m in project.messages
     ]
     return jsonify(messages)
+
+@message_bp.cli.command('notify_tagged_users')
+def notify_tagged_users():
+    messages = Message.query.all()
+    for message in messages:
+        mentioned_users = find_mentioned_users(message.content, message.project.members)
+        if mentioned_users:
+            current_user = message.user
+            mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
+            db.session.add_all(mention_notifications)
+            db.session.commit()
+            for user in mentioned_users:
+                if user.notify_email:
+                    send_email(
+                        "You were mentioned in a project message",
+                        [user.email],
+                        "",
+                        f"{current_user.username} mentioned you: {message.content}"
+                    )
 
 @message_bp.route('/projects/<int:project_id>/messages', methods=['POST'])
 @jwt_required()
