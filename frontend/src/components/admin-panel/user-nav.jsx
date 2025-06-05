@@ -42,8 +42,8 @@ export function UserNav() {
       // Clear auth data regardless of API response
       clearAuthData();
       // Reset theme to light mode
-      localStorage.setItem('theme', 'light');
-      document.documentElement.classList.remove('theme-dark', 'dark');
+      // localStorage.setItem('theme', 'light');
+      // document.documentElement.classList.remove('theme-dark', 'dark');
       // Redirect to login page
       navigate("/login");
     }
