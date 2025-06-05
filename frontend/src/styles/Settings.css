@@ -3,7 +3,7 @@
   margin: 0 auto;
   padding: 2rem 1rem;
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background-color: var(--color-btn-disabled-b);
   min-height: 100vh;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .settings-section {
-  background-color: var(--color-surface);
+  background-color: var(--color-bg);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 4px 20px var(--color-shadow);
@@ -62,7 +62,7 @@
   align-items: center;
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background-color: var(--color-surface-variant);
+  background-color: var(--color-bg);
   border-radius: 8px;
   border-left: 4px solid transparent;
   transition: border-color 0.3s;
@@ -139,7 +139,7 @@
   justify-content: flex-end;
   margin-top: 2rem;
   padding: 2rem;
-  background-color: var(--color-surface);
+  background-color: var(--color-bg);
   border-radius: 12px;
   box-shadow: 0 4px 20px var(--color-shadow);
 }

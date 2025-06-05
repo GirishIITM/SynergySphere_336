@@ -456,7 +456,7 @@ const ProjectCreate = () => {
                   {searchResults.map(user => (
                     <div
                       key={user.id}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-3"
+                      className="bg-black px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-3"
                       onClick={() => addMember(user)}
                     >
                       <div className="flex-shrink-0">
