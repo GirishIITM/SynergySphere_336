@@ -37,7 +37,7 @@ class ProjectService:
                     budget = Budget(
                         project_id=project.id,
                         allocated_amount=budget_amount,
-                        currency='USD'
+                        currency='INR'
                     )
                     db.session.add(budget)
             except (ValueError, TypeError):

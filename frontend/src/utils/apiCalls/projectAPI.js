@@ -77,6 +77,10 @@ export const projectAPI = {
         formData.append('deadline', deadlineISO);
       }
       
+      if (projectData.budget && projectData.budget.trim()) {
+        formData.append('budget', projectData.budget);
+      }
+      
       if (hasMemberEmails) {
         // Send member emails as JSON string for FormData
         formData.append('member_emails', JSON.stringify(projectData.member_emails));
@@ -101,6 +105,10 @@ export const projectAPI = {
       if (projectData.deadline) {
         // Ensure we send datetime in ISO format
         jsonData.deadline = new Date(projectData.deadline).toISOString();
+      }
+      
+      if (projectData.budget && projectData.budget.trim()) {
+        jsonData.budget = projectData.budget;
       }
       
       if (hasMemberEmails) {

@@ -160,6 +160,14 @@
 - [x] Update TaskCreate component for consistency ✅
 - [x] Test status dropdown display with all possible status values ✅
 
+#### 18. Add Budget Column to Create Project - 2025-01-18
+- [x] Add budget input field to ProjectCreate component ✅
+- [x] Update form validation to handle budget field ✅
+- [x] Add proper currency formatting and validation (₹ INR) ✅
+- [x] Update API call to include budget data ✅
+- [x] Update backend to use INR currency instead of USD ✅
+- [x] Test project creation with budget ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

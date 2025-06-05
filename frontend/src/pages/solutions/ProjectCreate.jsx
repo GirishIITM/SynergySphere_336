@@ -11,6 +11,7 @@ const ProjectCreate = () => {
     name: '',
     description: '',
     deadline: '',
+    budget: '',
     project_image: null,
     member_emails: [],
     member_permissions: {}
@@ -156,6 +157,15 @@ const ProjectCreate = () => {
       }
     }
     
+    if (formData.budget && formData.budget.trim()) {
+      const budgetValue = parseFloat(formData.budget);
+      if (isNaN(budgetValue) || budgetValue <= 0) {
+        errors.budget = 'Budget must be a positive number';
+      } else if (budgetValue > 999999999) {
+        errors.budget = 'Budget amount is too large';
+      }
+    }
+    
     if (formData.project_image) {
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
       const maxSize = 5 * 1024 * 1024; // 5MB
@@ -231,6 +241,7 @@ const ProjectCreate = () => {
           name: '',
           description: '',
           deadline: '',
+          budget: '',
           project_image: null,
           member_emails: [],
           member_permissions: {}
@@ -362,6 +373,28 @@ const ProjectCreate = () => {
                 min={new Date().toISOString().slice(0, 16)}
               />
               {formErrors.deadline && <p className="text-red-500 text-sm mt-1">{formErrors.deadline}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-1">
+                Budget (₹)
+              </label>
+              <Input
+                id="budget"
+                name="budget"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.budget}
+                onChange={handleInputChange}
+                placeholder="Enter project budget (optional)"
+                className={formErrors.budget ? 'border-red-300' : ''}
+                disabled={isCreating}
+              />
+              {formErrors.budget && <p className="text-red-500 text-sm mt-1">{formErrors.budget}</p>}
+              <p className="text-xs text-gray-500 mt-1">
+                Optional: Set an initial budget for this project
+              </p>
             </div>
           </div>
 
