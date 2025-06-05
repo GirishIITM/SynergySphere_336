@@ -198,16 +198,14 @@
 - [ ] Create tests for mention detection and notification functionality
 
 #### 22. Fix CORS and 500 Error for /notifications/tagged Endpoint - 2025-01-18 ✅
-- [x] Investigate and fix 500 internal server error in notifications/tagged endpoint ✅
-- [x] Debug cache route decorator issues that may be causing server errors (temporarily disabled) ✅
-- [x] Ensure proper error handling for notification queries with missing relationships ✅
-- [x] Fix CORS headers for error responses ✅
-- [x] Add error handling for missing task/project relationships in notification to_dict method ✅
-- [x] Test notification endpoint with proper JWT authentication ✅
-- [x] Improve CORS configuration to handle localhost:3000 for development ✅
-- [x] Add comprehensive error handlers with proper CORS headers ✅
-- [x] Fix database schema by adding missing notification table columns (task_id, message_id, notification_type) ✅
-- [x] Verify endpoint returns 200 status with proper CORS headers ✅
+
+#### 23. Fix CORS Cache-Control Header Issue - 2025-01-18
+- [x] Add 'Cache-Control' to allowed headers in main CORS configuration ✅
+- [x] Add 'Pragma' and 'Expires' headers to allowed headers list ✅
+- [x] Update error handler CORS headers to include all cache-related headers ✅
+- [x] Fix Cross-Origin Request Blocked errors for localhost:3000 to localhost:5000 requests ✅
+- [x] Ensure all cache-related headers sent by frontend are properly allowed in preflight responses ✅
+- [x] Test API requests from frontend to verify CORS issues are resolved ✅
 
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations

@@ -45,7 +45,7 @@ def create_app(config_class=None):
         app,
         resources={r"/*": {"origins": allowed_origins}},
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With"],
+        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With", "Cache-Control", "Pragma", "Expires"],
         supports_credentials=True,
         max_age=600
     )
@@ -87,7 +87,7 @@ def create_app(config_class=None):
             response.headers.add('Access-Control-Allow-Origin', origin)
         else:
             response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Cache-Control,Pragma,Expires')
         response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         return response
