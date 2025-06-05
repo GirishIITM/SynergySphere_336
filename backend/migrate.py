@@ -44,6 +44,37 @@ def migrate_sqlite_direct(db_path):
         existing_columns = [row[1] for row in cursor.fetchall()]
         print(f"📋 Existing task columns: {existing_columns}")
         
+        # Create status table if it doesn't exist
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='status'")
+        if not cursor.fetchone():
+            print("  📊 Creating status table...")
+            cursor.execute('''
+                CREATE TABLE status (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name VARCHAR(50) NOT NULL UNIQUE,
+                    description VARCHAR(200),
+                    display_order INTEGER NOT NULL DEFAULT 0,
+                    color VARCHAR(7),
+                    created_at DATETIME,
+                    updated_at DATETIME
+                )
+            ''')
+            print("  ✅ Created status table")
+            
+            # Insert default statuses
+            default_statuses = [
+                ('pending', 'Task has not been started', 1, '#6B7280'),
+                ('in_progress', 'Task is currently being worked on', 2, '#3B82F6'),
+                ('completed', 'Task has been completed', 3, '#10B981')
+            ]
+            
+            for name, desc, order, color in default_statuses:
+                cursor.execute('''
+                    INSERT INTO status (name, description, display_order, color, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+                ''', (name, desc, order, color))
+            print("  ✅ Inserted default statuses")
+        
         # Define all required columns for task table
         required_columns = [
             ('priority_score', 'REAL DEFAULT 0.0'),
@@ -52,7 +83,8 @@ def migrate_sqlite_direct(db_path):
             ('percent_complete', 'INTEGER DEFAULT 0'),
             ('last_progress_update', 'DATETIME'),
             ('budget', 'REAL'),
-            ('is_favorite', 'BOOLEAN DEFAULT 0 NOT NULL')
+            ('is_favorite', 'BOOLEAN DEFAULT 0 NOT NULL'),
+            ('status_id', 'INTEGER REFERENCES status(id)')
         ]
         
         # Add missing columns
@@ -71,6 +103,32 @@ def migrate_sqlite_direct(db_path):
             SET last_progress_update = created_at 
             WHERE last_progress_update IS NULL
         """)
+        
+        # Migrate existing task statuses to use status_id
+        cursor.execute("SELECT id FROM status WHERE name = 'pending' LIMIT 1")
+        pending_status_result = cursor.fetchone()
+        if pending_status_result:
+            pending_status_id = pending_status_result[0]
+            
+            # Update tasks that don't have status_id set
+            cursor.execute("""
+                UPDATE task 
+                SET status_id = (
+                    CASE 
+                        WHEN status = 'pending' THEN (SELECT id FROM status WHERE name = 'pending')
+                        WHEN status = 'in_progress' THEN (SELECT id FROM status WHERE name = 'in_progress')
+                        WHEN status = 'completed' THEN (SELECT id FROM status WHERE name = 'completed')
+                        ELSE (SELECT id FROM status WHERE name = 'pending')
+                    END
+                )
+                WHERE status_id IS NULL
+            """)
+            
+            migrated_count = cursor.rowcount
+            if migrated_count > 0:
+                print(f"  ✅ Migrated {migrated_count} tasks to use status_id")
+        else:
+            print("  ⚠️  No default statuses found for migration")
         
         # Check message table and add task_id if missing
         cursor.execute("PRAGMA table_info(message)")
@@ -105,6 +163,37 @@ def migrate_postgresql(database_url):
             print("❌ Task table does not exist. Please run db.create_all() first.")
             return False
         
+        # Create status table if it doesn't exist
+        if not inspector.has_table('status'):
+            print("  📊 Creating status table...")
+            with engine.begin() as conn:
+                conn.execute(text('''
+                    CREATE TABLE status (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(50) NOT NULL UNIQUE,
+                        description VARCHAR(200),
+                        display_order INTEGER NOT NULL DEFAULT 0,
+                        color VARCHAR(7),
+                        created_at TIMESTAMP,
+                        updated_at TIMESTAMP
+                    )
+                '''))
+                print("  ✅ Created status table")
+                
+                # Insert default statuses
+                default_statuses = [
+                    ('pending', 'Task has not been started', 1, '#6B7280'),
+                    ('in_progress', 'Task is currently being worked on', 2, '#3B82F6'),
+                    ('completed', 'Task has been completed', 3, '#10B981')
+                ]
+                
+                for name, desc, order, color in default_statuses:
+                    conn.execute(text('''
+                        INSERT INTO status (name, description, display_order, color, created_at, updated_at)
+                        VALUES (:name, :description, :display_order, :color, NOW(), NOW())
+                    '''), {'name': name, 'description': desc, 'display_order': order, 'color': color})
+                print("  ✅ Inserted default statuses")
+        
         # Get existing columns
         existing_columns = [col['name'] for col in inspector.get_columns('task')]
         print(f"📋 Existing task columns: {existing_columns}")
@@ -117,7 +206,8 @@ def migrate_postgresql(database_url):
             ('percent_complete', 'INTEGER DEFAULT 0'),
             ('last_progress_update', 'TIMESTAMP'),
             ('budget', 'REAL'),
-            ('is_favorite', 'BOOLEAN DEFAULT FALSE NOT NULL')
+            ('is_favorite', 'BOOLEAN DEFAULT FALSE NOT NULL'),
+            ('status_id', 'INTEGER REFERENCES status(id)')
         ]
         
         with engine.begin() as conn:
@@ -137,6 +227,26 @@ def migrate_postgresql(database_url):
                 SET last_progress_update = created_at 
                 WHERE last_progress_update IS NULL
             """))
+            
+            # Migrate existing task statuses to use status_id
+            status_check = conn.execute(text("SELECT id FROM status WHERE name = 'pending' LIMIT 1")).fetchone()
+            if status_check:
+                # Update tasks that don't have status_id set
+                conn.execute(text("""
+                    UPDATE task 
+                    SET status_id = (
+                        CASE 
+                            WHEN status = 'pending' THEN (SELECT id FROM status WHERE name = 'pending')
+                            WHEN status = 'in_progress' THEN (SELECT id FROM status WHERE name = 'in_progress')
+                            WHEN status = 'completed' THEN (SELECT id FROM status WHERE name = 'completed')
+                            ELSE (SELECT id FROM status WHERE name = 'pending')
+                        END
+                    )
+                    WHERE status_id IS NULL
+                """))
+                print("  ✅ Migrated existing tasks to use status_id")
+            else:
+                print("  ⚠️  No default statuses found for migration")
             
             # Check message table and add task_id if missing
             if inspector.has_table('message'):
@@ -178,17 +288,40 @@ def run_flask_migration():
             
             if inspector.has_table('task'):
                 task_columns = [col['name'] for col in inspector.get_columns('task')]
+                is_sqlite = 'sqlite' in str(db.engine.url)
                 
                 # Check if is_favorite column exists
                 if 'is_favorite' not in task_columns:
-                    is_sqlite = 'sqlite' in str(db.engine.url)
-                    
                     with db.engine.begin() as conn:
                         if is_sqlite:
                             conn.execute(text('ALTER TABLE task ADD COLUMN is_favorite BOOLEAN DEFAULT 0 NOT NULL'))
                         else:
                             conn.execute(text('ALTER TABLE task ADD COLUMN is_favorite BOOLEAN DEFAULT FALSE NOT NULL'))
                         print("  ✅ Added is_favorite column to task table")
+                
+                # Check if status_id column exists
+                if 'status_id' not in task_columns:
+                    with db.engine.begin() as conn:
+                        if is_sqlite:
+                            conn.execute(text('ALTER TABLE task ADD COLUMN status_id INTEGER REFERENCES status(id)'))
+                        else:
+                            conn.execute(text('ALTER TABLE task ADD COLUMN status_id INTEGER REFERENCES status(id)'))
+                        print("  ✅ Added status_id column to task table")
+                        
+                        # Initialize status_id for existing tasks
+                        conn.execute(text("""
+                            UPDATE task 
+                            SET status_id = (
+                                CASE 
+                                    WHEN status = 'pending' THEN (SELECT id FROM status WHERE name = 'pending')
+                                    WHEN status = 'in_progress' THEN (SELECT id FROM status WHERE name = 'in_progress')
+                                    WHEN status = 'completed' THEN (SELECT id FROM status WHERE name = 'completed')
+                                    ELSE (SELECT id FROM status WHERE name = 'pending')
+                                END
+                            )
+                            WHERE status_id IS NULL
+                        """))
+                        print("  ✅ Migrated existing tasks to use status_id")
             
             print("🎉 Flask migration completed successfully!")
             return True
@@ -248,6 +381,8 @@ def main():
         print("   • Progress tracking (percent_complete, estimated_effort)")
         print("   • Budget management (budget field)")
         print("   • Enhanced messaging (task_id in message table)")
+        print("   • Status system (status table with status_id in tasks)")
+        print("   • Three default statuses: Pending, In Progress, Completed")
     else:
         print("\n❌ Migration failed!")
         print("Please check the error messages above and try again.")

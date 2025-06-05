@@ -7,6 +7,7 @@ from .verification import OTPVerification, PasswordResetToken
 from .token_blocklist import TokenBlocklist
 from .budget import Budget
 from .expense import Expense
+from .status import Status
 
 __all__ = [
     'User', 
@@ -21,5 +22,6 @@ __all__ = [
     'PasswordResetToken', 
     'TokenBlocklist',
     'Budget',
-    'Expense'
+    'Expense',
+    'Status'
 ]

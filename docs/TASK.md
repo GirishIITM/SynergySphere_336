@@ -225,6 +225,18 @@
 - [ ] Create custom financial dashboard widgets
 - [ ] Add expense audit trail and change history
 
+#### 20. Create Status Model and Refactor Task Status - 2025-01-18
+- [ ] Create new Status model with three predefined statuses (Pending, In Progress, Completed)
+- [ ] Add status_id foreign key field to Task model
+- [ ] Update Task model to use status_id instead of enum status field
+- [ ] Create database migration for the schema change
+- [ ] Update all backend endpoints to handle status_id instead of status
+- [ ] Update frontend components to work with status objects instead of status strings
+- [ ] Update task creation, editing, and status update functionality
+- [ ] Ensure backward compatibility during transition
+- [ ] Create unit tests for new Status model and relationships
+- [ ] Update existing tests to account for status_id changes
+
 ### 📋 Additional Tasks - Discovered During Implementation
 - [x] Add integration between Projects.jsx and new analytics/finance pages ✅
 - [ ] Enhance project detail view with finance and analytics tabs

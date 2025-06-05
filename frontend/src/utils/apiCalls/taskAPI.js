@@ -1,6 +1,10 @@
 import { apiRequest } from './apiRequest.js';
 
 export const taskAPI = {
+  getStatuses: () => {
+    return apiRequest('/statuses', 'GET', null, 'statuses-get');
+  },
+
   getAllTasks: (params = {}) => {
     const queryParams = new URLSearchParams();
     

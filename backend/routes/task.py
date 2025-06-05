@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import cloudinary.uploader
 import logging
-from models import Task, User, Project, TaskAttachment, Notification
+from models import Task, User, Project, TaskAttachment, Notification, Status
 from extensions import db
 from utils.email import send_email
 from utils.datetime_utils import ensure_utc
@@ -12,6 +12,39 @@ from utils.route_cache import cache_route, invalidate_cache_on_change
 logger = logging.getLogger(__name__)
 
 task_bp = Blueprint('task', __name__)
+
+# Helper functions for status management
+def get_status_id_from_name(status_name):
+    """Get status ID from status name, with fallback creation for legacy statuses."""
+    if not status_name:
+        status_name = 'pending'
+    
+    status = Status.query.filter_by(name=status_name).first()
+    if status:
+        return status.id
+    
+    # If status doesn't exist, initialize default statuses
+    Status.initialize_default_statuses()
+    status = Status.query.filter_by(name=status_name).first()
+    return status.id if status else 1  # Default to first status
+
+def normalize_status_input(status_input):
+    """Normalize various status input formats to standard status name."""
+    if not status_input:
+        return 'pending'
+    
+    status_mapping = {
+        'To Do': 'pending',
+        'Not Started': 'pending',
+        'In Progress': 'in_progress', 
+        'Done': 'completed',
+        'Completed': 'completed',
+        'pending': 'pending',
+        'in_progress': 'in_progress',
+        'completed': 'completed'
+    }
+    
+    return status_mapping.get(status_input, 'pending')
 
 @task_bp.route('/projects/<int:project_id>/tasks', methods=['POST'])
 @jwt_required()
@@ -41,16 +74,10 @@ def create_task(project_id):
             due_date = ensure_utc(parsed_date)
         except ValueError:
             return jsonify({'msg': 'Invalid date format. Use ISO format with timezone.'}), 400
-    status = data.get('status', 'To Do')
-    status_mapping = {
-        'To Do': 'pending',
-        'In Progress': 'in_progress', 
-        'Done': 'completed',
-        'pending': 'pending',
-        'in_progress': 'in_progress',
-        'completed': 'completed'
-    }
-    status = status_mapping.get(status, 'pending')
+    status_input = data.get('status', 'pending')
+    # Normalize status input and get status_id
+    status_name = normalize_status_input(status_input)
+    status_id = get_status_id_from_name(status_name)
     
     assignee = None
     if 'assignee_id' in data:
@@ -64,7 +91,7 @@ def create_task(project_id):
         title=title, 
         description=description, 
         due_date=due_date,
-        status=status, 
+        status_id=status_id,
         project_id=project_id,
         owner_id=assignee.id if assignee else user_id
     )
@@ -161,10 +188,6 @@ def get_all_tasks():
         
         tasks_data = []
         for task in tasks:
-            # Return raw status values for consistency with frontend
-            # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
-            raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
-            
             # Get assignee name
             assignee_name = None
             if task.owner_id:
@@ -176,7 +199,9 @@ def get_all_tasks():
                 'title': task.title,
                 'description': task.description,
                 'due_date': task.due_date.isoformat() if task.due_date else None,
-                'status': raw_status,
+                'status': task.current_status,  # Use new status system
+                'status_id': task.status_id,
+                'status_info': task.get_status_dict(),
                 'project_id': task.project_id,
                 'owner_id': task.owner_id,
                 'assignee_id': task.owner_id,
@@ -242,16 +267,10 @@ def create_task_direct():
         except ValueError:
             return jsonify({'msg': 'Invalid date format. Use ISO format with timezone.'}), 400
     
-    status = data.get('status', 'To Do')
-    status_mapping = {
-        'To Do': 'pending',
-        'In Progress': 'in_progress', 
-        'Done': 'completed',
-        'pending': 'pending',
-        'in_progress': 'in_progress',
-        'completed': 'completed'
-    }
-    status = status_mapping.get(status, 'pending')
+    status_input = data.get('status', 'pending')
+    # Normalize status input and get status_id
+    status_name = normalize_status_input(status_input)
+    status_id = get_status_id_from_name(status_name)
     
     assignee = None
     if 'assigned_to' in data and data['assigned_to']:
@@ -265,7 +284,7 @@ def create_task_direct():
         title=title, 
         description=description, 
         due_date=due_date,
-        status=status, 
+        status_id=status_id,
         project_id=project_id,
         owner_id=assignee.id if assignee else user_id
     )
@@ -340,15 +359,14 @@ def update_task_direct(task_id):
             task.due_date = None
     
     if 'status' in data:
-        status_mapping = {
-            'To Do': 'pending',
-            'In Progress': 'in_progress', 
-            'Done': 'completed',
-            'pending': 'pending',
-            'in_progress': 'in_progress',
-            'completed': 'completed'
-        }
-        task.status = status_mapping.get(data['status'], 'pending')
+        # Handle both status name and status_id
+        status_input = data['status']
+        status_name = normalize_status_input(status_input)
+        status_id = get_status_id_from_name(status_name)
+        task.status_id = status_id
+    elif 'status_id' in data:
+        # Direct status_id update
+        task.status_id = data['status_id']
     # Prevent changing project_id - tasks cannot be moved between projects
     if 'project_id' in data and str(data['project_id']) != str(task.project_id):
         return jsonify({'msg': 'Project assignment cannot be changed when editing a task'}), 400
@@ -424,16 +442,14 @@ def update_task_status(task_id):
     if not any(member.id == user_id for member in project.members):
         return jsonify({'msg': 'Not authorized'}), 403
     
-    status_mapping = {
-        'Not Started': 'pending',
-        'In Progress': 'in_progress', 
-        'Completed': 'completed',
-        'pending': 'pending',
-        'in_progress': 'in_progress',
-        'completed': 'completed'
-    }
-    new_status = status_mapping.get(data['status'], 'pending')
-    task.status = new_status
+    # Handle both status name and status_id
+    if 'status_id' in data:
+        task.status_id = data['status_id']
+    else:
+        status_input = data['status']
+        status_name = normalize_status_input(status_input)
+        status_id = get_status_id_from_name(status_name)
+        task.status_id = status_id
     
     db.session.commit()
     return jsonify({'msg': 'Task status updated'})
@@ -476,10 +492,6 @@ def get_task(task_id):
     if not any(member.id == user_id for member in project.members):
         return jsonify({'success': False, 'message': 'Not authorized'}), 403
     
-    # Return raw status values for consistency with frontend
-    # Reason: Frontend expects 'pending', 'in_progress', 'completed' for proper synchronization
-    raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
-    
     # Get assignee name
     assignee_name = None
     if task.owner_id:
@@ -508,7 +520,9 @@ def get_task(task_id):
         'title': task.title,
         'description': task.description,
         'due_date': task.due_date.isoformat() if task.due_date else None,
-        'status': raw_status,
+        'status': task.current_status,  # Use new status system
+        'status_id': task.status_id,
+        'status_info': task.get_status_dict(),
         'project_id': task.project_id,
         'owner_id': task.owner_id,
         'assignee_id': task.owner_id,

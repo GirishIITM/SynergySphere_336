@@ -5,6 +5,7 @@ from utils.datetime_utils import get_utc_now, ensure_utc
 
 
 class TaskStatus(enum.Enum):
+    """Legacy enum - kept for backward compatibility during migration."""
     pending = "pending"
     in_progress = "in_progress"
     completed = "completed"
@@ -15,7 +16,10 @@ class Task(db.Model):
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text)
     due_date = db.Column(db.DateTime)
-    status = db.Column(SqlEnum(TaskStatus), default=TaskStatus.pending, nullable=False)
+    # Legacy status field - kept for backward compatibility during migration
+    status = db.Column(SqlEnum(TaskStatus), default=TaskStatus.pending, nullable=True)
+    # New status_id field - will become the primary status field
+    status_id = db.Column(db.Integer, db.ForeignKey("status.id"), nullable=True)
     project_id = db.Column(db.Integer, db.ForeignKey("project.id"), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=get_utc_now)
@@ -33,6 +37,7 @@ class Task(db.Model):
     assignee = db.relationship("User", back_populates="tasks")
     attachments = db.relationship("TaskAttachment", back_populates="task")
     expenses = db.relationship("Expense", back_populates="task")
+    status_rel = db.relationship("Status", back_populates="tasks")
     
     # Self-referencing relationship for task dependencies
     parent_task = db.relationship("Task", remote_side=[id], backref="subtasks")
@@ -44,6 +49,34 @@ class Task(db.Model):
         current_time = get_utc_now()
         due_date = ensure_utc(self.due_date)
         return current_time > due_date
+
+    @property
+    def current_status(self):
+        """Get the current status - prioritize status_id over legacy status field."""
+        if self.status_id and self.status_rel:
+            return self.status_rel.name
+        elif self.status:
+            # Fallback to legacy status field
+            return self.status.value if hasattr(self.status, 'value') else str(self.status)
+        else:
+            return 'pending'  # Default status
+
+    def get_status_dict(self):
+        """Get status information as dictionary."""
+        if self.status_id and self.status_rel:
+            return self.status_rel.to_dict()
+        else:
+            # Return legacy status as dictionary format
+            status_name = self.current_status
+            return {
+                'id': None,
+                'name': status_name,
+                'description': f'Task is {status_name}',
+                'display_order': {'pending': 1, 'in_progress': 2, 'completed': 3}.get(status_name, 1),
+                'color': {'pending': '#6B7280', 'in_progress': '#3B82F6', 'completed': '#10B981'}.get(status_name, '#6B7280'),
+                'created_at': None,
+                'updated_at': None
+            }
 
     @property
     def dependency_count(self):
@@ -62,7 +95,9 @@ class Task(db.Model):
             'title': self.title,
             'description': self.description,
             'due_date': self.due_date.isoformat() if self.due_date else None,
-            'status': self.status.value,
+            'status': self.current_status,  # Use the current_status property
+            'status_id': self.status_id,
+            'status_info': self.get_status_dict(),  # Include full status object
             'project_id': self.project_id,
             'owner_id': self.owner_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
