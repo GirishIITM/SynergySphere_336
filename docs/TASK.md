@@ -251,6 +251,12 @@
 - [x] Ensure all cache-related headers sent by frontend are properly allowed in preflight responses ✅
 - [x] Test API requests from frontend to verify CORS issues are resolved ✅
 
+#### 22. Add View Details Button to Task Cards in ProjectDetail Page - 2025-01-18
+- [x] Add "View Details" button to each task card in the Tasks tab of ProjectDetail.jsx ✅
+- [x] Ensure proper navigation to TaskDetail page using /solutions/tasks/:taskId route ✅
+- [x] Add appropriate icon (Eye icon) and styling for the button ✅
+- [ ] Test navigation functionality between project details and task details
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

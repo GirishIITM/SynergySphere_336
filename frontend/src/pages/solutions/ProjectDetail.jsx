@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, Edit, Plus, Target, Users } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Calendar, CheckCircle, Clock, DollarSign, Edit, Eye, Plus, Target, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import LoadingIndicator from '../../components/LoadingIndicator';
@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Progress } from '../../components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../components/ui/tooltip';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
@@ -298,11 +298,32 @@ const ProjectDetail = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button asChild variant="ghost" size="sm">
-                              <Link to={`/solutions/tasks/edit/${task.id}`}>
-                                <Edit className="w-4 h-4" />
-                              </Link>
-                            </Button>
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button asChild variant="ghost" size="sm">
+                                    <Link to={`/solutions/tasks/${task.id}`}>
+                                      <Eye className="w-4 h-4" />
+                                    </Link>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>View Details</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button asChild variant="ghost" size="sm">
+                                    <Link to={`/solutions/tasks/edit/${task.id}`}>
+                                      <Edit className="w-4 h-4" />
+                                    </Link>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Edit Task</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           </div>
                         </div>
                       ))}
