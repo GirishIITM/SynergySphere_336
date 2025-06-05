@@ -2,14 +2,12 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Budget, Expense
 from extensions import db
-from utils.route_cache import invalidate_cache_on_change
 from services.finance_service import FinanceService
 
 finance_bp = Blueprint('finance', __name__)
 
 @finance_bp.route('/projects/<int:project_id>/budget', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['budgets'])
 def create_budget(project_id):
     """Create a new budget for a project."""
     user_id = int(get_jwt_identity())
@@ -30,7 +28,6 @@ def create_budget(project_id):
 
 @finance_bp.route('/budgets/<int:budget_id>', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['budgets'])
 def update_budget(budget_id):
     """Update an existing budget."""
     user_id = int(get_jwt_identity())
@@ -49,7 +46,6 @@ def update_budget(budget_id):
 
 @finance_bp.route('/budgets/<int:budget_id>', methods=['DELETE'])
 @jwt_required()
-@invalidate_cache_on_change(['budgets'])
 def delete_budget(budget_id):
     """Delete a budget."""
     user_id = int(get_jwt_identity())
@@ -67,7 +63,6 @@ def delete_budget(budget_id):
 
 @finance_bp.route('/projects/<int:project_id>/expenses', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['expenses', 'budgets'])
 def add_expense(project_id):
     """Add a new expense to a project."""
     user_id = int(get_jwt_identity())
@@ -88,7 +83,6 @@ def add_expense(project_id):
 
 @finance_bp.route('/expenses/<int:expense_id>', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['expenses', 'budgets'])
 def update_expense(expense_id):
     """Update an existing expense."""
     user_id = int(get_jwt_identity())
@@ -109,7 +103,6 @@ def update_expense(expense_id):
 
 @finance_bp.route('/expenses/<int:expense_id>', methods=['DELETE'])
 @jwt_required()
-@invalidate_cache_on_change(['expenses', 'budgets'])
 def delete_expense(expense_id):
     """Delete an expense."""
     user_id = int(get_jwt_identity())
@@ -162,4 +155,4 @@ def get_project_financials(project_id):
     except PermissionError as e:
         return jsonify({'msg': str(e)}), 403
     except Exception as e:
-        return jsonify({'msg': 'Error fetching project financials'}), 500 
+        return jsonify({'msg': 'Error fetching project financials'}), 500

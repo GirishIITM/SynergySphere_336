@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { taskAPI } from '../utils/apiCalls/taskAPI';
+import LoadingIndicator from './LoadingIndicator';
 
 /**
  * TaskBoard Component - Drag and Drop Kanban-style task board
@@ -25,6 +26,7 @@ import { taskAPI } from '../utils/apiCalls/taskAPI';
  * Features:
  * - Three columns: Started, In Progress, Completed
  * - Drag and drop between columns updates task status
+ * - Loading indicator during status updates
  * - Favorite/unfavorite toggle with star icons
  * - Favorites appear at top of each column (sorted by backend)
  * - User-defined ordering through drag and drop
@@ -39,6 +41,7 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
   });
   const [draggedTask, setDraggedTask] = useState(null);
   const [draggedOver, setDraggedOver] = useState(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const dragCounterRef = useRef(0);
 
 
@@ -164,6 +167,9 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
     });
 
     try {
+      // Show loading indicator
+      setIsUpdatingStatus(true);
+      
       // Update task status via API
       await taskAPI.updateTaskStatus(draggedTask.id, newStatus);
       
@@ -194,6 +200,9 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
       
       // Reset drag state on error
       setDraggedTask(null);
+    } finally {
+      // Hide loading indicator
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -354,24 +363,27 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
    * 
    * Args:
    *   task (object): Task object to render
+   *   isUpdating (boolean): Whether a status update is in progress
    * 
    * Returns:
    *   JSX.Element: Task card component
    */
-  const renderTaskCard = (task) => {
+  const renderTaskCard = (task, isUpdating = false) => {
     const overdueTask = isOverdue(task.due_date, task.status);
     
     return (
       <Card
         key={task.id}
-        draggable
-        onDragStart={(e) => handleDragStart(e, task)}
-        onDragEnd={handleDragEnd}
+        draggable={!isUpdating}
+        onDragStart={(e) => !isUpdating && handleDragStart(e, task)}
+        onDragEnd={!isUpdating ? handleDragEnd : undefined}
         className={`
-          cursor-move transition-all duration-200 hover:shadow-md
+          transition-all duration-200 hover:shadow-md
+          ${!isUpdating ? 'cursor-move' : 'cursor-not-allowed'}
           ${task.isFavorite ? 'ring-2 ring-yellow-400 ring-opacity-50' : ''}
           ${overdueTask ? 'border-red-500 bg-red-50/50 dark:bg-red-950/50' : ''}
           ${draggedTask?.id === task.id ? 'opacity-50' : ''}
+          ${isUpdating ? 'pointer-events-none opacity-60' : ''}
         `}
       >
         <CardHeader className="pb-2">
@@ -479,64 +491,67 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
   };
 
   return (
-    <div className="h-full">
-      {/* Board Header */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold tracking-tight">Task Board</h2>
-        <p className="text-muted-foreground">
-          Drag tasks between columns to update their status. Click the star to favorite tasks.
-        </p>
-      </div>
+    <LoadingIndicator loading={isUpdatingStatus}>
+      <div className="h-full">
+        {/* Board Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight">Task Board</h2>
+          <p className="text-muted-foreground">
+            Drag tasks between columns to update their status. Click the star to favorite tasks.
+          </p>
+        </div>
 
-      {/* Board Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
-        {Object.entries(COLUMN_CONFIG).map(([columnKey, config]) => {
-          const columnTasks = getTasksForColumn(config.status);
-          const isDraggedOver = draggedOver === config.status;
-          
-          return (
-            <div
-              key={columnKey}
-              className={`
-                flex flex-col h-full min-h-[500px] rounded-lg border-2 border-dashed transition-all duration-200
-                ${isDraggedOver 
-                  ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/50' 
-                  : 'border-gray-200 dark:border-gray-700'
-                }
-              `}
-              onDragEnter={(e) => handleDragEnter(e, config.status)}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, config.status)}
-            >
-              {/* Column Header */}
-              <div className="p-4 border-b">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">{config.title}</h3>
-                  <Badge variant="secondary" className="ml-2">
-                    {columnTasks.length}
-                  </Badge>
+        {/* Board Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-full">
+          {Object.entries(COLUMN_CONFIG).map(([columnKey, config]) => {
+            const columnTasks = getTasksForColumn(config.status);
+            const isDraggedOver = draggedOver === config.status;
+            
+            return (
+              <div
+                key={columnKey}
+                className={`
+                  flex flex-col h-full min-h-[500px] rounded-lg border-2 border-dashed transition-all duration-200
+                  ${isDraggedOver 
+                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/50' 
+                    : 'border-gray-200 dark:border-gray-700'
+                  }
+                  ${isUpdatingStatus ? 'pointer-events-none opacity-75' : ''}
+                `}
+                onDragEnter={(e) => !isUpdatingStatus && handleDragEnter(e, config.status)}
+                onDragLeave={!isUpdatingStatus ? handleDragLeave : undefined}
+                onDragOver={!isUpdatingStatus ? handleDragOver : undefined}
+                onDrop={(e) => !isUpdatingStatus && handleDrop(e, config.status)}
+              >
+                {/* Column Header */}
+                <div className="p-4 border-b">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg">{config.title}</h3>
+                    <Badge variant="secondary" className="ml-2">
+                      {columnTasks.length}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Column Content */}
+                <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+                  {columnTasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                      <CheckSquare className="h-8 w-8 mb-2" />
+                      <p className="text-sm">No tasks</p>
+                      <p className="text-xs">Drag tasks here</p>
+                    </div>
+                  ) : (
+                    columnTasks.map(task => renderTaskCard(task, isUpdatingStatus))
+                  )}
                 </div>
               </div>
-
-              {/* Column Content */}
-              <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-                {columnTasks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                    <CheckSquare className="h-8 w-8 mb-2" />
-                    <p className="text-sm">No tasks</p>
-                    <p className="text-xs">Drag tasks here</p>
-                  </div>
-                ) : (
-                  columnTasks.map(renderTaskCard)
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </LoadingIndicator>
   );
 };
 
-export default TaskBoard; 
+export default TaskBoard;

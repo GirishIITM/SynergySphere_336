@@ -5,13 +5,11 @@ from models import User
 from extensions import db
 from utils.validation import sanitize_string
 from utils.cloudinary_upload import upload_profile_image, delete_cloudinary_image, validate_image_file
-from utils.route_cache import cache_route, invalidate_cache_on_change
 
 profile_bp = Blueprint("profile", __name__)
 
 @profile_bp.route("/profile", methods=["GET"])
 @jwt_required()
-@cache_route(ttl=300, user_specific=True)  # Cache for 5 minutes
 def get_profile():
     try:
         user_id = int(get_jwt_identity())
@@ -36,7 +34,6 @@ def get_profile():
 
 @profile_bp.route('/profile/', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['users', 'profile'])
 def update_profile():
     try:
         user_id = int(get_jwt_identity())
@@ -101,7 +98,6 @@ def update_profile():
 
 @profile_bp.route("/profile/upload-image", methods=["POST"])
 @jwt_required()
-@invalidate_cache_on_change(['users', 'profile'])
 def upload_profile_image_endpoint():
     try:
         user_id = int(get_jwt_identity())

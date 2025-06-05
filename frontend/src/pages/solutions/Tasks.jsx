@@ -356,156 +356,143 @@ const Tasks = () => {
             const overdueTask = isOverdue(task.due_date, task.status);
             
             return (
-              <Card key={task.id} className={`hover:shadow-lg transition-shadow ${
-                overdueTask ? 'border-red-500 bg-red-50/50 dark:bg-red-950/50' : ''
-              }`}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base line-clamp-2 mb-1">
-                        {task.title}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant={getStatusVariant(task.status)}>
-                          {getStatusIcon(task.status)}
-                          <span className="ml-1">{task.status}</span>
-                        </Badge>
-                        {overdueTask && (
-                          <Badge variant="destructive" className="bg-red-600 hover:bg-red-700">
-                            Overdue
+              <Link key={task.id} to={`/solutions/tasks/${task.id}`} className="block">
+                <Card className={`hover:shadow-lg transition-shadow cursor-pointer ${
+                  overdueTask ? 'border-red-500 bg-red-50/50 dark:bg-red-950/50' : ''
+                }`}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-base line-clamp-2 mb-1">
+                          {task.title}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant={getStatusVariant(task.status)}>
+                            {getStatusIcon(task.status)}
+                            <span className="ml-1">{task.status}</span>
                           </Badge>
-                        )}
-                        {task.isFavorite && (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                            <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                            Favorite
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleFavorite(task.id)}
-                        className="p-1 h-8 w-8"
-                        title={task.isFavorite ? "Remove from favorites" : "Add to favorites"}
-                      >
-                        {task.isFavorite ? (
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        ) : (
-                          <Star className="h-4 w-4 text-gray-400 hover:text-yellow-400" />
-                        )}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to={`/solutions/tasks/${task.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to={`/solutions/tasks/edit/${task.id}`}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Task
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDelete(task.id, task.project_id)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete Task
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="py-3">
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
-                    {task.description || 'No description provided'}
-                  </p>
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Project:</span>
-                      <span className="font-medium">{getProjectName(task.project_id)}</span>
-                    </div>
-
-                    {task.due_date && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Due Date:</span>
-                        <span className={`font-medium ${overdueTask ? 'text-red-600' : ''}`}>
-                          {formatDate(task.due_date)}
-                        </span>
-                      </div>
-                    )}
-
-                    {task.assigned_to && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Assigned to:</span>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarFallback className="text-xs">
-                              {getInitials(task.assigned_to_name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium text-xs">{task.assigned_to_name}</span>
+                          {overdueTask && (
+                            <Badge variant="destructive" className="bg-red-600 hover:bg-red-700">
+                              Overdue
+                            </Badge>
+                          )}
+                          {task.isFavorite && (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                              <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
+                              Favorite
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-
-                <Separator />
-
-                <CardFooter className="pt-3">
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        Created {new Date(task.created_at).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleToggleFavorite(task.id);
+                          }}
+                          className="p-1 h-8 w-8"
+                          title={task.isFavorite ? "Remove from favorites" : "Add to favorites"}
+                        >
+                          {task.isFavorite ? (
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          ) : (
+                            <Star className="h-4 w-4 text-gray-400 hover:text-yellow-400" />
+                          )}
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" onClick={(e) => e.preventDefault()}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link to={`/solutions/tasks/edit/${task.id}`}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Task
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive"
+                              onClick={() => handleDelete(task.id, task.project_id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Task
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        asChild
-                        className="h-8"
-                      >
-                        <Link to={`/solutions/tasks/${task.id}`}>
-                          <Eye className="h-3 w-3 mr-1" />
-                          View Details
-                        </Link>
-                      </Button>
+                  </CardHeader>
+
+                  <CardContent className="py-3">
+                    <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                      {task.description || 'No description provided'}
+                    </p>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Project:</span>
+                        <span className="font-medium">{getProjectName(task.project_id)}</span>
+                      </div>
+
+                      {task.due_date && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Due Date:</span>
+                          <span className={`font-medium ${overdueTask ? 'text-red-600' : ''}`}>
+                            {formatDate(task.due_date)}
+                          </span>
+                        </div>
+                      )}
+
+                      {task.assigned_to && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Assigned to:</span>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs">
+                                {getInitials(task.assigned_to_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium text-xs">{task.assigned_to_name}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+
+                  <Separator />
+
+                  <CardFooter className="pt-3">
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          Created {new Date(task.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
                       
-                      <Select
-                        value={task.status}
-                        onValueChange={(newStatus) => handleUpdateStatus(task.id, newStatus)}
-                      >
-                        <SelectTrigger className="w-32 h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">Not Started</SelectItem>
-                          <SelectItem value="in_progress">In Progress</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value={task.status}
+                          onValueChange={(newStatus) => handleUpdateStatus(task.id, newStatus)}
+                        >
+                          <SelectTrigger className="w-32 h-8" onClick={(e) => e.preventDefault()}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Not Started</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
-                  </div>
-                </CardFooter>
-              </Card>
+                  </CardFooter>
+                </Card>
+              </Link>
             );
           })}
         </div>

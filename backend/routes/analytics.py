@@ -13,7 +13,6 @@ from typing import Dict, List, Any, Optional
 
 from models import User, Project, Task, Membership
 from extensions import db
-from utils.route_cache import cache_route
 from utils.datetime_utils import get_utc_now, ensure_utc
 from services.analytics_service import AnalyticsService
 
@@ -22,7 +21,6 @@ analytics_bp = Blueprint('analytics', __name__)
 
 @analytics_bp.route('/analytics/productivity', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=600, user_specific=True)  # Cache for 10 minutes
 def get_productivity_analytics():
     """
     Get user productivity analytics including task completion rates,
@@ -115,7 +113,6 @@ def get_productivity_analytics():
 
 @analytics_bp.route('/analytics/projects', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=600, user_specific=True)
 def get_project_analytics():
     """
     Get comprehensive project analytics including performance metrics,
@@ -209,7 +206,6 @@ def get_project_analytics():
 
 @analytics_bp.route('/analytics/team', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=900, user_specific=True)  # Cache for 15 minutes
 def get_team_analytics():
     """
     Get team performance analytics including collaboration metrics,

@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Message, Task, Project, User, Notification
 from extensions import db
-from utils.route_cache import invalidate_cache_on_change
 
 message_advanced_bp = Blueprint('message_advanced', __name__)
 
@@ -32,7 +31,6 @@ def get_task_messages(project_id, task_id):
 
 @message_advanced_bp.route('/projects/<int:project_id>/tasks/<int:task_id>/messages', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['messages'])
 def post_task_message(project_id, task_id):
     """Post a message to a specific task."""
     user_id = int(get_jwt_identity())
@@ -79,4 +77,4 @@ def post_task_message(project_id, task_id):
     
     db.session.commit()
     
-    return jsonify({'msg': 'Message posted', 'message': message.to_dict()}), 201 
+    return jsonify({'msg': 'Message posted', 'message': message.to_dict()}), 201

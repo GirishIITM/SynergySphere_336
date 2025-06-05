@@ -7,7 +7,6 @@ from models import Task, User, Project, TaskAttachment, Notification, Status
 from extensions import db
 from utils.email import send_email
 from utils.datetime_utils import ensure_utc
-from utils.route_cache import cache_route, invalidate_cache_on_change
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,6 @@ def normalize_status_input(status_input):
 
 @task_bp.route('/projects/<int:project_id>/tasks', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks', 'projects'])
 def create_task(project_id):
     user_id = int(get_jwt_identity())
     project = Project.query.get_or_404(project_id)
@@ -116,7 +114,6 @@ def create_task(project_id):
 
 @task_bp.route('/tasks/<int:task_id>/attachment', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks'])
 def add_attachment(task_id):
     user_id = int(get_jwt_identity())
     task = Task.query.get_or_404(task_id)
@@ -136,7 +133,6 @@ def add_attachment(task_id):
 
 @task_bp.route('/tasks', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_all_tasks():
     user_id = int(get_jwt_identity())
     
@@ -230,7 +226,6 @@ def get_all_tasks():
 
 @task_bp.route('/tasks', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks', 'projects'])
 def create_task_direct():
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -318,7 +313,6 @@ def create_task_direct():
 
 @task_bp.route('/tasks/<int:task_id>', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks', 'projects'])
 def update_task_direct(task_id):
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -396,7 +390,6 @@ def update_task_direct(task_id):
 
 @task_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks', 'projects'])
 def delete_task_direct(task_id):
     user_id = int(get_jwt_identity())
     task = Task.query.get_or_404(task_id)
@@ -428,7 +421,6 @@ def delete_task_direct(task_id):
 
 @task_bp.route('/tasks/<int:task_id>/status', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks', 'projects'])
 def update_task_status(task_id):
     user_id = int(get_jwt_identity())
     data = request.get_json()
@@ -456,7 +448,6 @@ def update_task_status(task_id):
 
 @task_bp.route('/tasks/<int:task_id>/favorite', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks'])
 def update_task_favorite(task_id):
     """Update the favorite status of a task"""
     user_id = int(get_jwt_identity())
@@ -483,7 +474,6 @@ def update_task_favorite(task_id):
 
 @task_bp.route('/tasks/<int:task_id>', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_task(task_id):
     user_id = int(get_jwt_identity())
     task = Task.query.get_or_404(task_id)
@@ -545,7 +535,6 @@ def get_task(task_id):
 
 @task_bp.route('/projects/<int:project_id>/tasks', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_project_tasks(project_id):
     """Get all tasks for a specific project"""
     user_id = int(get_jwt_identity())
@@ -597,7 +586,6 @@ def get_project_tasks(project_id):
 
 @task_bp.route('/projects/<int:project_id>/tasks/grouped', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_project_tasks_grouped(project_id):
     """Get all tasks for a specific project grouped by status"""
     user_id = int(get_jwt_identity())
@@ -661,7 +649,6 @@ def get_project_tasks_grouped(project_id):
 
 @task_bp.route('/tasks/grouped', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
 def get_all_tasks_grouped():
     """Get all tasks for user grouped by status"""
     user_id = int(get_jwt_identity())

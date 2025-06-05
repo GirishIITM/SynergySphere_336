@@ -1,12 +1,10 @@
 from flask import Blueprint, jsonify
 from version import get_version_info
 import os
-from utils.route_cache import cache_route
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/', methods=['GET'])
-@cache_route(ttl=3600, user_specific=False)  # Cache for 1 hour
 def index():
     """Default route that returns app version and basic info."""
     try:
@@ -46,7 +44,6 @@ def index():
         }), 200
 
 @main_bp.route('/health', methods=['GET'])
-@cache_route(ttl=60, user_specific=False)  # Cache for 1 minute
 def health_check():
     """Health check endpoint."""
     try:
@@ -63,7 +60,6 @@ def health_check():
         }), 500
 
 @main_bp.route('/version', methods=['GET'])
-@cache_route(ttl=3600, user_specific=False)  # Cache for 1 hour
 def version():
     """Detailed version information endpoint."""
     try:
