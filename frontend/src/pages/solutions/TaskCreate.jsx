@@ -28,8 +28,7 @@ const TaskCreate = () => {
     description: '',
     due_date: '',
     status: 'Not Started',
-    assigned_to: '', // Add assigned user field
-    budget: ''  // Add budget field
+    assigned_to: ''
   });
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [error, setError] = useState('');
@@ -136,8 +135,7 @@ const TaskCreate = () => {
         formData.description,
         formData.due_date,
         formData.status,
-        formData.assigned_to, // Include assigned user
-        formData.budget // Include budget
+        formData.assigned_to
       );
       
       setSuccess('Task created successfully! Redirecting...');
@@ -340,36 +338,10 @@ const TaskCreate = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="budget">Budget (Optional)</Label>
-              <Input
-                type="number"
-                id="budget"
-                name="budget"
-                value={formData.budget}
-                onChange={handleInputChange}
-                placeholder="Enter task budget"
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-6">
-              <Button type="button" variant="outline" asChild>
-                <Link to="/solutions/tasks">Cancel</Link>
-              </Button>
-              <Button type="submit" disabled={loadingState.isLoading('tasks-create')}>
-                {loadingState.isLoading('tasks-create') ? (
-                  <>
-                    <Clock className="h-4 w-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Create Task
-                  </>
-                )}
+            <div className="form-actions">
+              <Button type="submit" className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                Create Task
               </Button>
             </div>
           </form>

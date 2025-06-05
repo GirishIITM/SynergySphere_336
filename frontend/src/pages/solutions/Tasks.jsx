@@ -17,9 +17,7 @@ import {
   Plus,
   Search,
   Trash2,
-  TrendingUp,
   Star,
-  Zap,
   Eye,
   LayoutDashboard
 } from 'lucide-react';
@@ -29,7 +27,6 @@ import { loadingState } from '../../utils/apiCalls';
 import { getCurrentUser } from '../../utils/apiCalls/auth';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
-import { taskAdvancedAPI } from '../../utils/apiCalls/taskAdvancedAPI';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
@@ -43,8 +40,6 @@ const Tasks = () => {
     owner: ''
   });
   const [error, setError] = useState('');
-  const [priorityMode, setPriorityMode] = useState(false);
-  const [selectedProject, setSelectedProject] = useState('');
 
   const currentUser = getCurrentUser();
 
@@ -68,60 +63,48 @@ const Tasks = () => {
       loadingUnsubscribe();
       window.removeEventListener('focus', handleFocus);
     };
-  }, [filters, pagination.offset, priorityMode, selectedProject]);
+  }, [filters, pagination.offset]);
 
   const fetchTasks = async () => {
     try {
-      let allTasks;
-      let paginationData = pagination;
+      // Fetch regular tasks with filters
+      const params = {
+        ...filters,
+        limit: pagination.limit,
+        offset: pagination.offset
+      };
       
-      if (priorityMode && selectedProject) {
-        // Fetch prioritized tasks for the selected project
-        allTasks = await taskAdvancedAPI.getPrioritizedTasks(selectedProject);
-      } else {
-        // Fetch regular tasks with filters
-        const params = {
-          ...filters,
-          limit: pagination.limit,
-          offset: pagination.offset
-        };
-        
-        // Remove empty filters and "all" values
-        Object.keys(params).forEach(key => {
-          if (!params[key] || params[key] === 'all') delete params[key];
-        });
+      // Remove empty filters and "all" values
+      Object.keys(params).forEach(key => {
+        if (!params[key] || params[key] === 'all') delete params[key];
+      });
 
-        const response = await taskAPI.getAllTasks(params);
-        
-        // Handle new API response structure
-        const tasksData = response.tasks || [];
-        paginationData = response.pagination || {
-          total: 0,
-          limit: pagination.limit,
-          offset: pagination.offset,
-          has_more: false
-        };
-
-        allTasks = tasksData;
-      }
+      const response = await taskAPI.getAllTasks(params);
       
+      // Handle new API response structure
+      const tasksData = response.tasks || [];
+      const paginationData = response.pagination || {
+        total: 0,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        has_more: false
+      };
+
       // Transform tasks to include isFavorite field (defaulting to false)
       // Reason: Ensure consistent data structure between list and board views
-      const tasksWithFavorites = (Array.isArray(allTasks) ? allTasks : []).map(task => ({
+      const tasksWithFavorites = (Array.isArray(tasksData) ? tasksData : []).map(task => ({
         ...task,
         isFavorite: task.isFavorite || false
       }));
       
       setTasks(tasksWithFavorites);
       
-      // Update pagination data (only for normal mode)
-      if (!priorityMode) {
-        setPagination(prev => ({
-          ...prev,
-          total: paginationData.total,
-          has_more: paginationData.has_more
-        }));
-      }
+      // Update pagination data
+      setPagination(prev => ({
+        ...prev,
+        total: paginationData.total,
+        has_more: paginationData.has_more
+      }));
       
       setError('');
     } catch (err) {
@@ -168,16 +151,6 @@ const Tasks = () => {
     }
   };
 
-  const handleRecalculatePriorities = async () => {
-    try {
-      await taskAdvancedAPI.recalculatePriorityScores(currentUser.id);
-      fetchTasks(); // Refresh the list
-      setError('');
-    } catch (err) {
-      setError('Failed to recalculate priorities: ' + (err.message || 'Unknown error'));
-    }
-  };
-
   const handleToggleFavorite = async (taskId) => {
     try {
       const task = tasks.find(t => t.id === taskId);
@@ -210,20 +183,6 @@ const Tasks = () => {
       );
       setTasks(revertedTasks);
     }
-  };
-
-  const togglePriorityMode = () => {
-    setPriorityMode(!priorityMode);
-    if (!priorityMode && projects.length > 0) {
-      setSelectedProject(projects[0].id);
-    }
-  };
-
-  const getPriorityBadge = (score) => {
-    if (!score) return null;
-    if (score >= 80) return { text: 'High', variant: 'destructive', icon: Zap };
-    if (score >= 60) return { text: 'Medium', variant: 'warning', icon: TrendingUp };
-    return { text: 'Low', variant: 'secondary', icon: Star };
   };
 
   const getStatusIcon = (status) => {
@@ -298,14 +257,6 @@ const Tasks = () => {
         </div>
         <div className="flex gap-2">
           <Button 
-            variant={priorityMode ? "default" : "outline"} 
-            onClick={togglePriorityMode}
-            className="flex items-center gap-2"
-          >
-            <Star className="h-4 w-4" />
-            {priorityMode ? 'Priority View' : 'Enable Priority'}
-          </Button>
-          <Button 
             variant="outline"
             asChild
             className="flex items-center gap-2"
@@ -336,89 +287,48 @@ const Tasks = () => {
         </Card>
       )}
 
-      {/* Priority Mode Controls */}
-      {priorityMode && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="h-5 w-5" />
-              Smart Task Prioritization
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <label className="text-sm font-medium">Select Project for Priority View</label>
-                <Select value={selectedProject} onValueChange={setSelectedProject}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={handleRecalculatePriorities}
-                className="flex items-center gap-2"
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search tasks..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
               >
-                <TrendingUp className="h-4 w-4" />
-                Recalculate Priorities
-              </Button>
+                <option value="">All Status</option>
+                <option value="pending">Not Started</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+
+              <select
+                value={filters.project_id}
+                onChange={(e) => handleFilterChange('project_id', e.target.value)}
+                className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
+              >
+                <option value="">All Projects</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Filters - Only show in normal mode */}
-      {!priorityMode && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search tasks..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-
-              <div className="flex gap-2">
-                <select
-                  value={filters.status}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                  className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
-                >
-                  <option value="">All Status</option>
-                  <option value="pending">Not Started</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-
-                <select
-                  value={filters.project_id}
-                  onChange={(e) => handleFilterChange('project_id', e.target.value)}
-                  className="px-3 py-2 border border-input rounded-md bg-background text-sm focus:ring-2 focus:ring-ring focus:border-ring"
-                >
-                  <option value="">All Projects</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Tasks Grid */}
       {tasks.length === 0 ? (
@@ -427,11 +337,9 @@ const Tasks = () => {
             <CheckSquare className="h-16 w-16 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
             <p className="text-muted-foreground text-center max-w-md mb-4">
-              {priorityMode 
-                ? "No tasks found for this project or try recalculating priorities"
-                : Object.values(filters).some(filter => filter) 
-                  ? "Try adjusting your filters to see more tasks"
-                  : "Create your first task to get started"
+              {Object.values(filters).some(filter => filter) 
+                ? "Try adjusting your filters to see more tasks"
+                : "Create your first task to get started"
               }
             </p>
             <Button asChild size="lg">
@@ -445,7 +353,6 @@ const Tasks = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tasks.map((task) => {
-            const priorityInfo = getPriorityBadge(task.priority_score);
             const overdueTask = isOverdue(task.due_date, task.status);
             
             return (
@@ -463,12 +370,6 @@ const Tasks = () => {
                           {getStatusIcon(task.status)}
                           <span className="ml-1">{task.status}</span>
                         </Badge>
-                        {priorityMode && priorityInfo && (
-                          <Badge variant={priorityInfo.variant} className="flex items-center gap-1">
-                            <priorityInfo.icon className="h-3 w-3" />
-                            {priorityInfo.text}
-                          </Badge>
-                        )}
                         {overdueTask && (
                           <Badge variant="destructive" className="bg-red-600 hover:bg-red-700">
                             Overdue
@@ -561,13 +462,6 @@ const Tasks = () => {
                         </div>
                       </div>
                     )}
-
-                    {priorityMode && task.priority_score && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Priority Score:</span>
-                        <span className="font-medium">{task.priority_score.toFixed(1)}</span>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
 
@@ -617,8 +511,8 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Load More Button - Only in normal mode */}
-      {!priorityMode && pagination.has_more && (
+      {/* Load More Button */}
+      {pagination.has_more && (
         <div className="flex justify-center">
           <Button variant="outline" onClick={loadMore}>
             Load More Tasks

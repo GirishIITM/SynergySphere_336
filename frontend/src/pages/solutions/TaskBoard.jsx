@@ -13,14 +13,18 @@ import { taskAPI } from '../../utils/apiCalls/taskAPI';
  * TaskBoardPage - Main page component for the drag and drop task board
  * 
  * Features:
- * - Fetches tasks from the API
+ * - Fetches tasks from the API grouped by status
  * - Provides task board and list view toggle
  * - Handles task updates and deletions
  * - Shows loading and error states
  * - Integrates with existing task management system
  */
 const TaskBoardPage = () => {
-  const [tasks, setTasks] = useState([]);
+  const [tasksGrouped, setTasksGrouped] = useState({
+    pending: [],
+    in_progress: [],
+    completed: []
+  });
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -29,7 +33,7 @@ const TaskBoardPage = () => {
   const currentUser = getCurrentUser();
 
   useEffect(() => {
-    fetchTasks();
+    fetchTasksGrouped();
     fetchProjects();
 
     const loadingUnsubscribe = loadingState.subscribe('task-board', (isLoading) => {
@@ -39,7 +43,7 @@ const TaskBoardPage = () => {
     // Add focus listener to refresh data when returning to this view
     // Reason: Ensures data stays synchronized when switching between list and board views
     const handleFocus = () => {
-      fetchTasks();
+      fetchTasksGrouped();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -53,46 +57,50 @@ const TaskBoardPage = () => {
   // Add effect to refresh data when view mode changes
   useEffect(() => {
     if (viewMode === 'board') {
-      fetchTasks();
+      fetchTasksGrouped();
     }
   }, [viewMode]);
 
   /**
-   * Fetch all tasks from the API
+   * Fetch all tasks grouped by status from the API
    */
-  const fetchTasks = async () => {
+  const fetchTasksGrouped = async () => {
     try {
       setLoading(true);
-      console.log('TaskBoardPage: Fetching tasks from API');
-      const response = await taskAPI.getAllTasks({});
+      console.log('TaskBoardPage: Fetching grouped tasks from API');
+      const response = await taskAPI.getTasksGrouped({});
       
       console.log('TaskBoardPage: API response received', {
         responseType: typeof response,
-        hasTasks: !!response.tasks,
-        tasksCount: response.tasks ? response.tasks.length : 0
+        hasPending: !!response.pending,
+        hasInProgress: !!response.in_progress,
+        hasCompleted: !!response.completed,
+        pendingCount: response.pending ? response.pending.length : 0,
+        inProgressCount: response.in_progress ? response.in_progress.length : 0,
+        completedCount: response.completed ? response.completed.length : 0
       });
       
-      // Handle new API response structure with tasks and pagination
-      const allTasks = response.tasks || response || [];
+      // Ensure the response has the expected structure
+      const groupedTasks = {
+        pending: response.pending || [],
+        in_progress: response.in_progress || [],
+        completed: response.completed || []
+      };
       
-      // Transform tasks to include isFavorite field (defaulting to false)
-      // Note: You'll need to add this field to your backend model and API
-      const tasksWithFavorites = (Array.isArray(allTasks) ? allTasks : []).map(task => ({
-        ...task,
-        isFavorite: task.isFavorite || false
-      }));
-      
-      console.log('TaskBoardPage: Setting tasks state', {
-        tasksCount: tasksWithFavorites.length,
-        sampleTask: tasksWithFavorites[0] || null
+      console.log('TaskBoardPage: Setting grouped tasks state', {
+        totalTasks: groupedTasks.pending.length + groupedTasks.in_progress.length + groupedTasks.completed.length
       });
       
-      setTasks(tasksWithFavorites);
+      setTasksGrouped(groupedTasks);
       setError('');
     } catch (err) {
-      console.error('TaskBoardPage: Failed to fetch tasks:', err);
+      console.error('TaskBoardPage: Failed to fetch grouped tasks:', err);
       setError('Failed to fetch tasks: ' + (err.message || 'Unknown error'));
-      setTasks([]);
+      setTasksGrouped({
+        pending: [],
+        in_progress: [],
+        completed: []
+      });
     } finally {
       setLoading(false);
     }
@@ -120,13 +128,40 @@ const TaskBoardPage = () => {
    */
   const handleTaskUpdate = (updatedTask) => {
     console.log('TaskBoardPage: Received task update', updatedTask);
-    setTasks(prevTasks => {
-      const newTasks = prevTasks.map(task => 
-        task.id === updatedTask.id ? updatedTask : task
-      );
+    setTasksGrouped(prevTasks => {
+      // Find the task in the current groups and remove it
+      const currentTask = prevTasks.pending.find(t => t.id === updatedTask.id) ||
+                          prevTasks.in_progress.find(t => t.id === updatedTask.id) ||
+                          prevTasks.completed.find(t => t.id === updatedTask.id);
+      
+      if (!currentTask) {
+        console.warn('TaskBoardPage: Task not found in current state');
+        return prevTasks;
+      }
+      
+      // Remove task from all groups
+      const newTasks = {
+        pending: prevTasks.pending.filter(task => task.id !== updatedTask.id),
+        in_progress: prevTasks.in_progress.filter(task => task.id !== updatedTask.id),
+        completed: prevTasks.completed.filter(task => task.id !== updatedTask.id)
+      };
+      
+      // Add task to the appropriate group based on its new status
+      const targetStatus = updatedTask.status;
+      if (newTasks[targetStatus]) {
+        newTasks[targetStatus].push(updatedTask);
+      } else {
+        console.warn(`TaskBoardPage: Unknown status "${targetStatus}", keeping task in original group`);
+        // Fallback: keep in original group if status is unknown
+        if (currentTask.status && newTasks[currentTask.status]) {
+          newTasks[currentTask.status].push(updatedTask);
+        }
+      }
+      
       console.log('TaskBoardPage: Updated tasks state', {
-        totalTasks: newTasks.length,
-        updatedTaskId: updatedTask.id
+        totalTasks: newTasks.pending.length + newTasks.in_progress.length + newTasks.completed.length,
+        updatedTaskId: updatedTask.id,
+        newStatus: updatedTask.status
       });
       return newTasks;
     });
@@ -139,14 +174,22 @@ const TaskBoardPage = () => {
    *   taskId (string|number): The ID of the deleted task
    */
   const handleTaskDelete = (taskId) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    setTasksGrouped(prevTasks => {
+      const newTasks = {
+        ...prevTasks,
+        pending: prevTasks.pending.filter(task => task.id !== taskId),
+        in_progress: prevTasks.in_progress.filter(task => task.id !== taskId),
+        completed: prevTasks.completed.filter(task => task.id !== taskId)
+      };
+      return newTasks;
+    });
   };
 
   /**
    * Refresh the task data
    */
   const handleRefresh = () => {
-    fetchTasks();
+    fetchTasksGrouped();
     fetchProjects();
   };
 
@@ -233,7 +276,7 @@ const TaskBoardPage = () => {
       {/* Task Board */}
       {viewMode === 'board' && (
         <div className="flex-1">
-          {tasks.length === 0 && !loading ? (
+          {tasksGrouped.pending.length === 0 && tasksGrouped.in_progress.length === 0 && tasksGrouped.completed.length === 0 && !loading ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-16">
                 <LayoutDashboard className="h-16 w-16 text-muted-foreground mb-4" />
@@ -251,7 +294,7 @@ const TaskBoardPage = () => {
             </Card>
           ) : (
             <TaskBoard
-              initialTasks={tasks}
+              initialTasksGrouped={tasksGrouped}
               onTaskUpdate={handleTaskUpdate}
               onTaskDelete={handleTaskDelete}
             />
@@ -260,7 +303,7 @@ const TaskBoardPage = () => {
       )}
 
       {/* Help Text */}
-      {viewMode === 'board' && tasks.length > 0 && (
+      {viewMode === 'board' && (tasksGrouped.pending.length > 0 || tasksGrouped.in_progress.length > 0 || tasksGrouped.completed.length > 0) && (
         <Card className="bg-blue-50/50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">

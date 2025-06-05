@@ -27,13 +27,17 @@ import { getCurrentUser } from '../utils/apiCalls/auth';
  * - Three columns: Started, In Progress, Completed
  * - Drag and drop between columns updates task status
  * - Favorite/unfavorite toggle with star icons
- * - Favorites appear at top of each column
+ * - Favorites appear at top of each column (sorted by backend)
  * - User-defined ordering through drag and drop
  * - Visual indicators during drag operations
  * - Responsive design
  */
-const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
-  const [tasks, setTasks] = useState(initialTasks);
+const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) => {
+  const [tasksGrouped, setTasksGrouped] = useState(initialTasksGrouped || {
+    pending: [],
+    in_progress: [],
+    completed: []
+  });
   const [draggedTask, setDraggedTask] = useState(null);
   const [draggedOver, setDraggedOver] = useState(null);
   const dragCounterRef = useRef(0);
@@ -48,34 +52,22 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
   };
 
   useEffect(() => {
-    setTasks(initialTasks);
-  }, [initialTasks]);
+    if (initialTasksGrouped) {
+      setTasksGrouped(initialTasksGrouped);
+    }
+  }, [initialTasksGrouped]);
 
   /**
-   * Get tasks for a specific column, sorted with favorites at top
+   * Get tasks for a specific column - now directly from grouped data
    * 
    * Args:
-   *   columnStatus (string): The status to filter tasks by
+   *   columnStatus (string): The status to get tasks for
    * 
    * Returns:
-   *   array: Sorted array of tasks for the column
+   *   array: Array of tasks for the column (already sorted by backend with favorites first)
    */
   const getTasksForColumn = (columnStatus) => {
-    const columnTasks = tasks.filter(task => {
-      // Map task statuses to column statuses
-      if (columnStatus === 'pending') return task.status === 'pending';
-      if (columnStatus === 'in_progress') return task.status === 'in_progress';
-      if (columnStatus === 'completed') return task.status === 'completed';
-      return false;
-    });
-
-    // Sort: favorites first, then by user-defined order (maintain array order)
-    // Reason: User's explicit favoriting takes priority, but within each group
-    // (favorites/non-favorites), maintain the order from drag operations
-    const favorites = columnTasks.filter(task => task.isFavorite);
-    const nonFavorites = columnTasks.filter(task => !task.isFavorite);
-    
-    return [...favorites, ...nonFavorites];
+    return tasksGrouped[columnStatus] || [];
   };
 
   /**
@@ -179,17 +171,17 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
       
       console.log('TaskBoard: API call successful, updating local state');
       
-      // Update local state
-      const updatedTasks = tasks.map(task => 
-        task.id === draggedTask.id 
-          ? { ...task, status: newStatus }
-          : task
-      );
-      setTasks(updatedTasks);
+      // Update local state - move task to new status group
+      const updatedTask = { ...draggedTask, status: newStatus };
+      const updatedTasks = {
+        ...tasksGrouped,
+        [draggedTask.status]: tasksGrouped[draggedTask.status].filter(task => task.id !== draggedTask.id),
+        [newStatus]: [...tasksGrouped[newStatus], updatedTask]
+      };
+      setTasksGrouped(updatedTasks);
 
       // Notify parent component if callback provided
       if (onTaskUpdate) {
-        const updatedTask = { ...draggedTask, status: newStatus };
         console.log('TaskBoard: Notifying parent component', updatedTask);
         onTaskUpdate(updatedTask);
       }
@@ -215,18 +207,23 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
    */
   const handleToggleFavorite = async (taskId) => {
     try {
-      const task = tasks.find(t => t.id === taskId);
+      const task = tasksGrouped.pending.find(t => t.id === taskId) ||
+                    tasksGrouped.in_progress.find(t => t.id === taskId) ||
+                    tasksGrouped.completed.find(t => t.id === taskId);
       if (!task) return;
 
       const newFavoriteStatus = !task.isFavorite;
       
       // Update local state immediately for responsive UI
-      const updatedTasks = tasks.map(t => 
-        t.id === taskId 
-          ? { ...t, isFavorite: newFavoriteStatus }
-          : t
-      );
-      setTasks(updatedTasks);
+      const updatedTasks = {
+        ...tasksGrouped,
+        [task.status]: tasksGrouped[task.status].map(t => 
+          t.id === taskId 
+            ? { ...t, isFavorite: newFavoriteStatus }
+            : t
+        )
+      };
+      setTasksGrouped(updatedTasks);
 
       // Update via API
       // Reason: Persist favorite status to backend so it's consistent across views
@@ -247,12 +244,15 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
     } catch (error) {
       console.error('Failed to toggle task favorite:', error);
       // Revert the change on error
-      const revertedTasks = tasks.map(t => 
-        t.id === taskId 
-          ? { ...t, isFavorite: !t.isFavorite }
-          : t
-      );
-      setTasks(revertedTasks);
+      const revertedTasks = {
+        ...tasksGrouped,
+        [task.status]: tasksGrouped[task.status].map(t => 
+          t.id === taskId 
+            ? { ...t, isFavorite: !t.isFavorite }
+            : t
+        )
+      };
+      setTasksGrouped(revertedTasks);
     }
   };
 
@@ -270,8 +270,13 @@ const TaskBoard = ({ initialTasks = [], onTaskUpdate, onTaskDelete }) => {
       await taskAPI.deleteTask(taskId, projectId);
       
       // Update local state
-      const updatedTasks = tasks.filter(task => task.id !== taskId);
-      setTasks(updatedTasks);
+      const updatedTasks = {
+        ...tasksGrouped,
+        pending: tasksGrouped.pending.filter(task => task.id !== taskId),
+        in_progress: tasksGrouped.in_progress.filter(task => task.id !== taskId),
+        completed: tasksGrouped.completed.filter(task => task.id !== taskId)
+      };
+      setTasksGrouped(updatedTasks);
 
       // Notify parent component if callback provided
       if (onTaskDelete) {

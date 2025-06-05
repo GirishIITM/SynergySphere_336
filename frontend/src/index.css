@@ -139,7 +139,7 @@
 }
 
 .theme-dark {
-  --color-bg: #0f172a;
+  --color-bg: #000000;
   --color-surface: #1e293b;
   --color-primary: #60a5fa;
   --color-primary-hover: #3b82f6;
