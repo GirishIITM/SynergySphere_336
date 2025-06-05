@@ -174,6 +174,39 @@
 - [x] Clean up unused imports and variables ✅
 - [x] Test that task board functionality remains intact ✅
 
+#### 20. Create Status Model and Refactor Task Status - 2025-01-18
+- [ ] Create new Status model with three predefined statuses (Pending, In Progress, Completed)
+- [ ] Add status_id foreign key field to Task model
+- [ ] Update Task model to use status_id instead of enum status field
+- [ ] Create database migration for the schema change
+- [ ] Update all backend endpoints to handle status_id instead of status
+- [ ] Update frontend components to work with status objects instead of status strings
+- [ ] Update task creation, editing, and status update functionality
+- [ ] Ensure backward compatibility during transition
+- [ ] Create unit tests for new Status model and relationships
+- [ ] Update existing tests to account for status_id changes
+
+#### 21. Link Inbox to Show Tagged Messages and Navigate to Task Details - 2025-01-18
+- [ ] Enhance Notification model to include task_id and message_id for context
+- [ ] Create backend functionality to detect @mentions in message content
+- [ ] Add notification creation for mentioned users when messages are posted
+- [ ] Create API endpoint to get notifications where user is tagged
+- [ ] Update InBox.jsx to fetch and display tagged messages
+- [ ] Add click functionality to navigate to TaskDetail page from inbox items
+- [ ] Implement proper message preview and context in inbox
+- [ ] Add notification categorization (tagged, assigned, general)
+- [ ] Create tests for mention detection and notification functionality
+
+#### 22. Fix CORS and 500 Error for /notifications/tagged Endpoint - 2025-01-18 ✅
+
+#### 23. Fix CORS Cache-Control Header Issue - 2025-01-18
+- [x] Add 'Cache-Control' to allowed headers in main CORS configuration ✅
+- [x] Add 'Pragma' and 'Expires' headers to allowed headers list ✅
+- [x] Update error handler CORS headers to include all cache-related headers ✅
+- [x] Fix Cross-Origin Request Blocked errors for localhost:3000 to localhost:5000 requests ✅
+- [x] Ensure all cache-related headers sent by frontend are properly allowed in preflight responses ✅
+- [x] Test API requests from frontend to verify CORS issues are resolved ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
@@ -224,18 +257,6 @@
 - [ ] Add expense benchmarking against similar projects
 - [ ] Create custom financial dashboard widgets
 - [ ] Add expense audit trail and change history
-
-#### 20. Create Status Model and Refactor Task Status - 2025-01-18
-- [ ] Create new Status model with three predefined statuses (Pending, In Progress, Completed)
-- [ ] Add status_id foreign key field to Task model
-- [ ] Update Task model to use status_id instead of enum status field
-- [ ] Create database migration for the schema change
-- [ ] Update all backend endpoints to handle status_id instead of status
-- [ ] Update frontend components to work with status objects instead of status strings
-- [ ] Update task creation, editing, and status update functionality
-- [ ] Ensure backward compatibility during transition
-- [ ] Create unit tests for new Status model and relationships
-- [ ] Update existing tests to account for status_id changes
 
 ### 📋 Additional Tasks - Discovered During Implementation
 - [x] Add integration between Projects.jsx and new analytics/finance pages ✅

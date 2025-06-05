@@ -1,4 +1,4 @@
-from flask import Flask, current_app
+from flask import Flask, current_app, request, jsonify
 from flask_cors import CORS
 from flask_apscheduler import APScheduler
 from dotenv import load_dotenv
@@ -34,12 +34,18 @@ def create_app(config_class=None):
     # Scheduler configuration
     app.config['SCHEDULER_API_ENABLED'] = True
     
-    # CORS setup
+    # CORS setup - Allow both production and development URLs
+    allowed_origins = [
+        app.config['FRONTEND_URL'],
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ]
+    
     CORS(
         app,
-        resources={r"/*": {"origins": [app.config['FRONTEND_URL'], "http://localhost:3000"]}},
+        resources={r"/*": {"origins": allowed_origins}},
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With"],
+        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With", "Cache-Control", "Pragma", "Expires"],
         supports_credentials=True,
         max_age=600
     )
@@ -72,6 +78,34 @@ def create_app(config_class=None):
         jti = jwt_payload['jti']
         token = TokenBlocklist.query.filter_by(jti=jti).first()
         return token is not None
+    
+    # Error handlers to ensure CORS headers are included in error responses
+    def add_cors_headers(response):
+        # For development, allow localhost:3000
+        origin = request.headers.get('Origin')
+        if origin in allowed_origins:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+        else:
+            response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Cache-Control,Pragma,Expires')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
+    
+    @app.errorhandler(500)
+    def handle_500_error(e):
+        response = jsonify({'error': 'Internal server error', 'details': str(e)})
+        return add_cors_headers(response), 500
+    
+    @app.errorhandler(404)
+    def handle_404_error(e):
+        response = jsonify({'error': 'Resource not found'})
+        return add_cors_headers(response), 404
+    
+    @app.errorhandler(401)
+    def handle_401_error(e):
+        response = jsonify({'error': 'Unauthorized'})
+        return add_cors_headers(response), 401
     
     # Scheduled jobs
     def scheduled_deadline_monitoring():

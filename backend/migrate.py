@@ -141,6 +141,32 @@ def migrate_sqlite_direct(db_path):
             except Exception as e:
                 print(f"  ❌ Error adding task_id to message: {str(e)}")
         
+        # Check notification table and add enhanced columns if missing
+        cursor.execute("PRAGMA table_info(notification)")
+        notification_columns = [row[1] for row in cursor.fetchall()]
+        print(f"📋 Existing notification columns: {notification_columns}")
+        
+        notification_required_columns = [
+            ('task_id', 'INTEGER'),
+            ('message_id', 'INTEGER'),
+            ('notification_type', 'VARCHAR(50) DEFAULT "general"')
+        ]
+        
+        for column_name, column_def in notification_required_columns:
+            if column_name not in notification_columns:
+                try:
+                    cursor.execute(f"ALTER TABLE notification ADD COLUMN {column_name} {column_def}")
+                    print(f"  ✅ Added {column_name} to notification table")
+                except Exception as e:
+                    print(f"  ❌ Error adding {column_name} to notification: {str(e)}")
+        
+        # Set default notification_type for existing notifications
+        cursor.execute("""
+            UPDATE notification 
+            SET notification_type = 'general' 
+            WHERE notification_type IS NULL
+        """)
+        
         conn.commit()
         conn.close()
         print("🎉 SQLite migration completed successfully!")
@@ -257,6 +283,32 @@ def migrate_postgresql(database_url):
                         print("  ✅ Added task_id to message table")
                     except Exception as e:
                         print(f"  ❌ Error adding task_id to message: {str(e)}")
+            
+            # Check notification table and add enhanced columns if missing
+            if inspector.has_table('notification'):
+                notification_columns = [col['name'] for col in inspector.get_columns('notification')]
+                print(f"📋 Existing notification columns: {notification_columns}")
+                
+                notification_required_columns = [
+                    ('task_id', 'INTEGER'),
+                    ('message_id', 'INTEGER'),
+                    ('notification_type', 'VARCHAR(50) DEFAULT \'general\'')
+                ]
+                
+                for column_name, column_def in notification_required_columns:
+                    if column_name not in notification_columns:
+                        try:
+                            conn.execute(text(f'ALTER TABLE notification ADD COLUMN {column_name} {column_def}'))
+                            print(f"  ✅ Added {column_name} to notification table")
+                        except Exception as e:
+                            print(f"  ❌ Error adding {column_name} to notification: {str(e)}")
+                
+                # Set default notification_type for existing notifications
+                conn.execute(text("""
+                    UPDATE notification 
+                    SET notification_type = 'general' 
+                    WHERE notification_type IS NULL
+                """))
         
         print("🎉 PostgreSQL migration completed successfully!")
         return True

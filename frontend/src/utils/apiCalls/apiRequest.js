@@ -69,7 +69,11 @@ export const apiRequest = async (endpoint, method = 'GET', data = null, loadingK
 
   const options = {
     method,
-    headers: {},
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    },
   };
 
   if (data instanceof FormData) {

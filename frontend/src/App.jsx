@@ -5,6 +5,7 @@ import './App.css';
 import LoadingIndicator from './components/LoadingIndicator';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
+import { setupCacheClearingOnRefresh, addNoCacheHeaders } from './utils/cacheManager';
 
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
@@ -40,6 +41,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Set up cache clearing on refresh
+    const cleanupCacheClearing = setupCacheClearingOnRefresh();
+    
+    // Add no-cache headers to prevent browser caching
+    addNoCacheHeaders();
+    
     // Subscribe to authentication state changes
     const unsubscribe = authState.subscribe((isAuth) => {
       setAuthenticated(isAuth);
@@ -54,7 +61,10 @@ function App() {
     
     checkAuth();
     
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      cleanupCacheClearing();
+    };
   }, []);
 
   if (isLoading) {
