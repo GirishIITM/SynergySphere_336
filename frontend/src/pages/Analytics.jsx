@@ -260,11 +260,10 @@ const Analytics = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="trends">Trends & Prediction</TabsTrigger>
           <TabsTrigger value="projects">Project Deep Dive</TabsTrigger>
-          <TabsTrigger value="insights">AI Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -611,26 +610,7 @@ const Analytics = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="insights" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                AI-Powered Insights
-              </CardTitle>
-              <p className="text-muted-foreground">
-                Advanced analytics and recommendations based on your work patterns
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>AI insights feature coming soon...</p>
-                <p className="text-sm">This will include personalized recommendations, pattern recognition, and predictive insights.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+
       </Tabs>
     </div>
   );

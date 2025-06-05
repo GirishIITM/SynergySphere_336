@@ -199,6 +199,12 @@
 - [x] Fix TypeError in mention detection where extract_mentions result was passed to find_mentioned_users instead of raw content ✅
 - [ ] Create tests for mention detection and notification functionality
 
+#### 22. Remove AI Insights Tab from Analytics - 2025-01-18
+- [x] Remove the AI Insights tab from Analytics page ✅
+- [x] Keep Brain icon import as it's still used in AI Performance Prediction ✅
+- [x] No AI-related state cleanup needed as other features still use them ✅
+- [x] Update tab grid to 3 columns instead of 4 ✅
+
 #### 22. Revamp Analytics and Finance Pages with Advanced Analysis - 2025-01-18
 - [x] Enhance analytics backend endpoints with more sophisticated calculations ✅
 - [x] Add project and task-level analytics with trend analysis ✅
@@ -379,3 +385,14 @@
 - [x] Update task state management to handle grouped data structure ✅
 - [x] Create test script for verifying new backend endpoints ✅
 - [x] Ensure backward compatibility with existing task API ✅
+
+#### 25. Fix Analytics Endpoints CORS and 404 Errors - 2025-01-18
+- [x] Identified route prefix conflict: analytics blueprint registered with '/analytics' prefix but routes defined with '/analytics/' ✅
+- [x] Fixed route definitions to remove redundant '/analytics' prefix from endpoint paths ✅
+- [x] Updated '/analytics/trends' to '/trends' (final URL: /analytics/trends) ✅
+- [x] Updated '/analytics/performance-prediction' to '/performance-prediction' (final URL: /analytics/performance-prediction) ✅
+- [x] Updated '/analytics/productivity' to '/productivity' (final URL: /analytics/productivity) ✅
+- [x] Updated '/analytics/projects' to '/projects' (final URL: /analytics/projects) ✅
+- [x] Updated '/analytics/team' to '/team' (final URL: /analytics/team) ✅
+- [x] Verified CORS configuration supports localhost:3000 to localhost:5000 requests ✅
+- [ ] Test frontend analytics data loading to verify 404 errors are resolved
