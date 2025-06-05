@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { taskAPI } from '../utils/apiCalls/taskAPI';
-import { getCurrentUser } from '../utils/apiCalls/auth';
 
 /**
  * TaskBoard Component - Drag and Drop Kanban-style task board
@@ -42,7 +41,6 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
   const [draggedOver, setDraggedOver] = useState(null);
   const dragCounterRef = useRef(0);
 
-  const currentUser = getCurrentUser();
 
   // Status mapping for the columns
   const COLUMN_CONFIG = {

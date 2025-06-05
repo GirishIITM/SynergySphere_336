@@ -7,10 +7,8 @@ export const taskAdvancedAPI = {
 
   // Progress management
   updateTaskProgress: async (taskId, percentComplete) => {
-    return await apiRequest(`/task_advanced/tasks/${taskId}/progress`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ percent_complete: percentComplete })
+    return await apiRequest(`/task_advanced/tasks/${taskId}/progress`, 'PUT', {
+      percent_complete: percentComplete
     });
   },
 

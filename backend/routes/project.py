@@ -18,13 +18,31 @@ def create_project():
         # Parse form data or JSON
         if request.content_type and 'multipart/form-data' in request.content_type:
             data = request.form.to_dict()
-            member_emails = data.get('member_emails', '').split(',') if data.get('member_emails') else []
-            member_emails = [email.strip() for email in member_emails if email.strip()]
+            
+            # Parse member_emails from JSON string
+            member_emails = []
+            if data.get('member_emails'):
+                try:
+                    import json
+                    member_emails = json.loads(data['member_emails'])
+                    if isinstance(member_emails, list):
+                        member_emails = [email.strip() for email in member_emails if email.strip()]
+                    else:
+                        member_emails = []
+                except (json.JSONDecodeError, TypeError):
+                    member_emails = []
+            
+            # Parse member_permissions from JSON string
             member_permissions = {}
-            for key, value in data.items():
-                if key.startswith('member_permission_'):
-                    email = key.replace('member_permission_', '')
-                    member_permissions[email] = value.lower() == 'true'
+            if data.get('member_permissions'):
+                try:
+                    import json
+                    member_permissions = json.loads(data['member_permissions'])
+                    if not isinstance(member_permissions, dict):
+                        member_permissions = {}
+                except (json.JSONDecodeError, TypeError):
+                    member_permissions = {}
+            
             image_file = request.files.get('project_image')
         else:
             data = request.get_json()
@@ -61,7 +79,6 @@ def create_project():
 
 @project_bp.route('/projects', methods=['GET'])
 @jwt_required()
-#@cache_route(ttl=180, user_specific=True)  # Cache for 3 minutes
 def list_projects():
     """Get detailed projects list with filtering options"""
     user_id = int(get_jwt_identity())

@@ -439,7 +439,10 @@ const TaskDetail = () => {
             </TabsContent>
 
             <TabsContent value="comments">
-              <TaskComments taskId={taskId} />
+              <TaskComments 
+                taskId={taskId} 
+                projectId={task.project_id}
+              />
             </TabsContent>
           </Tabs>
         </div>

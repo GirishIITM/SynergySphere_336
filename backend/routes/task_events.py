@@ -3,14 +3,14 @@ from datetime import datetime
 from models.user import Message, Project, Task, User, db 
 from routes import auth_bp  
 
-@auth_bp.route('/tasks', methods=['GET'])
+@auth_bp.route('/auth/tasks', methods=['GET'])
 def get_tasks():
     tasks = Task.query.all()
     return jsonify([task.to_dict() for task in tasks])
 
 
 
-@auth_bp.route('/tasks', methods=['POST'])
+@auth_bp.route('/auth/tasks', methods=['POST'])
 def create_task():
     data = request.json
     project_id = data.get('project_id')
@@ -18,15 +18,16 @@ def create_task():
     description = data.get('description')
     due_date = data.get('due_date')
     status = data.get('status')
-    # conert date to datetime object
-    due_date = datetime.strptime(due_date, '%Y-%m-%d')
+    # convert date to datetime object
+    if due_date:
+        due_date = datetime.strptime(due_date, '%Y-%m-%d')
     new_task = Task(project_id=project_id, title=title, description=description, due_date=due_date, status=status)
     db.session.add(new_task)
     db.session.commit()
     return jsonify(new_task.to_dict()), 201
 
 
-@auth_bp.route('/tasks/<int:task_id>', methods=['PUT'])
+@auth_bp.route('/auth/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
     data = request.json
     project_id = data.get('project_id')
@@ -34,36 +35,30 @@ def update_task(task_id):
     description = data.get('description')
     due_date = data.get('due_date')
     status = data.get('status')
-    
-    task = Task.query.get_or_404(task_id)
-    
-    # Prevent changing project_id - tasks cannot be moved between projects
-    if project_id and str(project_id) != str(task.project_id):
-        return jsonify({'msg': 'Project assignment cannot be changed when editing a task'}), 400
-    
-    # Update allowed fields
-    if title:
-        task.title = title
-    if description:
-        task.description = description
+    budget = data.get('budget')
+    # convert date to datetime object
     if due_date:
-        # convert date to datetime object
-        task.due_date = datetime.strptime(due_date, '%Y-%m-%d')
-    if status:
-        task.status = status
-    
+        due_date = datetime.strptime(due_date, '%Y-%m-%d')
+    task = Task.query.get_or_404(task_id)
+    task.project_id = project_id
+    task.title = title
+    task.description = description
+    task.due_date = due_date
+    task.status = status
+    if budget:
+        try:
+            task.budget = float(budget)
+        except (ValueError, TypeError):
+            pass
     db.session.commit()
     return jsonify(task.to_dict())
 
 
-@auth_bp.route('/tasks/<int:task_id>', methods=['DELETE'])
+@auth_bp.route('/auth/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
     data = request.json
     project_id = data.get('project_id')
     task = Task.query.get_or_404(task_id)
-    # delete the task from the project
-    project = Project.query.get(project_id)
-    project.tasks.remove(task)
     db.session.delete(task)
     db.session.commit()
     return '', 204

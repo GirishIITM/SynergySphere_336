@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { messageAPI } from '../utils/apiCalls/messageAPI';
+import { projectAPI } from '../utils/apiCalls/projectAPI';
+import { taskAPI } from '../utils/apiCalls/taskAPI';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -8,10 +11,11 @@ import { ScrollArea } from './ui/scroll-area';
 import { MessageCircle, Send, AtSign, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) => {
+const TaskComments = ({ taskId }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [projectId, setProjectId] = useState(null);
     const [showMentions, setShowMentions] = useState(false);
     const [mentionSearch, setMentionSearch] = useState('');
     const [filteredMembers, setFilteredMembers] = useState([]);
@@ -22,16 +26,35 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
     const mentionListRef = useRef(null);
 
     useEffect(() => {
-        fetchComments();
+        if (taskId) {
+            fetchTaskDetails();
+        }
     }, [taskId]);
 
     useEffect(() => {
-        if (mentionSearch) {
+        if (projectId && taskId) {
+            fetchComments();
+        }
+    }, [projectId, taskId]);
+
+    useEffect(() => {
+        if (mentionSearch && projectId) {
             searchProjectMembers(mentionSearch);
         } else {
             setFilteredMembers([]);
         }
     }, [mentionSearch, projectId]);
+
+    const fetchTaskDetails = async () => {
+        try {
+            const response = await taskAPI.getTask(taskId);
+            if (response.success && response.data) {
+                setProjectId(response.data.project_id);
+            }
+        } catch (error) {
+            console.error('Error fetching task details:', error);
+        }
+    };
 
     const searchProjectMembers = async (query) => {
         if (!query.trim()) {
@@ -41,24 +64,10 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
 
         try {
             setIsSearchingMembers(true);
-            // Use the project member search API directly
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`/api/projects/${projectId}/members/search?q=${encodeURIComponent(query)}&limit=10`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setFilteredMembers(data.members || []);
-                setSelectedMentionIndex(0);
-            } else {
-                setFilteredMembers([]);
-            }
-        } catch (error) {
-            console.error('Error searching project members:', error);
+            const response = await projectAPI.searchUsers({ q: query, limit: 10 });
+            setFilteredMembers(response.users || []);
+        } catch (err) {
+            console.error('User search error:', err);
             setFilteredMembers([]);
         } finally {
             setIsSearchingMembers(false);
@@ -66,46 +75,29 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
     };
 
     const fetchComments = async () => {
-        try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}/messages`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+        if (!projectId || !taskId) return;
 
-            if (response.ok) {
-                const data = await response.json();
-                setComments(data);
-            }
+        try {
+            setIsLoading(true);
+            const response = await messageAPI.getTaskMessages(projectId, taskId);
+            setComments(response || []);
         } catch (error) {
             console.error('Error fetching comments:', error);
+            setComments([]);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
-        if (!newComment.trim()) return;
+        if (!newComment.trim() || !projectId) return;
 
-        setIsLoading(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await fetch(`/api/projects/${projectId}/tasks/${taskId}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    content: newComment
-                })
-            });
-
-            if (response.ok) {
-                setNewComment('');
-                await fetchComments();
-            }
+            setIsLoading(true);
+            await messageAPI.sendTaskMessage(projectId, taskId, newComment.trim());
+            setNewComment('');
+            fetchComments(); // Refresh comments
         } catch (error) {
             console.error('Error posting comment:', error);
         } finally {
@@ -115,42 +107,34 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
 
     const handleTextareaChange = (e) => {
         const value = e.target.value;
-        const cursorPosition = e.target.selectionStart;
-
         setNewComment(value);
-        // Check for @ mention
-        const beforeCursor = value.slice(0, cursorPosition);
-        const atIndex = beforeCursor.lastIndexOf('@');
-        // console.log(atIndex,beforeCursor);
+
+        // Check for @ mentions
+        const cursorPosition = e.target.selectionStart;
+        const textBeforeCursor = value.substring(0, cursorPosition);
+        const atIndex = textBeforeCursor.lastIndexOf('@');
 
         if (atIndex !== -1) {
-            const afterAt = beforeCursor.slice(atIndex + 1);
-
-            // Allow mention dropdown even if afterAt is empty (just typed @)
-            if (
-                !afterAt.includes(' ') &&
-                !afterAt.includes('\n')
-            ) {
-                setMentionSearch(afterAt);
+            const mentionText = textBeforeCursor.substring(atIndex + 1);
+            if (!mentionText.includes(' ') && mentionText.length <= 20) {
+                setMentionSearch(mentionText);
                 setShowMentions(true);
 
-                const textarea = textareaRef.current;
-                if (textarea) {
-                    const rect = textarea.getBoundingClientRect();
-                    const lineHeight = 20;
-                    const lines = beforeCursor.split('\n').length - 1;
+                // Calculate mention dropdown position
+                const textarea = e.target;
+                const textMetrics = getTextMetrics(textBeforeCursor, textarea);
+                setMentionPosition({
+                    top: textMetrics.height + 25,
+                    left: textMetrics.width
+                });
 
-                    setMentionPosition({
-                        top: rect.top + (lines * lineHeight) + 25,
-                        left: rect.left + 10
-                    });
-                }
-            } else {
-                setShowMentions(false);
+                setSelectedMentionIndex(0);
+                return;
             }
-        } else {
-            setShowMentions(false);
         }
+
+        setShowMentions(false);
+        setMentionSearch('');
     };
 
     const handleKeyDown = (e) => {
@@ -158,14 +142,12 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 setSelectedMentionIndex(prev =>
-                    prev < filteredMembers.length - 1 ? prev + 1 : 0
+                    prev < filteredMembers.length - 1 ? prev + 1 : prev
                 );
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                setSelectedMentionIndex(prev =>
-                    prev > 0 ? prev - 1 : filteredMembers.length - 1
-                );
-            } else if (e.key === 'Enter' && !e.shiftKey) {
+                setSelectedMentionIndex(prev => prev > 0 ? prev - 1 : 0);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
                 e.preventDefault();
                 selectMention(filteredMembers[selectedMentionIndex]);
             } else if (e.key === 'Escape') {
@@ -179,13 +161,13 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
 
     const selectMention = (member) => {
         const cursorPosition = textareaRef.current.selectionStart;
-        const beforeCursor = newComment.slice(0, cursorPosition);
-        const afterCursor = newComment.slice(cursorPosition);
-        const atIndex = beforeCursor.lastIndexOf('@');
+        const textBeforeCursor = newComment.substring(0, cursorPosition);
+        const textAfterCursor = newComment.substring(cursorPosition);
+        const atIndex = textBeforeCursor.lastIndexOf('@');
 
-        const beforeAt = beforeCursor.slice(0, atIndex);
-        const mentionText = `@${member.username}`;
-        const newText = beforeAt + mentionText + ' ' + afterCursor;
+        const newText = textBeforeCursor.substring(0, atIndex) +
+            `@${member.full_name || member.username} ` +
+            textAfterCursor;
 
         setNewComment(newText);
         setShowMentions(false);
@@ -194,36 +176,42 @@ const TaskComments = ({ taskId, projectId, currentUser, projectMembers = [] }) =
         // Focus back to textarea
         setTimeout(() => {
             textareaRef.current?.focus();
-            const newCursorPos = beforeAt.length + mentionText.length + 1;
+            const newCursorPos = atIndex + (member.full_name || member.username).length + 2;
             textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
         }, 0);
     };
 
     const renderCommentContent = (content) => {
-        // Simple mention highlighting - replace @username with styled spans
-        const mentionRegex = /@(\w+)/g;
-        const parts = content.split(mentionRegex);
-
-        return parts.map((part, index) => {
-            if (index % 2 === 1) {
-                // This is a username
-                const member = projectMembers.find(m => m.username === part);
-                return (
-                    <Badge key={index} variant="secondary" className="mx-1">
-                        @{part}
-                    </Badge>
-                );
-            }
-            return part;
-        });
+        // Simple mention rendering - replace @mentions with styled spans
+        return content.replace(/@(\w+(?:\s+\w+)*)/g, '<span class="mention">@$1</span>');
     };
 
     const getUserInitials = (user) => {
         if (user.full_name) {
             return user.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
         }
-        return user.username?.[0]?.toUpperCase() || 'U';
+        return user.username?.substring(0, 2).toUpperCase() || 'U';
     };
+
+    const getTextMetrics = (text, textarea) => {
+        // Simple approximation for textarea text metrics
+        const lines = text.split('\n').length;
+        const avgCharWidth = 8;
+        const lineHeight = 20;
+
+        return {
+            width: Math.min(text.length * avgCharWidth, textarea.offsetWidth - 20),
+            height: lines * lineHeight
+        };
+    };
+
+    if (!projectId) {
+        return (
+            <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <Card className="mt-6">
