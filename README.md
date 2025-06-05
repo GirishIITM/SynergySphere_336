@@ -1,5 +1,7 @@
 # SynergySphere - Intelligent Team Collaboration Platform
 
+[demo](https://drive.google.com/file/d/1roAdPW577RFYyRX4CSlQeamEJOOiAS54/view)
+
 > **🏆 Built by Team 336 for the Odoo Hackathon**  
 > An advanced, AI-powered project management and team collaboration platform designed to help teams operate at their peak performance.
 
