@@ -173,11 +173,17 @@ def search_users():
         limit = min(int(request.args.get('limit', 20)), 50)
         offset = int(request.args.get('offset', 0))
         
+        print(f"Searching users with query: '{search_query}', limit: {limit}")  # Debug log
+        
         result = UserService.search_users(search_query, limit, offset)
+        print(f"Search result: {result}")  # Debug log
+        
         return jsonify(result), 200
         
     except Exception as e:
         print(f"Search users error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'msg': 'An error occurred while searching users'}), 500
 
 @project_bp.route('/projects/<int:project_id>', methods=['DELETE'])

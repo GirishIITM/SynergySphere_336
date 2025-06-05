@@ -294,7 +294,20 @@ export const messageAPI = {
    * @returns {Promise} - Messages list response
    */
   getTaskMessages: (projectId, taskId) => {
-    return apiRequest(`/auth/projects/${projectId}/tasks/${taskId}/messages`, 'GET', null, `task-messages-${taskId}`);
+    return apiRequest(`/projects/${projectId}/tasks/${taskId}/messages`, 'GET', null, `task-messages-${taskId}`)
+      .then(result => {
+        if (Array.isArray(result)) {
+          return result;
+        }
+        if (result && Array.isArray(result.messages)) {
+          return result.messages;
+        }
+        return [];
+      })
+      .catch(error => {
+        console.error('Error fetching task messages:', error);
+        return [];
+      });
   },
 
   /**
@@ -306,7 +319,7 @@ export const messageAPI = {
    */
   sendTaskMessage: (projectId, taskId, content) => {
     return apiRequest(
-      `/auth/projects/${projectId}/tasks/${taskId}/messages`,
+      `/projects/${projectId}/tasks/${taskId}/messages`,
       'POST',
       { content },
       `task-message-send-${taskId}`
@@ -319,7 +332,20 @@ export const messageAPI = {
    * @returns {Promise} - Messages list response
    */
   getProjectMessages: (projectId) => {
-    return apiRequest(`/auth/projects/${projectId}/messages`, 'GET', null, `project-messages-${projectId}`);
+    return apiRequest(`/projects/${projectId}/messages`, 'GET', null, `project-messages-${projectId}`)
+      .then(result => {
+        if (Array.isArray(result)) {
+          return result;
+        }
+        if (result && Array.isArray(result.messages)) {
+          return result.messages;
+        }
+        return [];
+      })
+      .catch(error => {
+        console.error('Error fetching project messages:', error);
+        return [];
+      });
   },
 
   /**
@@ -368,9 +394,23 @@ export const isAuthenticated = () => {
  * Get current user data
  * @returns {object|null} - User data or null if not logged in
  */
-const getCurrentUser = () => {
+export const getCurrentUser = () => {
   const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      // Ensure we have a consistent user structure
+      return {
+        ...user,
+        full_name: user.full_name || user.name || user.username,
+        username: user.username || user.email?.split('@')[0]
+      };
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  }
+  return null;
 };
 
 export default {
