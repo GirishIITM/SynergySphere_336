@@ -93,7 +93,7 @@ const Settings = () => {
 
   const handleResetSettings = () => {
     const defaultSettings = {
-      theme: 'light',
+  
       notifications: {
         email: true,
         desktop: false,
@@ -113,8 +113,7 @@ const Settings = () => {
     
     setSettings(defaultSettings);
     localStorage.setItem('userSettings', JSON.stringify(defaultSettings));
-    localStorage.setItem('theme', 'light');
-    document.documentElement.classList.remove('theme-dark');
+   
   };
 
   return (
@@ -131,29 +130,7 @@ const Settings = () => {
       )}
 
       <div className="settings-content">
-        {/* Appearance Settings */}
-        <div className="settings-section">
-          <h2>Appearance</h2>
-          <div className="setting-item">
-            <label className="setting-label">Theme</label>
-            <div className="theme-options">
-              <Button
-                className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
-                onClick={() => handleThemeChange('light')}
-                variant={settings.theme === 'light' ? 'default' : 'outline'}
-              >
-                ☀️ Light
-              </Button>
-              <Button
-                className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
-                onClick={() => handleThemeChange('dark')}
-                variant={settings.theme === 'dark' ? 'default' : 'outline'}
-              >
-                🌙 Dark
-              </Button>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Notification Settings */}
         <div className="settings-section">
