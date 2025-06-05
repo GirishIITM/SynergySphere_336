@@ -168,6 +168,12 @@
 - [x] Update backend to use INR currency instead of USD ✅
 - [x] Test project creation with budget ✅
 
+#### 19. Remove Refresh and Board Buttons from Task Board Page - 2025-01-18
+- [x] Remove refresh button from TaskBoard page header ✅
+- [x] Remove board view toggle button from TaskBoard page ✅
+- [x] Clean up unused imports and variables ✅
+- [x] Test that task board functionality remains intact ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

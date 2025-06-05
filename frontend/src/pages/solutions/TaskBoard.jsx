@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, Plus, LayoutDashboard, List, RefreshCw } from 'lucide-react';
+import { AlertCircle, Plus, List, RefreshCw, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TaskBoard from '../../components/TaskBoard';
 import { loadingState } from '../../utils/apiCalls';
@@ -14,7 +14,7 @@ import { taskAPI } from '../../utils/apiCalls/taskAPI';
  * 
  * Features:
  * - Fetches tasks from the API grouped by status
- * - Provides task board and list view toggle
+ * - Provides link to list view
  * - Handles task updates and deletions
  * - Shows loading and error states
  * - Integrates with existing task management system
@@ -28,7 +28,6 @@ const TaskBoardPage = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [viewMode, setViewMode] = useState('board'); // 'board' or 'list'
 
   const currentUser = getCurrentUser();
 
@@ -53,13 +52,6 @@ const TaskBoardPage = () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
-
-  // Add effect to refresh data when view mode changes
-  useEffect(() => {
-    if (viewMode === 'board') {
-      fetchTasksGrouped();
-    }
-  }, [viewMode]);
 
   /**
    * Fetch all tasks grouped by status from the API
@@ -185,13 +177,7 @@ const TaskBoardPage = () => {
     });
   };
 
-  /**
-   * Refresh the task data
-   */
-  const handleRefresh = () => {
-    fetchTasksGrouped();
-    fetchProjects();
-  };
+
 
   if (loading) {
     return (
@@ -211,45 +197,20 @@ const TaskBoardPage = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Task Management</h1>
           <p className="text-muted-foreground">
-            {viewMode === 'board' 
-              ? 'Drag and drop tasks between columns to update their status'
-              : 'View and manage your project tasks'
-            }
+            Drag and drop tasks between columns to update their status
           </p>
         </div>
         <div className="flex gap-2">
-          {/* View Toggle */}
-          <div className="flex rounded-lg border p-1">
-            <Button
-              variant={viewMode === 'board' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('board')}
-              className="flex items-center gap-2"
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Board
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              asChild
-              className="flex items-center gap-2"
-            >
-              <Link to="/solutions/tasks">
-                <List className="h-4 w-4" />
-                List
-              </Link>
-            </Button>
-          </div>
-          
-          {/* Action Buttons */}
+          {/* View Toggle - Only List View Button */}
           <Button
             variant="outline"
-            onClick={handleRefresh}
+            asChild
             className="flex items-center gap-2"
           >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
+            <Link to="/solutions/tasks">
+              <List className="h-4 w-4" />
+              List View
+            </Link>
           </Button>
           
           <Button asChild size="lg" className="shadow-md">
@@ -274,36 +235,34 @@ const TaskBoardPage = () => {
       )}
 
       {/* Task Board */}
-      {viewMode === 'board' && (
-        <div className="flex-1">
-          {tasksGrouped.pending.length === 0 && tasksGrouped.in_progress.length === 0 && tasksGrouped.completed.length === 0 && !loading ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <LayoutDashboard className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
-                <p className="text-muted-foreground text-center max-w-md mb-4">
-                  Create your first task to get started with the task board
-                </p>
-                <Button asChild size="lg">
-                  <Link to="/solutions/tasks/create">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Task
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <TaskBoard
-              initialTasksGrouped={tasksGrouped}
-              onTaskUpdate={handleTaskUpdate}
-              onTaskDelete={handleTaskDelete}
-            />
-          )}
-        </div>
-      )}
+      <div className="flex-1">
+        {tasksGrouped.pending.length === 0 && tasksGrouped.in_progress.length === 0 && tasksGrouped.completed.length === 0 && !loading ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <LayoutDashboard className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
+              <p className="text-muted-foreground text-center max-w-md mb-4">
+                Create your first task to get started with the task board
+              </p>
+              <Button asChild size="lg">
+                <Link to="/solutions/tasks/create">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Task
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <TaskBoard
+            initialTasksGrouped={tasksGrouped}
+            onTaskUpdate={handleTaskUpdate}
+            onTaskDelete={handleTaskDelete}
+          />
+        )}
+      </div>
 
       {/* Help Text */}
-      {viewMode === 'board' && (tasksGrouped.pending.length > 0 || tasksGrouped.in_progress.length > 0 || tasksGrouped.completed.length > 0) && (
+      {(tasksGrouped.pending.length > 0 || tasksGrouped.in_progress.length > 0 || tasksGrouped.completed.length > 0) && (
         <Card className="bg-blue-50/50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
