@@ -34,20 +34,24 @@ def update_task(task_id):
     description = data.get('description')
     due_date = data.get('due_date')
     status = data.get('status')
-    # conert date to datetime object
-    due_date = datetime.strptime(due_date, '%Y-%m-%d')
+    
     task = Task.query.get_or_404(task_id)
-    task.project_id = project_id
-    task.title = title
-    task.description = description
-    task.due_date = due_date
-    task.status = status
-    # delete the task from the project
-    project = Project.query.get(project_id)
-    project.tasks.remove(task)
-    # add the task to the project
-    project = Project.query.get(project_id)
-    project.tasks.append(task)
+    
+    # Prevent changing project_id - tasks cannot be moved between projects
+    if project_id and str(project_id) != str(task.project_id):
+        return jsonify({'msg': 'Project assignment cannot be changed when editing a task'}), 400
+    
+    # Update allowed fields
+    if title:
+        task.title = title
+    if description:
+        task.description = description
+    if due_date:
+        # convert date to datetime object
+        task.due_date = datetime.strptime(due_date, '%Y-%m-%d')
+    if status:
+        task.status = status
+    
     db.session.commit()
     return jsonify(task.to_dict())
 

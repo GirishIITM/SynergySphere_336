@@ -180,9 +180,8 @@ const TaskEdit = () => {
       setError('');
       setSuccess('');
       
-      await taskAPI.updateTask(
+      await taskAPI.updateTaskDetails(
         id,
-        formData.project_id,
         formData.title,
         formData.description,
         formData.due_date,
@@ -262,24 +261,12 @@ const TaskEdit = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="project_id">Project *</Label>
-                <Select
-                  value={formData.project_id}
-                  onValueChange={(value) => setFormData({...formData, project_id: value})}
-                  required
-                  disabled={true}
-                >
-                  <SelectTrigger className="bg-muted cursor-not-allowed">
-                    <SelectValue placeholder="Select a project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Project</Label>
+                <div className="p-3 bg-muted rounded-md border">
+                  <span className="font-medium">
+                    {projects.find(project => project.id === formData.project_id)?.name || 'Loading project...'}
+                  </span>
+                </div>
                 <p className="text-sm text-muted-foreground">
                   Project cannot be changed when editing a task
                 </p>

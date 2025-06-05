@@ -142,6 +142,12 @@
 - [x] Add visual styling to indicate project field is disabled ✅
 - [x] Add explanatory text that project cannot be changed when editing ✅
 - [x] Maintain existing functionality for all other task fields ✅
+- [x] Implement backend validation to prevent project_id changes ✅
+- [x] Update main task update endpoint to reject project_id changes ✅
+- [x] Update alternative task update endpoint for consistency ✅
+- [x] Create new updateTaskDetails API method without project_id ✅
+- [x] Update frontend to use new API method for task editing ✅
+- [x] Add test documentation for project immutability validation ✅
 
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations

@@ -341,8 +341,9 @@ def update_task_direct(task_id):
             'completed': 'completed'
         }
         task.status = status_mapping.get(data['status'], 'pending')
-    if 'project_id' in data:
-        task.project_id = data['project_id']
+    # Prevent changing project_id - tasks cannot be moved between projects
+    if 'project_id' in data and str(data['project_id']) != str(task.project_id):
+        return jsonify({'msg': 'Project assignment cannot be changed when editing a task'}), 400
     if 'owner_id' in data:
         task.owner_id = data['owner_id']
     

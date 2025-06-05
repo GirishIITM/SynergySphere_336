@@ -69,6 +69,11 @@ export const taskAPI = {
     return apiRequest(`/tasks/${id}`, 'PUT', { project_id, title, description, due_date, status, assigned_to }, 'tasks-update');
   },
 
+  updateTaskDetails: (id, title, description, due_date, status, assigned_to) => {
+    // Update task without changing project_id (for task editing)
+    return apiRequest(`/tasks/${id}`, 'PUT', { title, description, due_date, status, assigned_to }, 'tasks-update');
+  },
+
   updateTaskStatus: (id, status) => {
     return apiRequest(`/tasks/${id}/status`, 'PUT', { status }, 'tasks-update-status');
   },
