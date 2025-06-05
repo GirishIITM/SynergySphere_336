@@ -407,3 +407,11 @@
 - [x] Fix incorrect project details URL in Analytics page project deep dive section ✅
 - [x] Change `/projects/${project.id}` to `/solutions/projects/${project.id}` to match router structure ✅
 - [x] Ensure "View Project Details" button navigates to correct ProjectDetail page ✅
+
+#### 27. Add Links to ProjectDetails and TaskDetails Pages in Dashboard - 2025-01-19
+- [x] Add "View Details" button with Eye icon to Recent Projects section ✅
+- [x] Add "View Details" button with Eye icon to Recent Tasks section ✅  
+- [x] Import Eye icon from lucide-react ✅
+- [x] Link Recent Projects "View Details" to `/solutions/projects/${project.id}` ✅
+- [x] Link Recent Tasks "View Details" to `/solutions/tasks/${task.id}` ✅
+- [x] Maintain existing Analytics and Finance links in Recent Projects ✅
