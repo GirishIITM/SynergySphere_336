@@ -2,7 +2,7 @@
   display: flex;
   min-height: 100vh;
   position: relative; /* Needed for ::before positioning */
-  overflow: hidden;
+  overflow: visible;
  
 }
 
@@ -35,7 +35,7 @@
   justify-content: center;
   position: relative;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
   z-index: 1;
   padding: 2rem 0;
@@ -113,7 +113,7 @@
   width: 100%;
   max-width: 370px;
   margin: 0 auto;
-  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  padding: 0.3rem 2.5rem 2rem 2.5rem;
   background: var(--color-surface);
   border-radius: 14px;
   box-shadow: 0 4px 24px var(--color-shadow);
