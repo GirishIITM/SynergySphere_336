@@ -148,6 +148,9 @@
 - [x] Create new updateTaskDetails API method without project_id ✅
 - [x] Update frontend to use new API method for task editing ✅
 - [x] Add test documentation for project immutability validation ✅
+- [x] Fix project name display by using task.project_name from API response ✅
+- [x] Remove unnecessary projects fetch and optimize TaskEdit component ✅
+- [x] Handle different API response structures for better compatibility ✅
 
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations

@@ -19,7 +19,6 @@ const TaskEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [task, setTask] = useState(null);
-  const [projects, setProjects] = useState([]);
   const [formData, setFormData] = useState({
     project_id: '',
     title: '',
@@ -29,7 +28,6 @@ const TaskEdit = () => {
     assigned_to: ''
   });
   const [loading, setLoading] = useState(true);
-  const [loadingProjects, setLoadingProjects] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -44,7 +42,7 @@ const TaskEdit = () => {
   
   useEffect(() => {
     fetchTask();
-    fetchProjects();
+    // Note: No longer need to fetch projects since project_name comes with task data
   }, [id]);
 
   useEffect(() => {
@@ -64,7 +62,10 @@ const TaskEdit = () => {
     try {
       setLoading(true);
       const response = await taskAPI.getTask(id);
-      const taskData = response.task || response;
+      // Handle both direct task data and wrapped response structure
+      const taskData = response.data || response.task || response;
+      
+      console.log('TaskEdit fetchTask response:', { response, taskData });
       
       setTask(taskData);
       setFormData({
@@ -94,18 +95,7 @@ const TaskEdit = () => {
     }
   };
 
-  const fetchProjects = async () => {
-    try {
-      const response = await projectAPI.getAllProjects();
-      const projectsData = response.projects || response || [];
-      setProjects(Array.isArray(projectsData) ? projectsData : []);
-    } catch (err) {
-      console.error('Error fetching projects:', err);
-      setProjects([]);
-    } finally {
-      setLoadingProjects(false);
-    }
-  };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -202,7 +192,7 @@ const TaskEdit = () => {
     navigate('/solutions/tasks');
   };
 
-  if (loading || loadingProjects) {
+  if (loading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <LoadingIndicator loading={true}>
@@ -264,7 +254,7 @@ const TaskEdit = () => {
                 <Label>Project</Label>
                 <div className="p-3 bg-muted rounded-md border">
                   <span className="font-medium">
-                    {projects.find(project => project.id === formData.project_id)?.name || 'Loading project...'}
+                    {task?.project_name || 'Loading project...'}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
