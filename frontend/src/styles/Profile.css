@@ -8,7 +8,7 @@
   animation: fadeInProfile 1.2s cubic-bezier(.77,0,.18,1) both;
   min-height: 100vh;
   overflow-x: hidden;
-  background-color: var(--color-bg);
+  background-color: var( black);
 }
 
 @keyframes fadeInProfile {
@@ -16,27 +16,6 @@
   100% { opacity: 1; transform: translateY(0) scale(1);}
 }
 
-/* Animated blue gradient background blob */
-.profile-page::before {
-  content: "";
-  position: fixed;
-  z-index: -1;
-  top: -180px;
-  left: 50%;
-  width: 120vw;
-  height: 600px;
-  background: radial-gradient(ellipse at 60% 40%, var(--color-gradient-primary-start) 0%, var(--color-gradient-primary-end) 100%);
-  opacity: 0.13;
-  filter: blur(30px);
-  transform: translateX(-50%) scaleY(1.1);
-  animation: blobMove 12s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-@keyframes blobMove {
-  0% { transform: translateX(-50%) scaleY(1.1) scaleX(1);}
-  100% { transform: translateX(-52%) scaleY(1.2) scaleX(1.08);}
-}
 
 .profile-header {
   display: flex;
@@ -209,12 +188,9 @@
   height: 20px;
 }
 .edit-icon-button{
-  background-color: var(--color-white);
   padding:0;
 }
-.edit-icon-button:hover {
-  background-color: var(--color-white);
-}
+
 .profile-avatar::after {
   content: "";
   position: absolute;
@@ -292,7 +268,7 @@
 }
 
 .profile-info-card {
-  background: var(--color-surface);
+  background: var(--color-bg);
   border-radius: 18px;
   padding: 1.7rem 1.2rem;
   box-shadow: 0 8px 32px 0 var(--color-shadow);
@@ -337,7 +313,7 @@
 
 /* About Card */
 .profile-about-card {
-  background: var(--color-surface);
+  background: var(--color-bg);
   border-radius: 16px;
   padding: 1.3rem 1.1rem;
   margin-bottom: 1.5rem;
