@@ -255,7 +255,7 @@
 - [x] Add "View Details" button to each task card in the Tasks tab of ProjectDetail.jsx ✅
 - [x] Ensure proper navigation to TaskDetail page using /solutions/tasks/:taskId route ✅
 - [x] Add appropriate icon (Eye icon) and styling for the button ✅
-- [ ] Test navigation functionality between project details and task details
+- [x] Test navigation functionality between project details and task details ✅
 
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations

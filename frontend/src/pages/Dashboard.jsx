@@ -1,5 +1,6 @@
 import {
   CheckSquare,
+  Eye,
   FolderKanban,
   LayoutDashboard,
   Target,
@@ -171,6 +172,11 @@ const Dashboard = () => {
                       </div>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/solutions/projects/${project.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild>
                           <Link to={`/solutions/projects/${project.id}/analytics`}>
                             📊
                           </Link>
@@ -220,6 +226,13 @@ const Dashboard = () => {
                           {task.project_name} • {task.status}
                           {task.is_overdue && ' • Overdue'}
                         </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/solutions/tasks/${task.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
                   ))}
