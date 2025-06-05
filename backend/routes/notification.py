@@ -2,13 +2,11 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Notification
 from extensions import db
-from utils.route_cache import cache_route, invalidate_cache_on_change
 
 notification_bp = Blueprint('notification', __name__)
 
 @notification_bp.route('/notifications', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=60, user_specific=True)  # Cache for 1 minute
 def list_notifications():
     """Get all notifications for the current user."""
     user_id = int(get_jwt_identity())
@@ -69,7 +67,6 @@ def list_tagged_notifications():
 
 @notification_bp.route('/notifications/<int:notif_id>/read', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['notifications'])
 def mark_read(notif_id):
     """Mark a notification as read."""
     user_id = int(get_jwt_identity())

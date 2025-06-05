@@ -5,14 +5,12 @@ from datetime import datetime, timezone, timedelta
 
 from models import User, Project, Task, Membership
 from extensions import db
-from utils.route_cache import cache_route
 from utils.datetime_utils import get_utc_now, ensure_utc, is_expired
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/dashboard/overview', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=300, user_specific=True)  # Cache for 5 minutes
 def get_dashboard_overview():
     try:
         user_id = int(get_jwt_identity())
@@ -139,7 +137,6 @@ def get_dashboard_overview():
 
 @dashboard_bp.route('/dashboard/stats', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=180, user_specific=True)  # Cache for 3 minutes
 def get_dashboard_stats():
     try:
         user_id = int(get_jwt_identity())

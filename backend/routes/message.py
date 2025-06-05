@@ -3,13 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Project, Message, Notification
 from extensions import db
 from utils.email import send_email
-from utils.route_cache import cache_route, invalidate_cache_on_change
 
 message_bp = Blueprint('message', __name__)
 
 @message_bp.route('/projects/<int:project_id>/messages', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=30, user_specific=True)  # Cache for 30 seconds (real-time data)
 def get_messages(project_id):
     user_id = int(get_jwt_identity())
     project = Project.query.get_or_404(project_id)
@@ -24,7 +22,6 @@ def get_messages(project_id):
 
 @message_bp.route('/projects/<int:project_id>/messages', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['messages'])
 def post_message(project_id):
     user_id = int(get_jwt_identity())
     project = Project.query.get_or_404(project_id)

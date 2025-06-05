@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Task, User, Project, TaskStatus
 from extensions import db
-from utils.route_cache import invalidate_cache_on_change
 from services.priority_service import PriorityService
 from services.deadline_service import DeadlineService
 from sqlalchemy import and_, or_
@@ -103,7 +102,6 @@ def get_at_risk_tasks():
 
 @task_advanced_bp.route('/tasks/<int:task_id>/progress', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['tasks'])
 def update_task_progress(task_id):
     """Update task progress percentage."""
     user_id = int(get_jwt_identity())

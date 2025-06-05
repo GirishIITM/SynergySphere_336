@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from utils.route_cache import cache_route, invalidate_cache_on_change
 from services.project_service import ProjectService
 from services.member_service import MemberService
 from services.user_service import UserService
@@ -9,7 +8,6 @@ project_bp = Blueprint('project', __name__)
 
 @project_bp.route('/projects', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['projects', 'memberships'])
 def create_project():
     """Create a new project with optional members and image"""
     user_id = int(get_jwt_identity())
@@ -118,7 +116,6 @@ def list_projects():
 
 @project_bp.route('/projects/<int:project_id>', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=240, user_specific=True)  # Cache for 4 minutes
 def get_project(project_id):
     """Get detailed project information"""
     user_id = int(get_jwt_identity())
@@ -135,7 +132,6 @@ def get_project(project_id):
 
 @project_bp.route('/projects/<int:project_id>/members', methods=['POST'])
 @jwt_required()
-@invalidate_cache_on_change(['projects', 'memberships'])
 def add_member(project_id):
     """Add member with edit permissions"""
     user_id = int(get_jwt_identity())
@@ -165,7 +161,6 @@ def add_member(project_id):
 
 @project_bp.route('/users/search', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=600, user_specific=False)  # Cache for 10 minutes, not user-specific
 def search_users():
     """Get users for member auto-completion with optimized queries"""
     try:
@@ -188,7 +183,6 @@ def search_users():
 
 @project_bp.route('/projects/<int:project_id>', methods=['DELETE'])
 @jwt_required()
-@invalidate_cache_on_change(['projects', 'memberships', 'tasks'])
 def delete_project(project_id):
     """Delete a project (owner only)"""
     print(f"Delete project request for ID: {project_id}")
@@ -206,7 +200,6 @@ def delete_project(project_id):
 
 @project_bp.route('/projects/<int:project_id>', methods=['PUT'])
 @jwt_required()
-@invalidate_cache_on_change(['projects', 'memberships'])
 def update_project(project_id):
     """Update project details (owner or editor only)"""
     user_id = int(get_jwt_identity())
@@ -228,7 +221,6 @@ def update_project(project_id):
 
 @project_bp.route('/projects/<int:project_id>/members', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=300, user_specific=True)  # Cache for 5 minutes
 def get_project_members(project_id):
     """Get all members of a project"""
     user_id = int(get_jwt_identity())
