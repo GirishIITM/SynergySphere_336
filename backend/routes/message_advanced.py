@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Message, Task, Project, User, Notification
 from extensions import db
 from utils.route_cache import invalidate_cache_on_change
+from utils.mention_utils import get_mentioned_users, create_mention_notifications
 
 message_advanced_bp = Blueprint('message_advanced', __name__)
 
@@ -65,15 +66,26 @@ def post_task_message(project_id, task_id):
     db.session.add(message)
     db.session.commit()
     
-    # Notify other project members about the new task message
+    # Get current user for notifications
     current_user = User.query.get(user_id)
-    notification_message = f"New message in task '{task.title}' from {current_user.full_name if hasattr(current_user, 'full_name') else 'Unknown User'}"
+    
+    # Handle @mentions - create targeted notifications for mentioned users
+    mentioned_users = get_mentioned_users(content, project.members)
+    if mentioned_users:
+        create_mention_notifications(message, mentioned_users, current_user)
+    
+    # Create general notifications for other project members (excluding mentioned users to avoid duplicates)
+    mentioned_user_ids = [user.id for user in mentioned_users]
+    general_notification_message = f"New message in task '{task.title}' from {current_user.full_name if hasattr(current_user, 'full_name') else 'Unknown User'}"
     
     for member in project.members:
-        if member.id != user_id:  # Don't notify the sender
+        if member.id != user_id and member.id not in mentioned_user_ids:  # Don't notify sender or mentioned users
             notification = Notification(
                 user_id=member.id,
-                message=notification_message
+                message=general_notification_message,
+                task_id=task.id,
+                message_id=message.id,
+                notification_type='general'
             )
             db.session.add(notification)
     
