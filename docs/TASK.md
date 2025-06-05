@@ -152,6 +152,14 @@
 - [x] Remove unnecessary projects fetch and optimize TaskEdit component ✅
 - [x] Handle different API response structures for better compatibility ✅
 
+#### 17. Display Current Selected Status in TaskEdit Dropdown - 2025-01-18
+- [x] Fix status dropdown in TaskEdit to show current selected value before opening ✅
+- [x] Add placeholder text to SelectValue for better UX ✅
+- [x] Ensure consistent behavior across different task status values ✅
+- [x] Fix status value mapping between frontend and backend (use 'pending', 'in_progress', 'completed') ✅
+- [x] Update TaskCreate component for consistency ✅
+- [x] Test status dropdown display with all possible status values ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

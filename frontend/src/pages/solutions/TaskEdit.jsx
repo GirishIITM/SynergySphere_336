@@ -24,7 +24,7 @@ const TaskEdit = () => {
     title: '',
     description: '',
     due_date: '',
-    status: 'Not Started',
+    status: 'pending',
     assigned_to: ''
   });
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,7 @@ const TaskEdit = () => {
         title: taskData.title || '',
         description: taskData.description || '',
         due_date: taskData.due_date ? taskData.due_date.slice(0, 16) : '',
-        status: taskData.status || 'Not Started',
+        status: taskData.status || 'pending',
         assigned_to: taskData.assigned_to || ''
       });
       
@@ -310,12 +310,12 @@ const TaskEdit = () => {
                   disabled={isUpdating}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select status..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="pending">Not Started</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
