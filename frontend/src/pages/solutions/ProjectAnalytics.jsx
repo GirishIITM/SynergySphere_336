@@ -65,6 +65,8 @@ const ProjectAnalytics = () => {
         analyticsAPI.getResourceUtilization(projectId)
       ]);
       
+      console.log('Analytics data received:', { statsData, healthData, resourcesData });
+      
       setProject(projectData);
       setStats(statsData);
       setHealth(healthData);
@@ -111,7 +113,11 @@ const ProjectAnalytics = () => {
   }
 
   const healthStatus = health ? getHealthStatus(health.health_score || 0) : null;
-  const taskProgress = stats?.productivity_metrics ? formatProgress(stats.productivity_metrics.completed_tasks, stats.productivity_metrics.total_tasks) : null;
+  const taskProgress = stats?.productivity_metrics ? 
+    formatProgress(
+      stats.productivity_metrics.completed_tasks || 0, 
+      stats.productivity_metrics.total_tasks || 0
+    ) : null;
 
   return (
     <div className="space-y-6">
@@ -224,10 +230,10 @@ const ProjectAnalytics = () => {
                 <RechartsPieChart>
                   <Pie
                     data={[
-                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks },
-                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks },
-                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks },
-                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks }
+                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks || 0 },
+                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks || 0 },
+                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks || 0 },
+                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks || 0 }
                     ].filter(item => item.count > 0)}
                     cx="50%"
                     cy="50%"
@@ -238,10 +244,10 @@ const ProjectAnalytics = () => {
                     dataKey="count"
                   >
                     {[
-                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks },
-                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks },
-                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks },
-                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks }
+                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks || 0 },
+                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks || 0 },
+                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks || 0 },
+                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks || 0 }
                     ].filter(item => item.count > 0).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}

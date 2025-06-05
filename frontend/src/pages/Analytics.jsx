@@ -595,7 +595,7 @@ const Analytics = () => {
                       </div>
 
                       <div className="pt-2">
-                        <Link to={`/projects/${project.id}`}>
+                        <Link to={`/solutions/projects/${project.id}`}>
                           <Button variant="outline" className="w-full">
                             View Project Details
                             <ChevronRight className="h-4 w-4 ml-1" />

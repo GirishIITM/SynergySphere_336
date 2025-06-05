@@ -396,3 +396,8 @@
 - [x] Updated '/analytics/team' to '/team' (final URL: /analytics/team) ✅
 - [x] Verified CORS configuration supports localhost:3000 to localhost:5000 requests ✅
 - [ ] Test frontend analytics data loading to verify 404 errors are resolved
+
+#### 26. Fix View Project Details Link in Project Deep Dive Analytics - 2025-01-19
+- [x] Fix incorrect project details URL in Analytics page project deep dive section ✅
+- [x] Change `/projects/${project.id}` to `/solutions/projects/${project.id}` to match router structure ✅
+- [x] Ensure "View Project Details" button navigates to correct ProjectDetail page ✅
