@@ -45,11 +45,7 @@ const HomePage = () => {
         </div>
       </section>
       
-      <section className="cta-section">
-        <h2>Ready to Streamline Your Project Management?</h2>
-        <p>Join SynergySphere today and transform how your team collaborates on tasks and projects.</p>
-        <Button className="cta-button">Start Free Trial</Button>
-      </section>
+      
       
       <Footer />
     </div>
