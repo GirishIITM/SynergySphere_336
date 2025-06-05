@@ -35,12 +35,9 @@ export default function Login() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Accept either email or username (any non-empty value)
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Email or username is required';
     }
 
     // Password validation
@@ -66,44 +63,25 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
+      // Send as entered (could be email or username)
       const response = await authAPI.login(
-        formData.email.trim().toLowerCase(), 
+        formData.email.trim(),
         formData.password
       );
-      
+
       saveAuthData(response.access_token, response.refresh_token, response.user);
       navigate(from, { replace: true });
     } catch (error) {
       const errorMessage = error.message || 'Failed to login. Please check your credentials.';
-      
-      // Handle specific backend errors
-      if (errorMessage.includes('Invalid credentials') || 
-          errorMessage.includes('User not found') ||
-          errorMessage.includes('Invalid password')) {
-        setErrors({ 
-          general: 'Invalid email or password. Please check your credentials and try again.' 
-        });
-      } else if (errorMessage.includes('Account not verified')) {
-        setErrors({ 
-          general: 'Please verify your email before logging in. Check your inbox for the verification link.' 
-        });
-      } else if (errorMessage.includes('Account disabled')) {
-        setErrors({ 
-          general: 'Your account has been disabled. Please contact support.' 
-        });
-      } else if (errorMessage.includes('server')) {
-        setErrors({ 
-          general: 'Unable to connect to the server. Please try again later.' 
-        });
-      } else {
-        setErrors({ general: errorMessage });
-      }
+
+      // Show all errors in .error-message
+      setErrors({ general: errorMessage });
     }
   };
 
@@ -151,16 +129,16 @@ export default function Login() {
             
             <form className="login-form" onSubmit={handleSubmit}>
               <div className="form-group">
-                <label htmlFor="login-email">Email:</label>
+                <label htmlFor="login-email">Email or Username:</label>
                 <Input
-                  type="email"
+                  type="text"
                   id="login-email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   className={errors.email ? 'error' : ''}
-                  placeholder="Enter your email"
-                  autoComplete="email"
+                  placeholder="Enter your email or username"
+                  autoComplete="username"
                   required
                 />
                 {errors.email && <span className="field-error">{errors.email}</span>}
