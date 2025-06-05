@@ -9,6 +9,9 @@ import LoadingIndicator from '../../components/LoadingIndicator';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
 
@@ -257,29 +260,30 @@ const TaskEdit = () => {
             <CardTitle>Task Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="task-edit-form">
-              <div className="form-group">
-                <label htmlFor="project_id">Project *</label>
-                <select
-                  id="project_id"
-                  name="project_id"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="project_id">Project *</Label>
+                <Select
                   value={formData.project_id}
-                  onChange={handleInputChange}
+                  onValueChange={(value) => setFormData({...formData, project_id: value})}
                   required
-                  className="form-select"
                   disabled={isUpdating}
                 >
-                  <option value="">Select a project</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map(project => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="title">Task Title *</label>
+              <div className="space-y-2">
+                <Label htmlFor="title">Task Title *</Label>
                 <Input
                   type="text"
                   id="title"
@@ -292,22 +296,21 @@ const TaskEdit = () => {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description">Description</label>
-                <textarea
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   placeholder="Enter task description"
                   rows={4}
-                  className="form-textarea"
                   disabled={isUpdating}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="due_date">Due Date & Time *</label>
+              <div className="space-y-2">
+                <Label htmlFor="due_date">Due Date & Time *</Label>
                 <Input
                   type="datetime-local"
                   id="due_date"
@@ -319,24 +322,26 @@ const TaskEdit = () => {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
                   value={formData.status}
-                  onChange={handleInputChange}
-                  className="form-select"
+                  onValueChange={(value) => setFormData({...formData, status: value})}
                   disabled={isUpdating}
                 >
-                  <option value="Not Started">Not Started</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Not Started">Not Started</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="assigned_to">Assign To (Optional)</label>
+              <div className="space-y-2">
+                <Label htmlFor="assigned_to">Assign To (Optional)</Label>
                 <div className="relative">
                   <Input
                     type="text"
@@ -353,69 +358,75 @@ const TaskEdit = () => {
                   )}
                   
                   {showAssigneeDropdown && assigneeResults.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
-                      {assigneeResults.map(user => (
-                        <div
-                          key={user.id}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-3"
-                          onClick={() => selectAssignee(user)}
-                        >
-                          <div className="flex-shrink-0">
-                            {user.profile_picture ? (
-                              <img 
-                                src={user.profile_picture} 
-                                alt={user.full_name}
-                                className="w-6 h-6 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
-                                {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                              </div>
-                            )}
+                    <Card className="absolute z-10 w-full mt-1 shadow-lg max-h-40 overflow-y-auto">
+                      <CardContent className="p-0">
+                        {assigneeResults.map(user => (
+                          <div
+                            key={user.id}
+                            className="px-4 py-3 hover:bg-muted cursor-pointer flex items-center space-x-3 border-b last:border-b-0"
+                            onClick={() => selectAssignee(user)}
+                          >
+                            <div className="flex-shrink-0">
+                              {user.profile_picture ? (
+                                <img 
+                                  src={user.profile_picture} 
+                                  alt={user.full_name}
+                                  className="w-6 h-6 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+                                  {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{user.full_name}</div>
+                              <div className="text-xs text-muted-foreground">{user.email}</div>
+                            </div>
                           </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{user.full_name}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </CardContent>
+                    </Card>
                   )}
                   
                   {selectedAssignee && (
-                    <div className="mt-2 flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
-                          {selectedAssignee.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                    <Card className="mt-3">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center text-xs font-medium">
+                              {selectedAssignee.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                            <span className="text-sm font-medium">{selectedAssignee.full_name}</span>
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={clearAssignee}
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            disabled={isUpdating}
+                          >
+                            ×
+                          </Button>
                         </div>
-                        <span className="text-sm text-gray-900">{selectedAssignee.full_name}</span>
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={clearAssignee}
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-800"
-                        disabled={isUpdating}
-                      >
-                        ×
-                      </Button>
-                    </div>
+                      </CardContent>
+                    </Card>
                   )}
                 </div>
               </div>
 
-              <div className="form-actions">
+              <div className="flex gap-3 pt-6">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={handleCancel}
                   disabled={isUpdating}
-                  className="mr-3"
+                  className="flex-1"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isUpdating}>
+                <Button type="submit" disabled={isUpdating} className="flex-1">
                   {isUpdating ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
