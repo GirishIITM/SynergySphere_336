@@ -136,6 +136,13 @@
 - [x] Add getProjectMembers API method ✅
 - [x] Update updateProject API to handle FormData for file uploads ✅
 
+#### 16. Update TaskEdit Page to Auto-Select Project - 2025-01-18
+- [x] Disable project selection dropdown in TaskEdit component ✅
+- [x] Auto-select the project the task belongs to ✅
+- [x] Add visual styling to indicate project field is disabled ✅
+- [x] Add explanatory text that project cannot be changed when editing ✅
+- [x] Maintain existing functionality for all other task fields ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system

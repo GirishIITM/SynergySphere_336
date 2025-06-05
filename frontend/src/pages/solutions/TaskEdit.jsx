@@ -267,9 +267,9 @@ const TaskEdit = () => {
                   value={formData.project_id}
                   onValueChange={(value) => setFormData({...formData, project_id: value})}
                   required
-                  disabled={isUpdating}
+                  disabled={true}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-muted cursor-not-allowed">
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -280,6 +280,9 @@ const TaskEdit = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-sm text-muted-foreground">
+                  Project cannot be changed when editing a task
+                </p>
               </div>
 
               <div className="space-y-2">
