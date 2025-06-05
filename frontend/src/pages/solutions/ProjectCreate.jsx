@@ -611,7 +611,7 @@ const ProjectCreate = () => {
             </Button>
           </div>
         </form>
-      </LoadingIndicator>
+      </LoadingIndicator   >
     </div>
   );
 };

@@ -43,6 +43,9 @@ const NavSidebar = ({ children }) => {
 
   const handleLogout = () => {
     clearAuthData();
+    // Reset theme to light mode
+    localStorage.setItem('theme', 'light');
+    document.documentElement.classList.remove('theme-dark', 'dark');
     navigate('/login');
     setProfileMenuOpen(false);
   };
