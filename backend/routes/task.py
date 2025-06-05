@@ -649,9 +649,16 @@ def get_project_tasks_grouped(project_id):
             if raw_status in grouped_tasks:
                 grouped_tasks[raw_status].append(task_data)
         
-        # Sort each group with favorites first
+        # Sort each group with favorites first, then by creation date descending (newest first)
         for status in grouped_tasks:
-            grouped_tasks[status].sort(key=lambda x: (not x['is_favorite'], x['created_at']))
+            # Separate favorites and non-favorites, then sort each group by creation date descending
+            favorites = [task for task in grouped_tasks[status] if task['is_favorite']]
+            non_favorites = [task for task in grouped_tasks[status] if not task['is_favorite']]
+            # Sort each group by creation date descending (newest first)
+            favorites.sort(key=lambda x: x['created_at'] or "0000-01-01T00:00:00", reverse=True)
+            non_favorites.sort(key=lambda x: x['created_at'] or "0000-01-01T00:00:00", reverse=True)
+            # Combine back: favorites first, then non-favorites
+            grouped_tasks[status] = favorites + non_favorites
         
         return jsonify(grouped_tasks), 200
         
@@ -733,9 +740,16 @@ def get_all_tasks_grouped():
             if raw_status in grouped_tasks:
                 grouped_tasks[raw_status].append(task_data)
         
-        # Sort each group with favorites first
+        # Sort each group with favorites first, then by creation date descending (newest first)
         for status in grouped_tasks:
-            grouped_tasks[status].sort(key=lambda x: (not x['is_favorite'], x['created_at']))
+            # Separate favorites and non-favorites, then sort each group by creation date descending
+            favorites = [task for task in grouped_tasks[status] if task['is_favorite']]
+            non_favorites = [task for task in grouped_tasks[status] if not task['is_favorite']]
+            # Sort each group by creation date descending (newest first)
+            favorites.sort(key=lambda x: x['created_at'] or "0000-01-01T00:00:00", reverse=True)
+            non_favorites.sort(key=lambda x: x['created_at'] or "0000-01-01T00:00:00", reverse=True)
+            # Combine back: favorites first, then non-favorites
+            grouped_tasks[status] = favorites + non_favorites
         
         return jsonify(grouped_tasks), 200
         

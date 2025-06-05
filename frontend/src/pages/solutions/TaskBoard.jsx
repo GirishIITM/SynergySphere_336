@@ -7,41 +7,47 @@ import TaskBoard from '../../components/TaskBoard';
 import { loadingState } from '../../utils/apiCalls';
 import { getCurrentUser } from '../../utils/apiCalls/auth';
 import { projectAPI } from '../../utils/apiCalls/projectAPI';
-import { taskAPI } from '../../utils/apiCalls/taskAPI';
+import { useTaskStore } from '../../stores/taskStore';
 
 /**
  * TaskBoardPage - Main page component for the drag and drop task board
  * 
  * Features:
- * - Fetches tasks from the API grouped by status
- * - Provides link to list view
- * - Handles task updates and deletions
+ * - Uses Zustand store for shared task state management
+ * - Provides navigation to list view
+ * - Handles task updates and deletions through store
  * - Shows loading and error states
- * - Integrates with existing task management system
+ * - Intelligent caching to prevent unnecessary API calls
  */
 const TaskBoardPage = () => {
-  const [tasksGrouped, setTasksGrouped] = useState({
-    pending: [],
-    in_progress: [],
-    completed: []
-  });
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
   const currentUser = getCurrentUser();
 
+  // Use Zustand store for task state management
+  const { 
+    tasksGrouped, 
+    isLoading, 
+    error, 
+    fetchTasksGrouped, 
+    updateTask, 
+    deleteTask,
+    clearError
+  } = useTaskStore();
+
   useEffect(() => {
+    // Initialize data
     fetchTasksGrouped();
     fetchProjects();
+    clearError();
 
-    const loadingUnsubscribe = loadingState.subscribe('task-board', (isLoading) => {
-      setLoading(isLoading);
+    // Subscribe to loading state for compatibility
+    const loadingUnsubscribe = loadingState.subscribe('task-board', (loading) => {
+      // Store now handles loading state, but keep this for compatibility
     });
 
-    // Add focus listener to refresh data when returning to this view
-    // Reason: Ensures data stays synchronized when switching between list and board views
+    // Refresh data when window gains focus
     const handleFocus = () => {
+      console.log('TaskBoardPage: Window focus - checking for fresh data');
       fetchTasksGrouped();
     };
 
@@ -51,58 +57,7 @@ const TaskBoardPage = () => {
       loadingUnsubscribe();
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
-
-  /**
-   * Fetch all tasks grouped by status from the API
-   */
-  const fetchTasksGrouped = async () => {
-    try {
-      setLoading(true);
-      console.log('TaskBoardPage: Fetching grouped tasks from API');
-      const response = await taskAPI.getTasksGrouped({});
-      
-      console.log('TaskBoardPage: API response received', {
-        responseType: typeof response,
-        hasPending: !!response.pending,
-        hasInProgress: !!response.in_progress,
-        hasCompleted: !!response.completed,
-        pendingCount: response.pending ? response.pending.length : 0,
-        inProgressCount: response.in_progress ? response.in_progress.length : 0,
-        completedCount: response.completed ? response.completed.length : 0
-      });
-      
-      // Ensure the response has the expected structure and transform tasks
-      // Reason: Backend returns is_favorite but frontend expects isFavorite
-      const transformTasks = (tasks) => tasks.map(task => ({
-        ...task,
-        isFavorite: task.is_favorite || task.isFavorite || false
-      }));
-
-      const groupedTasks = {
-        pending: transformTasks(response.pending || []),
-        in_progress: transformTasks(response.in_progress || []),
-        completed: transformTasks(response.completed || [])
-      };
-      
-      console.log('TaskBoardPage: Setting grouped tasks state', {
-        totalTasks: groupedTasks.pending.length + groupedTasks.in_progress.length + groupedTasks.completed.length
-      });
-      
-      setTasksGrouped(groupedTasks);
-      setError('');
-    } catch (err) {
-      console.error('TaskBoardPage: Failed to fetch grouped tasks:', err);
-      setError('Failed to fetch tasks: ' + (err.message || 'Unknown error'));
-      setTasksGrouped({
-        pending: [],
-        in_progress: [],
-        completed: []
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchTasksGrouped, clearError]);
 
   /**
    * Fetch all projects from the API
@@ -120,72 +75,21 @@ const TaskBoardPage = () => {
 
   /**
    * Handle task updates from the TaskBoard component
-   * 
-   * Args:
-   *   updatedTask (object): The updated task object
    */
   const handleTaskUpdate = (updatedTask) => {
-    console.log('TaskBoardPage: Received task update', updatedTask);
-    setTasksGrouped(prevTasks => {
-      // Find the task in the current groups and remove it
-      const currentTask = prevTasks.pending.find(t => t.id === updatedTask.id) ||
-                          prevTasks.in_progress.find(t => t.id === updatedTask.id) ||
-                          prevTasks.completed.find(t => t.id === updatedTask.id);
-      
-      if (!currentTask) {
-        console.warn('TaskBoardPage: Task not found in current state');
-        return prevTasks;
-      }
-      
-      // Remove task from all groups
-      const newTasks = {
-        pending: prevTasks.pending.filter(task => task.id !== updatedTask.id),
-        in_progress: prevTasks.in_progress.filter(task => task.id !== updatedTask.id),
-        completed: prevTasks.completed.filter(task => task.id !== updatedTask.id)
-      };
-      
-      // Add task to the appropriate group based on its new status
-      const targetStatus = updatedTask.status;
-      if (newTasks[targetStatus]) {
-        newTasks[targetStatus].push(updatedTask);
-      } else {
-        console.warn(`TaskBoardPage: Unknown status "${targetStatus}", keeping task in original group`);
-        // Fallback: keep in original group if status is unknown
-        if (currentTask.status && newTasks[currentTask.status]) {
-          newTasks[currentTask.status].push(updatedTask);
-        }
-      }
-      
-      console.log('TaskBoardPage: Updated tasks state', {
-        totalTasks: newTasks.pending.length + newTasks.in_progress.length + newTasks.completed.length,
-        updatedTaskId: updatedTask.id,
-        newStatus: updatedTask.status
-      });
-      return newTasks;
-    });
+    console.log('TaskBoardPage: Received task update, delegating to store', updatedTask);
+    updateTask(updatedTask);
   };
 
   /**
    * Handle task deletion from the TaskBoard component
-   * 
-   * Args:
-   *   taskId (string|number): The ID of the deleted task
    */
   const handleTaskDelete = (taskId) => {
-    setTasksGrouped(prevTasks => {
-      const newTasks = {
-        ...prevTasks,
-        pending: prevTasks.pending.filter(task => task.id !== taskId),
-        in_progress: prevTasks.in_progress.filter(task => task.id !== taskId),
-        completed: prevTasks.completed.filter(task => task.id !== taskId)
-      };
-      return newTasks;
-    });
+    console.log('TaskBoardPage: Received task deletion, delegating to store', taskId);
+    deleteTask(taskId);
   };
 
-
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center space-x-2">
@@ -207,7 +111,6 @@ const TaskBoardPage = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* View Toggle - Only List View Button */}
           <Button
             variant="outline"
             asChild
@@ -242,7 +145,7 @@ const TaskBoardPage = () => {
 
       {/* Task Board */}
       <div className="flex-1">
-        {tasksGrouped.pending.length === 0 && tasksGrouped.in_progress.length === 0 && tasksGrouped.completed.length === 0 && !loading ? (
+        {tasksGrouped.pending.length === 0 && tasksGrouped.in_progress.length === 0 && tasksGrouped.completed.length === 0 && !isLoading ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16">
               <LayoutDashboard className="h-16 w-16 text-muted-foreground mb-4" />

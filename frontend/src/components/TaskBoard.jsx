@@ -34,11 +34,12 @@ import LoadingIndicator from './LoadingIndicator';
  * - Responsive design
  */
 const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) => {
-  const [tasksGrouped, setTasksGrouped] = useState(initialTasksGrouped || {
+  // Use passed-in data directly instead of local state
+  const tasksGrouped = initialTasksGrouped || {
     pending: [],
     in_progress: [],
     completed: []
-  });
+  };
   const [draggedTask, setDraggedTask] = useState(null);
   const [draggedOver, setDraggedOver] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -52,12 +53,8 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
     'completed': { title: 'Completed', status: 'completed' }
   };
 
-  useEffect(() => {
-    if (initialTasksGrouped) {
-      console.log('TaskBoard: Updating local state from parent', initialTasksGrouped);
-      setTasksGrouped(initialTasksGrouped);
-    }
-  }, [initialTasksGrouped]);
+  // Remove useEffect since we're not managing local state anymore
+  // The component will re-render automatically when props change
 
   /**
    * Get tasks for a specific column - now directly from grouped data
@@ -184,14 +181,8 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
         console.log('TaskBoard: Notifying parent component', updatedTask);
         onTaskUpdate(updatedTask);
       } else {
-        // Fallback: update local state if no parent callback
-        console.log('TaskBoard: No parent callback, updating local state');
-        const updatedTasks = {
-          ...tasksGrouped,
-          [draggedTask.status]: tasksGrouped[draggedTask.status].filter(task => task.id !== draggedTask.id),
-          [newStatus]: [...tasksGrouped[newStatus], updatedTask]
-        };
-        setTasksGrouped(updatedTasks);
+        // No parent callback - this is an error state as we require parent management now
+        console.error('TaskBoard: No parent callback provided - task state will not be updated!');
       }
 
       setDraggedTask(null);
@@ -225,16 +216,8 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
 
       const newFavoriteStatus = !task.isFavorite;
       
-      // Update local state immediately for responsive UI
-      const updatedTasks = {
-        ...tasksGrouped,
-        [task.status]: tasksGrouped[task.status].map(t => 
-          t.id === taskId 
-            ? { ...t, isFavorite: newFavoriteStatus }
-            : t
-        )
-      };
-      setTasksGrouped(updatedTasks);
+      // Note: We no longer update local state directly
+      // The parent component will handle state updates via onTaskUpdate callback
 
       // Update via API
       // Reason: Persist favorite status to backend so it's consistent across views
@@ -254,16 +237,8 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
       }
     } catch (error) {
       console.error('Failed to toggle task favorite:', error);
-      // Revert the change on error
-      const revertedTasks = {
-        ...tasksGrouped,
-        [task.status]: tasksGrouped[task.status].map(t => 
-          t.id === taskId 
-            ? { ...t, isFavorite: !t.isFavorite }
-            : t
-        )
-      };
-      setTasksGrouped(revertedTasks);
+      // Note: Error handling for favorite changes now handled by parent/store
+      // We rely on the parent to manage state consistency
     }
   };
 
@@ -280,18 +255,11 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
     try {
       await taskAPI.deleteTask(taskId, projectId);
       
-      // Update local state
-      const updatedTasks = {
-        ...tasksGrouped,
-        pending: tasksGrouped.pending.filter(task => task.id !== taskId),
-        in_progress: tasksGrouped.in_progress.filter(task => task.id !== taskId),
-        completed: tasksGrouped.completed.filter(task => task.id !== taskId)
-      };
-      setTasksGrouped(updatedTasks);
-
-      // Notify parent component if callback provided
+      // Notify parent component to handle state updates
       if (onTaskDelete) {
         onTaskDelete(taskId);
+      } else {
+        console.error('TaskBoard: No parent callback provided for deletion - task state will not be updated!');
       }
     } catch (error) {
       console.error('Failed to delete task:', error);
