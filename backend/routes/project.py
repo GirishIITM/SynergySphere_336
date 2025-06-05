@@ -61,7 +61,7 @@ def create_project():
 
 @project_bp.route('/projects', methods=['GET'])
 @jwt_required()
-@cache_route(ttl=180, user_specific=True)  # Cache for 3 minutes
+#@cache_route(ttl=180, user_specific=True)  # Cache for 3 minutes
 def list_projects():
     """Get detailed projects list with filtering options"""
     user_id = int(get_jwt_identity())
