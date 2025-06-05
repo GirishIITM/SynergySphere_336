@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
+import TaskComments from '../../components/TaskComments';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Badge } from '../../components/ui/badge';
 import './TaskDetail.css';
 import { 
   Calendar,
@@ -11,14 +19,13 @@ import {
   TrendingUp,
   TrendingDown,
   AlertTriangle,
-  CheckCircle,
   Edit,
   ArrowLeft,
   Plus,
-  Trash2,
   Paperclip,
   Target,
-  BarChart3
+  BarChart3,
+  MessageCircle
 } from 'lucide-react';
 
 /**
@@ -104,31 +111,24 @@ const TaskDetail = () => {
   };
 
   /**
-   * Get status color for task status badge.
+   * Get status variant for task status badge.
    */
-  const getStatusColor = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
-      case 'Completed': return 'task-status-completed';
-      case 'In Progress': return 'task-status-in-progress';
-      case 'Not Started': return 'task-status-not-started';
-      default: return 'task-status-not-started';
+      case 'Completed': return 'success';
+      case 'In Progress': return 'default';
+      case 'Not Started': return 'secondary';
+      default: return 'secondary';
     }
   };
 
   /**
-   * Get budget status class based on utilization.
+   * Get budget status variant based on utilization.
    */
-  const getBudgetStatusClass = (utilization) => {
-    if (utilization > 100) return 'negative';
+  const getBudgetStatusVariant = (utilization) => {
+    if (utilization > 100) return 'destructive';
     if (utilization > 80) return 'warning';
-    return 'positive';
-  };
-
-  /**
-   * Get budget status color based on utilization (legacy function).
-   */
-  const getBudgetStatusColor = (utilization) => {
-    return getBudgetStatusClass(utilization);
+    return 'success';
   };
 
   /**
@@ -155,309 +155,375 @@ const TaskDetail = () => {
 
   if (loading) {
     return (
-      <div className="task-detail-loading">
-        <div className="task-detail-loading-spinner"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="task-detail-error">
-        <div className="task-detail-error-content">
-          <div className="task-detail-error-inner">
-            <AlertTriangle className="task-detail-error-icon" />
-            <span className="task-detail-error-text">{error}</span>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="border-destructive">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              <span>{error}</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (!task) {
     return (
-      <div className="task-detail-error">
-        <div className="task-detail-empty-state">Task not found</div>
+      <div className="max-w-4xl mx-auto p-6">
+        <Card>
+          <CardContent className="p-6 text-center text-muted-foreground">
+            Task not found
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="task-detail-container">
+    <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="task-detail-header">
-        <div className="task-detail-header-content">
-          <div className="flex items-start space-x-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="task-detail-back-btn"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div>
-              <div className="task-detail-status-container">
-                <h1 className="task-detail-title">{task.title}</h1>
-                <span className={`task-status-badge ${getStatusColor(task.status)}`}>
-                  {task.status}
-                </span>
-                {task.is_overdue && (
-                  <span className="task-overdue-badge">
-                    Overdue
-                  </span>
-                )}
-              </div>
-              <p className="task-detail-description">{task.description || 'No description provided'}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate(`/solutions/tasks/${taskId}/edit`)}
-            className="task-detail-edit-btn"
-          >
-            <Edit className="h-4 w-4" />
-            <span>Edit Task</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="task-detail-grid">
-        {/* Task Information */}
-        <div className="task-detail-main">
-          {/* Basic Information */}
-          <div className="task-detail-card">
-            <h2 className="task-detail-card-title">Task Information</h2>
-            <div className="task-detail-info-grid">
-              <div className="task-detail-info-item">
-                <Calendar className="task-detail-info-icon" />
-                <div className="task-detail-info-content">
-                  <span className="task-detail-info-label">Due Date</span>
-                  <p className="task-detail-info-value">{formatDate(task.due_date)}</p>
-                </div>
-              </div>
-              <div className="task-detail-info-item">
-                <User className="task-detail-info-icon" />
-                <div className="task-detail-info-content">
-                  <span className="task-detail-info-label">Assignee</span>
-                  <p className="task-detail-info-value">{task.assignee || 'Unassigned'}</p>
-                </div>
-              </div>
-              <div className="task-detail-info-item">
-                <Target className="task-detail-info-icon" />
-                <div className="task-detail-info-content">
-                  <span className="task-detail-info-label">Progress</span>
-                  <p className="task-detail-info-value">{task.percent_complete || 0}%</p>
-                </div>
-              </div>
-              <div className="task-detail-info-item">
-                <Clock className="task-detail-info-icon" />
-                <div className="task-detail-info-content">
-                  <span className="task-detail-info-label">Estimated Effort</span>
-                  <p className="task-detail-info-value">{task.estimated_effort || 0} hours</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Budget and Expenses */}
-          <div className="task-detail-card">
-            <div className="task-detail-card-title">
-              <span>Budget & Expenses</span>
-              <button
-                onClick={() => setShowAddExpense(!showAddExpense)}
-                className="task-detail-add-expense-btn"
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate(-1)}
               >
-                <Plus className="h-4 w-4" />
-                <span>Add Expense</span>
-              </button>
-            </div>
-
-            {/* Budget Overview */}
-            {task.budget && (
-              <div className="task-detail-budget-grid">
-                <div className="task-detail-budget-card task-detail-budget-total">
-                  <div className="task-detail-budget-header">
-                    <DollarSign className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Total Budget</span>
-                  </div>
-                  <p className="task-detail-budget-amount">{formatCurrency(task.budget)}</p>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-2xl font-bold">{task.title}</h1>
+                  <Badge variant={getStatusVariant(task.status)}>
+                    {task.status}
+                  </Badge>
+                  {task.is_overdue && (
+                    <Badge variant="destructive">
+                      Overdue
+                    </Badge>
+                  )}
                 </div>
-                <div className="task-detail-budget-card task-detail-budget-spent">
-                  <div className="task-detail-budget-header">
-                    <TrendingDown className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Total Spent</span>
-                  </div>
-                  <p className="task-detail-budget-amount">{formatCurrency(task.total_spent)}</p>
-                </div>
-                <div className="task-detail-budget-card task-detail-budget-remaining">
-                  <div className="task-detail-budget-header">
-                    <TrendingUp className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Remaining</span>
-                  </div>
-                  <p className={`task-detail-budget-amount ${getBudgetStatusColor(task.budget_utilization)}`}>
-                    {formatCurrency(task.budget_remaining)}
-                  </p>
-                </div>
+                <p className="text-muted-foreground max-w-2xl">
+                  {task.description || 'No description provided'}
+                </p>
               </div>
-            )}
+            </div>
+            <Button
+              onClick={() => navigate(`/solutions/tasks/${taskId}/edit`)}
+              className="flex items-center gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Edit Task
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* Add Expense Form */}
-            {showAddExpense && (
-              <form onSubmit={handleAddExpense} className="task-detail-expense-form">
-                <h3 className="task-detail-expense-form-title">Add New Expense</h3>
-                <div className="task-detail-expense-form-grid">
-                  <div className="task-detail-form-group">
-                    <label className="task-detail-form-label">Amount</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newExpense.amount}
-                      onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
-                      className="task-detail-form-input"
-                      placeholder="0.00"
-                      required
-                    />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="overview" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Budget
+              </TabsTrigger>
+              <TabsTrigger value="comments" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Comments
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="overview">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Task Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Due Date</p>
+                        <p className="font-medium">{formatDate(task.due_date)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Assignee</p>
+                        <p className="font-medium">{task.assignee || 'Unassigned'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Target className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Progress</p>
+                        <p className="font-medium">{task.percent_complete || 0}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Clock className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Estimated Effort</p>
+                        <p className="font-medium">{task.estimated_effort || 0} hours</p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="task-detail-form-group">
-                    <label className="task-detail-form-label">Category</label>
-                    <select
-                      value={newExpense.category}
-                      onChange={(e) => setNewExpense({...newExpense, category: e.target.value})}
-                      className="task-detail-form-select"
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="budget">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    Budget & Expenses
+                    <Button
+                      onClick={() => setShowAddExpense(!showAddExpense)}
+                      className="flex items-center gap-2"
                     >
-                      {expenseCategories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="task-detail-form-group">
-                    <label className="task-detail-form-label">Description</label>
-                    <input
-                      type="text"
-                      value={newExpense.description}
-                      onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
-                      className="task-detail-form-input"
-                      placeholder="Expense description"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="task-detail-form-actions">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddExpense(false)}
-                    className="task-detail-form-btn cancel"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="task-detail-form-btn submit"
-                  >
-                    Add Expense
-                  </button>
-                </div>
-              </form>
-            )}
+                      <Plus className="h-4 w-4" />
+                      Add Expense
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Budget Overview */}
+                  {task.budget && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <DollarSign className="h-4 w-4 text-blue-500" />
+                            <span className="text-sm text-muted-foreground">Total Budget</span>
+                          </div>
+                          <p className="text-xl font-bold">{formatCurrency(task.budget)}</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <TrendingDown className="h-4 w-4 text-red-500" />
+                            <span className="text-sm text-muted-foreground">Total Spent</span>
+                          </div>
+                          <p className="text-xl font-bold">{formatCurrency(task.total_spent)}</p>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-2 mb-2">
+                            <TrendingUp className="h-4 w-4 text-green-500" />
+                            <span className="text-sm text-muted-foreground">Remaining</span>
+                          </div>
+                          <p className="text-xl font-bold">{formatCurrency(task.budget_remaining)}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
 
-            {/* Expenses List */}
-            <div>
-              <h3 className="task-detail-expense-form-title">Expense History</h3>
-              {task.expenses && task.expenses.length > 0 ? (
-                <div className="task-detail-expenses-list">
-                  {task.expenses.map((expense) => (
-                    <div key={expense.id} className="task-detail-expense-item">
-                      <div className="task-detail-expense-content">
-                        <div className="task-detail-expense-header">
-                          <span className="task-detail-expense-title">{expense.description}</span>
-                          <span className="task-detail-expense-category">
-                            {expense.category}
-                          </span>
-                        </div>
-                        <p className="task-detail-expense-meta">
-                          Added by {expense.created_by_name} on {formatDate(expense.incurred_at)}
-                        </p>
+                  {/* Add Expense Form */}
+                  {showAddExpense && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Add New Expense</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <form onSubmit={handleAddExpense} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="amount">Amount</Label>
+                              <Input
+                                id="amount"
+                                type="number"
+                                step="0.01"
+                                value={newExpense.amount}
+                                onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+                                placeholder="0.00"
+                                required
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="category">Category</Label>
+                              <Select
+                                value={newExpense.category}
+                                onValueChange={(value) => setNewExpense({...newExpense, category: value})}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {expenseCategories.map(category => (
+                                    <SelectItem key={category} value={category}>
+                                      {category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="description">Description</Label>
+                              <Input
+                                id="description"
+                                value={newExpense.description}
+                                onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
+                                placeholder="Expense description"
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setShowAddExpense(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Add Expense
+                            </Button>
+                          </div>
+                        </form>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Expenses List */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Expense History</h3>
+                    {task.expenses && task.expenses.length > 0 ? (
+                      <div className="space-y-3">
+                        {task.expenses.map((expense) => (
+                          <Card key={expense.id}>
+                            <CardContent className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium">{expense.description}</p>
+                                    <Badge variant="outline">{expense.category}</Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    Added by {expense.created_by_name} on {formatDate(expense.incurred_at)}
+                                  </p>
+                                </div>
+                                <p className="text-lg font-bold">{formatCurrency(expense.amount)}</p>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
-                      <div className="task-detail-expense-amount">
-                        <p>{formatCurrency(expense.amount)}</p>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No expenses recorded for this task
                       </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="comments">
+              <TaskComments taskId={taskId} />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Quick Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Stats</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Priority Score</span>
+                <span className="font-medium">{task.priority_score || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtasks</span>
+                <span className="font-medium">{task.dependency_count || 0}</span>
+              </div>
+              {task.budget && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Budget Utilization</span>
+                  <Badge variant={getBudgetStatusVariant(task.budget_utilization)}>
+                    {task.budget_utilization.toFixed(1)}%
+                  </Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Attachments */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Attachments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {task.attachments && task.attachments.length > 0 ? (
+                <div className="space-y-3">
+                  {task.attachments.map((attachment) => (
+                    <div key={attachment.id} className="flex items-center gap-3">
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <a
+                        href={attachment.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Attachment {attachment.id}
+                      </a>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="task-detail-empty-state">No expenses recorded for this task</p>
+                <p className="text-muted-foreground">No attachments</p>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="task-detail-sidebar">
-          {/* Quick Stats */}
-          <div className="task-detail-card">
-            <h2 className="task-detail-card-title">Quick Stats</h2>
-            <div className="task-detail-quick-stats">
-              <div className="task-detail-stat-item">
-                <span className="task-detail-stat-label">Priority Score</span>
-                <span className="task-detail-stat-value">{task.priority_score || 0}</span>
-              </div>
-              <div className="task-detail-stat-item">
-                <span className="task-detail-stat-label">Subtasks</span>
-                <span className="task-detail-stat-value">{task.dependency_count || 0}</span>
-              </div>
-              {task.budget && (
-                <div className="task-detail-stat-item">
-                  <span className="task-detail-stat-label">Budget Utilization</span>
-                  <span className={`task-detail-stat-value ${getBudgetStatusColor(task.budget_utilization)}`}>
-                    {task.budget_utilization.toFixed(1)}%
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Attachments */}
-          <div className="task-detail-card">
-            <h2 className="task-detail-card-title">Attachments</h2>
-            {task.attachments && task.attachments.length > 0 ? (
-              <div className="task-detail-attachments-list">
-                {task.attachments.map((attachment) => (
-                  <div key={attachment.id} className="task-detail-attachment-item">
-                    <Paperclip className="task-detail-attachment-icon" />
-                    <a
-                      href={attachment.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="task-detail-attachment-link"
-                    >
-                      Attachment {attachment.id}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="task-detail-empty-state">No attachments</p>
-            )}
-          </div>
+            </CardContent>
+          </Card>
 
           {/* Project Info */}
-          <div className="task-detail-card">
-            <h2 className="task-detail-card-title">Project</h2>
-            <div className="task-detail-project-info">
-              <BarChart3 className="task-detail-project-icon" />
-              <div className="task-detail-project-content">
-                <p className="task-detail-project-name">{task.project_name}</p>
-                <button
-                  onClick={() => navigate(`/solutions/projects/${task.project_id}`)}
-                  className="task-detail-project-link"
-                >
-                  View Project Details
-                </button>
+          <Card>
+            <CardHeader>
+              <CardTitle>Project</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3">
+                <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                <div className="flex-1">
+                  <p className="font-medium">{task.project_name}</p>
+                  <Button
+                    variant="link"
+                    className="h-auto p-0 text-sm"
+                    onClick={() => navigate(`/solutions/projects/${task.project_id}`)}
+                  >
+                    View Project Details
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 };
 
-export default TaskDetail; 
+export default TaskDetail;

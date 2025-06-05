@@ -565,9 +565,27 @@
   font-weight: 500;
 }
 
+/* Minimal CSS - most styling handled by shadcn components */
+
+/* Loading spinner animation */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Custom spacing for mobile responsiveness */
+@media (max-width: 768px) {
+  .grid.grid-cols-1.lg\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid.grid-cols-1.md\\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .grid.grid-cols-1.md\\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Responsive adjustments */
@@ -613,4 +631,176 @@
     align-items: stretch;
     gap: 0.5rem;
   }
-} 
+}
+
+/* Tab Navigation Styling */
+.task-detail-tabs {
+  margin-bottom: 1.5rem;
+}
+
+.task-detail-tab-list {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.5rem;
+}
+
+.task-detail-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.task-detail-tab:hover {
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.task-detail-tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.task-detail-tab-content {
+  min-height: 400px;
+}
+
+/* Comments Section Styling */
+.task-comments-container {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.comment-card {
+  transition: all 0.2s ease;
+}
+
+.comment-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comment-form-card {
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+}
+
+.comment-form-card:focus-within {
+  border-color: #3b82f6;
+  background: white;
+}
+
+/* Avatar Styling */
+.comment-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+}
+
+/* Comment Content Styling */
+.comment-content {
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design for Comments */
+@media (max-width: 768px) {
+  .task-detail-main nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .task-detail-main nav::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .task-detail-main nav button {
+    white-space: nowrap;
+    min-width: auto;
+    padding: 0.5rem 1rem;
+  }
+  
+  .comment-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+/* Tab Content Animation */
+.tab-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Comments Loading State */
+.comments-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+/* Empty State Styling */
+.comments-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.comments-empty-state .icon {
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+/* Comment Form Styling */
+.comment-form {
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.comment-form:focus-within {
+  ring: 2px;
+  ring-color: #3b82f6;
+  ring-opacity: 0.5;
+}
+
+.comment-submit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  transition: all 0.2s ease;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.comment-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
