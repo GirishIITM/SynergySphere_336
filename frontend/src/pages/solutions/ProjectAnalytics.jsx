@@ -110,8 +110,8 @@ const ProjectAnalytics = () => {
     );
   }
 
-  const healthStatus = health ? getHealthStatus(health.overall_score) : null;
-  const taskProgress = stats ? formatProgress(stats.task_stats.completed, stats.task_stats.total) : null;
+  const healthStatus = health ? getHealthStatus(health.health_score || 0) : null;
+  const taskProgress = stats?.productivity_metrics ? formatProgress(stats.productivity_metrics.completed_tasks, stats.productivity_metrics.total_tasks) : null;
 
   return (
     <div className="space-y-6">
@@ -153,7 +153,7 @@ const ProjectAnalytics = () => {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{health?.overall_score || 0}%</div>
+              <div className="text-2xl font-bold">{health?.health_score || 0}%</div>
               {healthStatus && (
                 <Badge variant={healthStatus.variant} className="mt-1">
                   {healthStatus.text}
@@ -182,9 +182,9 @@ const ProjectAnalytics = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.team_stats?.total_members || 0}</div>
+              <div className="text-2xl font-bold">N/A</div>
               <p className="text-xs text-muted-foreground">
-                {stats.team_stats?.active_members || 0} active members
+                Team data not available
               </p>
             </CardContent>
           </Card>
@@ -196,10 +196,12 @@ const ProjectAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats.budget_stats ? `${stats.budget_stats.usage_percentage.toFixed(1)}%` : 'N/A'}
+                {stats?.resource_utilization?.budget?.utilization_percentage ? 
+                  `${stats.resource_utilization.budget.utilization_percentage.toFixed(1)}%` : 'N/A'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {stats.budget_stats ? `₹${stats.budget_stats.spent_amount.toLocaleString()} spent` : 'No budget set'}
+                {stats?.resource_utilization?.budget?.spent_amount ? 
+                  `₹${stats.resource_utilization.budget.spent_amount.toLocaleString()} spent` : 'No budget set'}
               </p>
             </CardContent>
           </Card>
@@ -209,7 +211,7 @@ const ProjectAnalytics = () => {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Task Status Distribution */}
-        {stats?.task_distribution && (
+        {stats?.productivity_metrics && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -221,7 +223,12 @@ const ProjectAnalytics = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <RechartsPieChart>
                   <Pie
-                    data={stats.task_distribution}
+                    data={[
+                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks },
+                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks },
+                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks },
+                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks }
+                    ].filter(item => item.count > 0)}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -230,7 +237,12 @@ const ProjectAnalytics = () => {
                     fill="#8884d8"
                     dataKey="count"
                   >
-                    {stats.task_distribution.map((entry, index) => (
+                    {[
+                      { name: 'Completed', count: stats.productivity_metrics.completed_tasks },
+                      { name: 'In Progress', count: stats.productivity_metrics.in_progress_tasks },
+                      { name: 'Pending', count: stats.productivity_metrics.pending_tasks },
+                      { name: 'Overdue', count: stats.productivity_metrics.overdue_tasks }
+                    ].filter(item => item.count > 0).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -241,25 +253,24 @@ const ProjectAnalytics = () => {
           </Card>
         )}
 
-        {/* Team Activity */}
-        {stats?.team_activity && (
+        {/* Weekly Progress */}
+        {stats?.productivity_metrics?.tasks_completed_per_week && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Team Activity
+                <TrendingUp className="h-5 w-5" />
+                Weekly Progress
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.team_activity}>
+                <BarChart data={stats.productivity_metrics.tasks_completed_per_week}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="member_name" />
+                  <XAxis dataKey="week" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="tasks_completed" fill="#8884d8" name="Tasks Completed" />
-                  <Bar dataKey="tasks_in_progress" fill="#82ca9d" name="Tasks In Progress" />
+                  <Bar dataKey="completed" fill="#8884d8" name="Tasks Completed" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -269,29 +280,29 @@ const ProjectAnalytics = () => {
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Progress Over Time */}
-        {stats?.progress_timeline && (
+        {/* Monthly Expenses */}
+        {stats?.resource_utilization?.monthly_expenses && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Progress Over Time
+                Monthly Expenses
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={stats.progress_timeline}>
+                <AreaChart data={stats.resource_utilization.monthly_expenses}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
                   <Area 
                     type="monotone" 
-                    dataKey="completion_percentage" 
+                    dataKey="amount" 
                     stroke="#8884d8" 
                     fill="#8884d8" 
                     fillOpacity={0.6}
-                    name="Completion %"
+                    name="Amount"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -299,27 +310,31 @@ const ProjectAnalytics = () => {
           </Card>
         )}
 
-        {/* Resource Utilization */}
-        {resources && (
+        {/* Expense Categories */}
+        {stats?.resource_utilization?.expenses_by_category && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Resource Utilization
+                Expense Categories
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Object.entries(resources).map(([resource, data]) => (
-                  <div key={resource} className="space-y-2">
+                {Object.entries(stats.resource_utilization.expenses_by_category).map(([category, amount]) => (
+                  <div key={category} className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="capitalize">{resource.replace('_', ' ')}</span>
-                      <span>{data.percentage}%</span>
+                      <span className="capitalize">{category.replace('_', ' ')}</span>
+                      <span>₹{amount.toLocaleString()}</span>
                     </div>
-                    <Progress value={data.percentage} className="h-2" />
-                    <p className="text-xs text-muted-foreground">
-                      {data.current} / {data.total} {data.unit || 'units'}
-                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ 
+                          width: `${(amount / Math.max(...Object.values(stats.resource_utilization.expenses_by_category))) * 100}%` 
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -339,31 +354,44 @@ const ProjectAnalytics = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {Object.entries(health.health_factors || {}).map(([factor, score]) => (
-                <div key={factor} className="text-center">
-                  <div className={`text-2xl font-bold ${
-                    score >= 80 ? 'text-green-600' :
-                    score >= 60 ? 'text-blue-600' :
-                    score >= 40 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {score}%
-                  </div>
-                  <div className="text-sm text-muted-foreground capitalize">
-                    {factor.replace('_', ' ')}
-                  </div>
-                  <Progress value={score} className="mt-2 h-1" />
+              <div className="text-center">
+                <div className={`text-2xl font-bold ${
+                  health.health_score >= 80 ? 'text-green-600' :
+                  health.health_score >= 60 ? 'text-blue-600' :
+                  health.health_score >= 40 ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {health.health_score}%
                 </div>
-              ))}
+                <div className="text-sm text-muted-foreground">Overall Health</div>
+                <Progress value={health.health_score} className="mt-2 h-1" />
+              </div>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{health.total_tasks}</div>
+                <div className="text-sm text-muted-foreground">Total Tasks</div>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-600">{health.overdue_tasks?.length || 0}</div>
+                <div className="text-sm text-muted-foreground">Overdue Tasks</div>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {health.on_time_completion_rate ? `${health.on_time_completion_rate.toFixed(1)}%` : 'N/A'}
+                </div>
+                <div className="text-sm text-muted-foreground">On-Time Rate</div>
+              </div>
             </div>
             
-            {health.recommendations && health.recommendations.length > 0 && (
+            {health.bottleneck_tasks && health.bottleneck_tasks.length > 0 && (
               <div className="mt-6">
-                <h4 className="font-medium mb-3">Recommendations:</h4>
+                <h4 className="font-medium mb-3">Bottleneck Tasks:</h4>
                 <ul className="space-y-2">
-                  {health.recommendations.map((recommendation, index) => (
+                  {health.bottleneck_tasks.map((task, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
-                      <div className="w-1 h-1 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                      {recommendation}
+                      <div className="w-1 h-1 bg-red-500 rounded-full mt-2 flex-shrink-0" />
+                      {task.title || `Task ${task.id}`} - {task.status}
                     </li>
                   ))}
                 </ul>
