@@ -71,11 +71,12 @@ Based on the analysis of `/frontend/src/utils/apiCalls/`, the frontend uses thes
 
 ### Project Members
 7. **Add Project Member** - `POST /projects/{id}/members`
-8. **Update Project Member** - `PUT /projects/{id}/members/{memberId}`
-9. **Remove Project Member** - `DELETE /projects/{id}/members/{memberId}`
+8. **Get Project Members** - `GET /projects/{id}/members`
+9. **Update Project Member** - `PUT /projects/{id}/members/{memberId}`
+10. **Remove Project Member** - `DELETE /projects/{id}/members/{memberId}`
 
 ### User Search
-10. **Search Users** - `GET /users/search` (for adding to projects)
+11. **Search Users** - `GET /users/search` (for adding to projects)
 
 ### Frontend-Specific Features
 - **Advanced Filtering**: search, status, owner, member, pagination
@@ -208,4 +209,4 @@ Based on the analysis of `/frontend/src/utils/apiCalls/`, the frontend uses thes
 
 ---
 
-**This collection reflects the actual frontend implementation, ensuring your API tests match real-world usage patterns!** 🚀 
+**This collection reflects the actual frontend implementation, ensuring your API tests match real-world usage patterns!** 🚀

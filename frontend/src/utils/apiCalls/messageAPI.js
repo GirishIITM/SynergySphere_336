@@ -1,4 +1,5 @@
 import { apiRequest } from './apiRequest.js';
+import { projectAPI } from './projectAPI.js';
 
 export const messageAPI = {
   /**
@@ -80,25 +81,40 @@ export const messageAPI = {
   },
 
   /**
-   * Get project members for mentions
+   * Get project members - delegates to projectAPI to avoid duplication
    * @param {number} projectId - Project ID
-   * @returns {Promise} - Project members list
+   * @returns {Promise} - Project members list response
    */
   getProjectMembers: (projectId) => {
-    return apiRequest(`/projects/${projectId}/members`, 'GET', null, `project-members-${projectId}`)
+    return projectAPI.getProjectMembers(projectId)
       .then(result => {
-        // Ensure we return an array
-        if (result && Array.isArray(result.members)) {
-          return result.members;
-        }
-        if (Array.isArray(result)) {
-          return result;
-        }
-        return [];
+        // Return just the members array for backward compatibility
+        return result.members || [];
       })
       .catch(error => {
         console.error('Error fetching project members:', error);
         return [];
       });
+  },
+
+  /**
+   * Add member to project - delegates to projectAPI
+   * @param {number} projectId - Project ID
+   * @param {number} userId - User ID to add
+   * @param {string} role - Member role (optional)
+   * @returns {Promise} - Add member response
+   */
+  addProjectMember: (projectId, userId, role = 'member') => {
+    return projectAPI.addProjectMember(projectId, { user_id: userId, role });
+  },
+
+  /**
+   * Remove member from project - delegates to projectAPI
+   * @param {number} projectId - Project ID
+   * @param {number} userId - User ID to remove
+   * @returns {Promise} - Remove member response
+   */
+  removeProjectMember: (projectId, userId) => {
+    return projectAPI.removeProjectMember(projectId, userId);
   }
 };
