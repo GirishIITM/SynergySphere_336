@@ -563,3 +563,152 @@ def get_project_tasks(project_id):
         logger.error(f"Get project tasks error: {e}")
         return jsonify({'msg': 'An error occurred while fetching project tasks'}), 500
 
+@task_bp.route('/projects/<int:project_id>/tasks/grouped', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
+def get_project_tasks_grouped(project_id):
+    """Get all tasks for a specific project grouped by status"""
+    user_id = int(get_jwt_identity())
+    
+    # Check if user has access to this project
+    project = Project.query.get_or_404(project_id)
+    if not any(member.id == user_id for member in project.members):
+        return jsonify({'msg': 'Not authorized'}), 403
+    
+    try:
+        # Get all tasks for this project
+        tasks = Task.query.filter_by(project_id=project_id).order_by(Task.created_at.desc()).all()
+        
+        # Group tasks by status with favorites at the top of each group
+        grouped_tasks = {
+            'pending': [],
+            'in_progress': [],
+            'completed': []
+        }
+        
+        for task in tasks:
+            # Return raw status values for consistency with frontend
+            raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
+            
+            # Get assignee name
+            assignee_name = None
+            if task.owner_id:
+                assignee = User.query.get(task.owner_id)
+                assignee_name = assignee.full_name if assignee else 'Unknown User'
+            
+            task_data = {
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'status': raw_status,
+                'project_id': task.project_id,
+                'owner_id': task.owner_id,
+                'assignee_id': task.owner_id,
+                'assignee': assignee_name,
+                'assigned_to_name': assignee_name,
+                'created_at': task.created_at.isoformat() if task.created_at else None,
+                'project_name': task.project.name if task.project else None,
+                'total_expenses': task.total_expenses,
+                'is_favorite': task.is_favorite
+            }
+            
+            # Add to appropriate status group
+            if raw_status in grouped_tasks:
+                grouped_tasks[raw_status].append(task_data)
+        
+        # Sort each group with favorites first
+        for status in grouped_tasks:
+            grouped_tasks[status].sort(key=lambda x: (not x['is_favorite'], x['created_at']))
+        
+        return jsonify(grouped_tasks), 200
+        
+    except Exception as e:
+        logger.error(f"Get project tasks grouped error: {e}")
+        return jsonify({'msg': 'An error occurred while fetching project tasks'}), 500
+
+@task_bp.route('/tasks/grouped', methods=['GET'])
+@jwt_required()
+@cache_route(ttl=120, user_specific=True)  # Cache for 2 minutes
+def get_all_tasks_grouped():
+    """Get all tasks for user grouped by status"""
+    user_id = int(get_jwt_identity())
+    
+    # Parse query parameters for filtering
+    search = request.args.get('search', '').strip()
+    project_id = request.args.get('project_id')
+    limit = min(int(request.args.get('limit', 200)), 500)  # Higher limit for board view
+    offset = int(request.args.get('offset', 0))
+    
+    try:
+        # Base query: Get tasks from projects where user is a member
+        from models.project import Membership
+        query = db.session.query(Task).join(Project).join(Membership).filter(
+            Membership.user_id == user_id
+        )
+        
+        # Apply search filter
+        if search:
+            search_pattern = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Task.title.ilike(search_pattern),
+                    Task.description.ilike(search_pattern)
+                )
+            )
+        
+        # Apply project filter
+        if project_id:
+            query = query.filter(Task.project_id == project_id)
+        
+        # Get tasks with pagination
+        tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+        
+        # Group tasks by status with favorites at the top of each group
+        grouped_tasks = {
+            'pending': [],
+            'in_progress': [],
+            'completed': []
+        }
+        
+        for task in tasks:
+            # Return raw status values for consistency with frontend
+            raw_status = task.status.value if hasattr(task.status, 'value') else str(task.status)
+            
+            # Get assignee name
+            assignee_name = None
+            if task.owner_id:
+                assignee = User.query.get(task.owner_id)
+                assignee_name = assignee.full_name if assignee else 'Unknown User'
+            
+            task_data = {
+                'id': task.id,
+                'title': task.title,
+                'description': task.description,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'status': raw_status,
+                'project_id': task.project_id,
+                'owner_id': task.owner_id,
+                'assignee_id': task.owner_id,
+                'assignee': assignee_name,
+                'assigned_to_name': assignee_name,
+                'created_at': task.created_at.isoformat() if task.created_at else None,
+                'project_name': task.project.name if task.project else None,
+                'total_expenses': task.total_expenses,
+                'is_favorite': task.is_favorite
+            }
+            
+            # Add to appropriate status group
+            if raw_status in grouped_tasks:
+                grouped_tasks[raw_status].append(task_data)
+        
+        # Sort each group with favorites first
+        for status in grouped_tasks:
+            grouped_tasks[status].sort(key=lambda x: (not x['is_favorite'], x['created_at']))
+        
+        return jsonify(grouped_tasks), 200
+        
+    except Exception as e:
+        logger.error(f"Get all tasks grouped error: {e}")
+        return jsonify({'msg': 'An error occurred while fetching tasks'}), 500
+

@@ -7,15 +7,10 @@ import {
   Calendar,
   Clock,
   User,
-  DollarSign,
-  TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  CheckCircle,
   Edit,
   ArrowLeft,
   Plus,
-  Trash2,
   Paperclip,
   Target,
   BarChart3
@@ -23,7 +18,7 @@ import {
 
 /**
  * TaskDetail component that displays comprehensive task information
- * including budget, expenses, and financial metrics.
+ * including expenses and project details.
  */
 const TaskDetail = () => {
   const { taskId } = useParams();
@@ -116,22 +111,6 @@ const TaskDetail = () => {
   };
 
   /**
-   * Get budget status class based on utilization.
-   */
-  const getBudgetStatusClass = (utilization) => {
-    if (utilization > 100) return 'negative';
-    if (utilization > 80) return 'warning';
-    return 'positive';
-  };
-
-  /**
-   * Get budget status color based on utilization (legacy function).
-   */
-  const getBudgetStatusColor = (utilization) => {
-    return getBudgetStatusClass(utilization);
-  };
-
-  /**
    * Format currency value.
    */
   const formatCurrency = (amount) => {
@@ -194,7 +173,7 @@ const TaskDetail = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
-            <div>
+            <div className="task-detail-header-info">
               <div className="task-detail-status-container">
                 <h1 className="task-detail-title">{task.title}</h1>
                 <span className={`task-status-badge ${getStatusColor(task.status)}`}>
@@ -257,10 +236,10 @@ const TaskDetail = () => {
             </div>
           </div>
 
-          {/* Budget and Expenses */}
+          {/* Expenses */}
           <div className="task-detail-card">
             <div className="task-detail-card-title">
-              <span>Budget & Expenses</span>
+              <span>Expenses</span>
               <button
                 onClick={() => setShowAddExpense(!showAddExpense)}
                 className="task-detail-add-expense-btn"
@@ -269,35 +248,6 @@ const TaskDetail = () => {
                 <span>Add Expense</span>
               </button>
             </div>
-
-            {/* Budget Overview */}
-            {task.budget && (
-              <div className="task-detail-budget-grid">
-                <div className="task-detail-budget-card task-detail-budget-total">
-                  <div className="task-detail-budget-header">
-                    <DollarSign className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Total Budget</span>
-                  </div>
-                  <p className="task-detail-budget-amount">{formatCurrency(task.budget)}</p>
-                </div>
-                <div className="task-detail-budget-card task-detail-budget-spent">
-                  <div className="task-detail-budget-header">
-                    <TrendingDown className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Total Spent</span>
-                  </div>
-                  <p className="task-detail-budget-amount">{formatCurrency(task.total_spent)}</p>
-                </div>
-                <div className="task-detail-budget-card task-detail-budget-remaining">
-                  <div className="task-detail-budget-header">
-                    <TrendingUp className="task-detail-budget-icon" />
-                    <span className="task-detail-budget-label">Remaining</span>
-                  </div>
-                  <p className={`task-detail-budget-amount ${getBudgetStatusColor(task.budget_utilization)}`}>
-                    {formatCurrency(task.budget_remaining)}
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Add Expense Form */}
             {showAddExpense && (
@@ -403,14 +353,6 @@ const TaskDetail = () => {
                 <span className="task-detail-stat-label">Subtasks</span>
                 <span className="task-detail-stat-value">{task.dependency_count || 0}</span>
               </div>
-              {task.budget && (
-                <div className="task-detail-stat-item">
-                  <span className="task-detail-stat-label">Budget Utilization</span>
-                  <span className={`task-detail-stat-value ${getBudgetStatusColor(task.budget_utilization)}`}>
-                    {task.budget_utilization.toFixed(1)}%
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 

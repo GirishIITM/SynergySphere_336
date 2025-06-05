@@ -61,12 +61,12 @@ export const taskAPI = {
     return apiRequest(`/tasks/${id}`, 'GET', null, 'task-details-get');
   },
 
-  createTask: (project_id, title, description, due_date, status, assigned_to, budget) => {
-    return apiRequest('/tasks', 'POST', { project_id, title, description, due_date, status, assigned_to, budget }, 'tasks-create');
+  createTask: (project_id, title, description, due_date, status, assigned_to) => {
+    return apiRequest('/tasks', 'POST', { project_id, title, description, due_date, status, assigned_to }, 'tasks-create');
   },
 
-  updateTask: (id, project_id, title, description, due_date, status, assigned_to, budget) => {
-    return apiRequest(`/tasks/${id}`, 'PUT', { project_id, title, description, due_date, status, assigned_to, budget }, 'tasks-update');
+  updateTask: (id, project_id, title, description, due_date, status, assigned_to) => {
+    return apiRequest(`/tasks/${id}`, 'PUT', { project_id, title, description, due_date, status, assigned_to }, 'tasks-update');
   },
 
   updateTaskStatus: (id, status) => {
@@ -83,5 +83,69 @@ export const taskAPI = {
 
   getProjectTasks: (project_id) => {
     return apiRequest(`/projects/${project_id}/tasks`, 'GET', null, 'project-tasks-get');
+  },
+
+  getTasksGrouped: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    if (params.project_id) queryParams.append('project_id', params.project_id);
+    if (params.search) queryParams.append('search', params.search);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.offset) queryParams.append('offset', params.offset);
+    
+    const endpoint = queryParams.toString() ? `/tasks/grouped?${queryParams}` : '/tasks/grouped';
+    return apiRequest(endpoint, 'GET', null, 'tasks-get-grouped')
+      .then(result => {
+        // Ensure we return the grouped tasks structure
+        if (result && typeof result === 'object') {
+          return {
+            pending: result.pending || [],
+            in_progress: result.in_progress || [],
+            completed: result.completed || []
+          };
+        }
+        // Fallback structure if API returns unexpected format
+        return {
+          pending: [],
+          in_progress: [],
+          completed: []
+        };
+      })
+      .catch(error => {
+        console.error('Error fetching grouped tasks:', error);
+        return {
+          pending: [],
+          in_progress: [],
+          completed: []
+        };
+      });
+  },
+
+  getProjectTasksGrouped: (project_id) => {
+    return apiRequest(`/projects/${project_id}/tasks/grouped`, 'GET', null, 'project-tasks-get-grouped')
+      .then(result => {
+        // Ensure we return the grouped tasks structure
+        if (result && typeof result === 'object') {
+          return {
+            pending: result.pending || [],
+            in_progress: result.in_progress || [],
+            completed: result.completed || []
+          };
+        }
+        // Fallback structure if API returns unexpected format
+        return {
+          pending: [],
+          in_progress: [],
+          completed: []
+        };
+      })
+      .catch(error => {
+        console.error('Error fetching grouped project tasks:', error);
+        return {
+          pending: [],
+          in_progress: [],
+          completed: []
+        };
+      });
   }
 };

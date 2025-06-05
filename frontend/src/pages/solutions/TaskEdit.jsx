@@ -23,8 +23,7 @@ const TaskEdit = () => {
     description: '',
     due_date: '',
     status: 'Not Started',
-    assigned_to: '',
-    budget: ''
+    assigned_to: ''
   });
   const [loading, setLoading] = useState(true);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -71,8 +70,7 @@ const TaskEdit = () => {
         description: taskData.description || '',
         due_date: taskData.due_date ? taskData.due_date.slice(0, 16) : '',
         status: taskData.status || 'Not Started',
-        assigned_to: taskData.assigned_to || '',
-        budget: taskData.budget || ''
+        assigned_to: taskData.assigned_to || ''
       });
       
       // Set assignee if exists
@@ -186,8 +184,7 @@ const TaskEdit = () => {
         formData.description,
         formData.due_date,
         formData.status,
-        formData.assigned_to,
-        formData.budget
+        formData.assigned_to
       );
       
       setSuccess('Task updated successfully! Redirecting...');
@@ -406,21 +403,6 @@ const TaskEdit = () => {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="budget">Budget (Optional)</label>
-                <Input
-                  type="number"
-                  id="budget"
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  placeholder="Enter task budget"
-                  min="0"
-                  step="0.01"
-                  disabled={isUpdating}
-                />
               </div>
 
               <div className="form-actions">

@@ -118,6 +118,15 @@
 - [x] Ensure consistency with other components that link to task edit ✅
 - [x] Test task edit navigation from TaskDetail page ✅
 
+#### 14. Fix Task Description CSS and Remove Budget from Task Frontend - 2025-01-16
+- [x] Fix task description CSS styling issues in TaskDetail component ✅
+- [x] Remove budget field from TaskCreate component ✅
+- [x] Remove budget field from TaskEdit component ✅
+- [x] Remove all budget-related UI from TaskDetail component ✅
+- [x] Remove budget-related CSS from TaskDetail.css ✅
+- [x] Clean up unused budget imports and functions ✅
+- [x] Update task API calls to not include budget parameter ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
