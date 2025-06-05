@@ -19,7 +19,7 @@ SynergySphere is more than project management—it's the collaboration engine th
 Watch our project demo video to see SynergySphere in action:
 
 [📺 SynergySphere Demo Video]([
-https://drive.google.com/file/d/1g-734K2ls9FDg0zQ6g29XvrRjWDK0k0b/view?usp=drivesdk])
+https://drive.google.com/file/d/1roAdPW577RFYyRX4CSlQeamEJOOiAS54/view])
 The video demonstrates key features including:
 - Project and task management workflow
 - Real-time collaboration capabilities  
