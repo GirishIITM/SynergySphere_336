@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { taskAPI } from '../../utils/apiCalls/taskAPI';
 import { financeAPI } from '../../utils/apiCalls/financeAPI';
 import TaskComments from '../../components/TaskComments';
@@ -31,13 +31,16 @@ import {
 /**
  * TaskDetail component that displays comprehensive task information
  * including budget, expenses, and financial metrics.
+ * Supports URL parameters for direct tab navigation (e.g., ?tab=comments)
  */
 const TaskDetail = () => {
   const { taskId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [newExpense, setNewExpense] = useState({
     amount: '',
@@ -53,6 +56,18 @@ const TaskDetail = () => {
   useEffect(() => {
     loadTaskDetails();
   }, [taskId]);
+
+  // Handle tab parameter from URL
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const validTabs = ['overview', 'budget', 'comments'];
+    
+    if (tabParam && validTabs.includes(tabParam)) {
+      setActiveTab(tabParam);
+    } else {
+      setActiveTab('overview');
+    }
+  }, [searchParams]);
 
   /**
    * Load task details with financial information.
@@ -189,6 +204,16 @@ const TaskDetail = () => {
     ));
   };
 
+  /**
+   * Handle tab change and update URL
+   */
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('tab', newTab);
+    setSearchParams(newSearchParams);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -269,7 +294,7 @@ const TaskDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2">
-          <Tabs defaultValue="overview" className="space-y-4">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
