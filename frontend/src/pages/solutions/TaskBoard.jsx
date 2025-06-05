@@ -72,11 +72,17 @@ const TaskBoardPage = () => {
         completedCount: response.completed ? response.completed.length : 0
       });
       
-      // Ensure the response has the expected structure
+      // Ensure the response has the expected structure and transform tasks
+      // Reason: Backend returns is_favorite but frontend expects isFavorite
+      const transformTasks = (tasks) => tasks.map(task => ({
+        ...task,
+        isFavorite: task.is_favorite || task.isFavorite || false
+      }));
+
       const groupedTasks = {
-        pending: response.pending || [],
-        in_progress: response.in_progress || [],
-        completed: response.completed || []
+        pending: transformTasks(response.pending || []),
+        in_progress: transformTasks(response.in_progress || []),
+        completed: transformTasks(response.completed || [])
       };
       
       console.log('TaskBoardPage: Setting grouped tasks state', {

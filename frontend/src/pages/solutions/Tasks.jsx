@@ -94,7 +94,7 @@ const Tasks = () => {
       // Reason: Ensure consistent data structure between list and board views
       const tasksWithFavorites = (Array.isArray(tasksData) ? tasksData : []).map(task => ({
         ...task,
-        isFavorite: task.isFavorite || false
+        isFavorite: task.is_favorite || task.isFavorite || false
       }));
       
       setTasks(tasksWithFavorites);

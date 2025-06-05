@@ -253,6 +253,13 @@
 - [ ] Test board view updates after drag and drop operations
 - [ ] Verify synchronization between board and list views
 
+#### Fix Task Favoriting Not Updating - 2025-01-18
+- [x] Fix data mapping issue between backend is_favorite field and frontend isFavorite field ✅
+- [x] Add proper data transformation in Tasks.jsx to map is_favorite to isFavorite ✅
+- [x] Add proper data transformation in TaskBoardPage.jsx to map is_favorite to isFavorite ✅
+- [x] Ensure favorite status displays correctly in both list and board views ✅
+- [ ] Test favorite functionality synchronization between views
+
 #### Fix TaskEdit Description Box Styling Inconsistency - 2025-01-18
 - [x] Update TaskEdit component to use consistent shadcn/ui components like TaskCreate ✅
 - [x] Replace plain HTML textarea with Textarea component from '@/components/ui/textarea' ✅
