@@ -105,7 +105,13 @@ def create_task(project_id):
             # Fallback to direct notification if Celery is not available
             logger.warning(f"Celery task failed, using direct notification: {e}")
             message = f"You have been assigned task '{task.title}' in project '{project.name}'"
-            notification = Notification(user_id=assignee.id, message=message)
+            notification = Notification(
+                user_id=assignee.id, 
+                message=message,
+                task_id=task.id,
+                project_id=project.id,
+                notification_type='assigned'
+            )
             db.session.add(notification)
             if hasattr(assignee, 'notify_email') and assignee.notify_email:
                 send_email("Task Assigned", [assignee.email], "", message)
@@ -303,7 +309,13 @@ def create_task_direct():
             # Fallback to direct notification if Celery is not available
             logger.warning(f"Celery task failed, using direct notification: {e}")
             message = f"You have been assigned task '{task.title}' in project '{project.name}'"
-            notification = Notification(user_id=assignee.id, message=message)
+            notification = Notification(
+                user_id=assignee.id, 
+                message=message,
+                task_id=task.id,
+                project_id=project.id,
+                notification_type='assigned'
+            )
             db.session.add(notification)
             if hasattr(assignee, 'notify_email') and assignee.notify_email:
                 send_email("Task Assigned", [assignee.email], "", message)

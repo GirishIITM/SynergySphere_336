@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Message, Task, Project, User, Notification
 from extensions import db
+from utils.mention_utils import extract_mentions, find_mentioned_users, create_mention_notifications
 
 message_advanced_bp = Blueprint('message_advanced', __name__)
 
@@ -63,15 +64,32 @@ def post_task_message(project_id, task_id):
     db.session.add(message)
     db.session.commit()
     
-    # Notify other project members about the new task message
+    # Get the current user who sent the message
     current_user = User.query.get(user_id)
-    notification_message = f"New message in task '{task.title}' from {current_user.full_name if hasattr(current_user, 'full_name') else 'Unknown User'}"
+    
+    # Extract mentions and create mention notifications
+    mentions = extract_mentions(content)
+    if mentions:
+        # Find mentioned users who are project members
+        mentioned_users = find_mentioned_users(mentions, project.members)
+        if mentioned_users:
+            # Create mention notifications using the utility function
+            mention_notifications = create_mention_notifications(message, mentioned_users, current_user)
+            # Mention notifications are already added to session in the utility function
+    
+    # Create general activity notifications for all project members (except sender and mentioned users)
+    mentioned_user_ids = [user.id for user in mentioned_users] if 'mentioned_users' in locals() else []
+    notification_message = f"New message in task '{task.title}' from {current_user.full_name if current_user.full_name else current_user.username}"
     
     for member in project.members:
-        if member.id != user_id:  # Don't notify the sender
+        if member.id != user_id and member.id not in mentioned_user_ids:  # Don't notify sender or already mentioned users
             notification = Notification(
                 user_id=member.id,
-                message=notification_message
+                message=notification_message,
+                task_id=task_id,
+                message_id=message.id,
+                project_id=project_id,  # Add project context
+                notification_type='general'
             )
             db.session.add(notification)
     

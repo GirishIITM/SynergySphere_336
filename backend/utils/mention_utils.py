@@ -78,6 +78,9 @@ def get_mentioned_users(content, project_members):
     
     return mentioned_users
 
+# Alias for backward compatibility
+find_mentioned_users = get_mentioned_users
+
 def create_mention_notifications(message_obj, mentioned_users, sender_user):
     """
     Create notifications for mentioned users.
@@ -107,6 +110,7 @@ def create_mention_notifications(message_obj, mentioned_users, sender_user):
                 user_id=user.id,
                 message=notification_text,
                 task_id=message_obj.task_id,
+                project_id=message_obj.project_id,
                 message_id=message_obj.id,
                 notification_type='tagged'
             )

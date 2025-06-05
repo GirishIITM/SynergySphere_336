@@ -138,7 +138,7 @@ def create_app(config_class=None):
     # Everything below runs inside app context!
     with app.app_context():
         use_postgresql = getattr(config_instance, 'USE_POSTGRESQL', False)
-        skip_migration = getattr(config_instance, 'SKIP_MIGRATION', True)
+        skip_migration = getattr(config_instance, 'SKIP_MIGRATION', False)
         
         try:
             database_url = app.config.get('SQLALCHEMY_DATABASE_URI')

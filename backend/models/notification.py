@@ -10,12 +10,14 @@ class Notification(db.Model):
     
     # Enhanced fields for context and categorization
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
     message_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)
     notification_type = db.Column(db.String(50), default='general')  # 'tagged', 'assigned', 'general'
     
     # Relationships
     user = db.relationship('User', back_populates='notifications')
     task = db.relationship('Task', backref='notifications')
+    project = db.relationship('Project', backref='notifications')
     notification_message = db.relationship('Message', backref='notifications')
 
     def to_dict(self):
@@ -23,15 +25,21 @@ class Notification(db.Model):
         try:
             # Safely get task-related information
             task_title = None
-            project_id = None
+            project_id = self.project_id
             project_name = None
             
             if self.task:
                 task_title = self.task.title
-                project_id = self.task.project_id
+                # If project_id not directly set, get from task
+                if not project_id:
+                    project_id = self.task.project_id
                 # Safely access the project relationship
                 if hasattr(self.task, 'project') and self.task.project:
                     project_name = self.task.project.name
+            
+            # If we have project_id but no project_name yet, try to get it directly
+            if project_id and not project_name and self.project:
+                project_name = self.project.name
             
             return {
                 'id': self.id,
@@ -40,10 +48,10 @@ class Notification(db.Model):
                 'is_read': self.is_read,
                 'created_at': self.created_at.isoformat() if self.created_at else None,
                 'task_id': self.task_id,
+                'project_id': project_id,
                 'message_id': self.message_id,
                 'notification_type': self.notification_type,
                 'task_title': task_title,
-                'project_id': project_id,
                 'project_name': project_name
             }
         except Exception as e:
@@ -55,10 +63,10 @@ class Notification(db.Model):
                 'is_read': self.is_read,
                 'created_at': self.created_at.isoformat() if self.created_at else None,
                 'task_id': self.task_id,
+                'project_id': self.project_id,
                 'message_id': self.message_id,
                 'notification_type': self.notification_type,
                 'task_title': None,
-                'project_id': None,
                 'project_name': None,
                 'error': f'Relationship access error: {str(e)}'
             }

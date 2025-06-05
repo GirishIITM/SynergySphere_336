@@ -187,17 +187,28 @@
 - [ ] Update existing tests to account for status_id changes
 
 #### 21. Link Inbox to Show Tagged Messages and Navigate to Task Details - 2025-01-18
-- [ ] Enhance Notification model to include task_id and message_id for context
-- [ ] Create backend functionality to detect @mentions in message content
-- [ ] Add notification creation for mentioned users when messages are posted
-- [ ] Create API endpoint to get notifications where user is tagged
-- [ ] Update InBox.jsx to fetch and display tagged messages
-- [ ] Add click functionality to navigate to TaskDetail page from inbox items
-- [ ] Implement proper message preview and context in inbox
-- [ ] Add notification categorization (tagged, assigned, general)
+- [x] Enhance Notification model to include task_id and message_id for context ✅
+- [x] Create backend functionality to detect @mentions in message content ✅
+- [x] Add notification creation for mentioned users when messages are posted ✅
+- [x] Create API endpoint to get notifications where user is tagged ✅
+- [x] Update InBox.jsx to fetch and display tagged messages ✅
+- [x] Add click functionality to navigate to TaskDetail page from inbox items ✅
+- [x] Implement proper message preview and context in inbox ✅
+- [x] Add notification categorization (tagged, assigned, general) ✅
 - [ ] Create tests for mention detection and notification functionality
 
 #### 22. Fix CORS and 500 Error for /notifications/tagged Endpoint - 2025-01-18 ✅
+
+#### 24. Ensure All Messages for Users Show in Inbox - 2025-01-18 ✅
+- [x] Add project_id field to Notification model for better context ✅
+- [x] Update message posting endpoints to detect @mentions and create tagged notifications ✅
+- [x] Enhance project message routes to create comprehensive notifications ✅
+- [x] Update task message routes to create notifications with proper context ✅
+- [x] Ensure all notification creation includes proper project and task context ✅
+- [x] Update task assignment notifications to include project context ✅
+- [x] Update member addition notifications to include project context ✅
+- [x] Update existing migration script to add project_id to notification table ✅
+- [x] Create migration logic to populate existing notifications with project context ✅
 
 #### 23. Fix CORS Cache-Control Header Issue - 2025-01-18
 - [x] Add 'Cache-Control' to allowed headers in main CORS configuration ✅

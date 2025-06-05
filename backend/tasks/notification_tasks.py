@@ -32,7 +32,13 @@ def send_task_assignment_notification(self, task_id, assigned_user_id, assigner_
             
             # Create in-app notification
             message = f"You have been assigned task '{task.title}' in project '{project_name}' by {assigner.full_name}"
-            notification = Notification(user_id=assigned_user.id, message=message)
+            notification = Notification(
+                user_id=assigned_user.id, 
+                message=message,
+                task_id=task.id,
+                project_id=task.project_id,
+                notification_type='assigned'
+            )
             db.session.add(notification)
             
             # Send email if enabled
@@ -98,7 +104,12 @@ def send_project_update_notification(self, project_id, update_type, user_ids=Non
             message = update_messages.get(update_type, f"Update in project '{project.name}'")
             
             for user in users:
-                notification = Notification(user_id=user.id, message=message)
+                notification = Notification(
+                    user_id=user.id, 
+                    message=message,
+                    project_id=project.id,
+                    notification_type='general'
+                )
                 db.session.add(notification)
                 
                 # Send email if enabled
@@ -150,7 +161,12 @@ def send_project_deadline_reminder(self, project_id, reminder_type='due_soon'):
                     continue
                 
                 # Create in-app notification
-                notification = Notification(user_id=user.id, message=message)
+                notification = Notification(
+                    user_id=user.id, 
+                    message=message,
+                    project_id=project.id,
+                    notification_type='deadline'
+                )
                 db.session.add(notification)
                 
                 # Send email if enabled

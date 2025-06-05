@@ -148,6 +148,7 @@ def migrate_sqlite_direct(db_path):
         
         notification_required_columns = [
             ('task_id', 'INTEGER'),
+            ('project_id', 'INTEGER'),
             ('message_id', 'INTEGER'),
             ('notification_type', 'VARCHAR(50) DEFAULT "general"')
         ]
@@ -166,6 +167,23 @@ def migrate_sqlite_direct(db_path):
             SET notification_type = 'general' 
             WHERE notification_type IS NULL
         """)
+        
+        # Update existing notifications to link them to projects where possible
+        # For task-related notifications, get project_id from task.project_id
+        cursor.execute("""
+            UPDATE notification 
+            SET project_id = (
+                SELECT task.project_id 
+                FROM task 
+                WHERE task.id = notification.task_id
+            )
+            WHERE notification.task_id IS NOT NULL 
+            AND notification.project_id IS NULL
+        """)
+        
+        updated_count = cursor.rowcount
+        if updated_count > 0:
+            print(f"  ✅ Updated {updated_count} existing notifications with project context")
         
         conn.commit()
         conn.close()
@@ -291,6 +309,7 @@ def migrate_postgresql(database_url):
                 
                 notification_required_columns = [
                     ('task_id', 'INTEGER'),
+                    ('project_id', 'INTEGER'),
                     ('message_id', 'INTEGER'),
                     ('notification_type', 'VARCHAR(50) DEFAULT \'general\'')
                 ]
@@ -309,6 +328,20 @@ def migrate_postgresql(database_url):
                     SET notification_type = 'general' 
                     WHERE notification_type IS NULL
                 """))
+                
+                # Update existing notifications to link them to projects where possible
+                # For task-related notifications, get project_id from task.project_id
+                conn.execute(text("""
+                    UPDATE notification 
+                    SET project_id = (
+                        SELECT task.project_id 
+                        FROM task 
+                        WHERE task.id = notification.task_id
+                    )
+                    WHERE notification.task_id IS NOT NULL 
+                    AND notification.project_id IS NULL
+                """))
+                print("  ✅ Updated existing notifications with project context")
         
         print("🎉 PostgreSQL migration completed successfully!")
         return True

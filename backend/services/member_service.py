@@ -58,7 +58,12 @@ class MemberService:
         """Send notification when member is added to project"""
         edit_status = "with edit access" if is_editor else "with view access"
         message = f"You have been added to project '{project.name}' {edit_status}"
-        notification = Notification(user_id=member.id, message=message)
+        notification = Notification(
+            user_id=member.id, 
+            message=message,
+            project_id=project.id,
+            notification_type='general'
+        )
         db.session.add(notification)
         
         if getattr(member, 'notify_email', True):

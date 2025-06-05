@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Notification
 from extensions import db
+from utils.route_cache import invalidate_cache_on_change
 
 notification_bp = Blueprint('notification', __name__)
 
