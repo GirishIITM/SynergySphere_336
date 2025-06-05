@@ -1,10 +1,13 @@
 from typing import List, Dict, Any, Optional
-from models import Budget, Expense, Project, User, Notification
+from models import Budget, Expense, Project, User, Notification, Task
 from extensions import db
 from utils.datetime_utils import get_utc_now
 from utils.email import send_email
 from sqlalchemy import func, and_, extract
 import logging
+import numpy as np
+from datetime import datetime, timedelta
+from collections import defaultdict
 
 
 logger = logging.getLogger(__name__)
@@ -340,4 +343,451 @@ class FinanceService:
         
         db.session.delete(expense)
         db.session.commit()
-        return True 
+        return True
+    
+    @staticmethod
+    def get_budget_variance_analysis(user_id: int, project_id: int) -> Dict[str, Any]:
+        """
+        Get detailed budget variance analysis for a project.
+        
+        Args:
+            user_id (int): User requesting the analysis
+            project_id (int): Project ID
+            
+        Returns:
+            Dict[str, Any]: Budget variance analysis
+        """
+        # Verify user is project member
+        project = Project.query.get_or_404(project_id)
+        is_member = any(member.id == user_id for member in project.members) or project.owner_id == user_id
+        if not is_member:
+            raise PermissionError("User is not a member of this project")
+        
+        budget = Budget.query.filter_by(project_id=project_id).first()
+        expenses = Expense.query.filter_by(project_id=project_id).all()
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        
+        if not budget:
+            return {
+                'has_budget': False,
+                'message': 'No budget defined for this project'
+            }
+        
+        # Calculate actual vs planned by category
+        category_analysis = defaultdict(lambda: {'planned': 0, 'actual': 0, 'variance': 0, 'variance_percentage': 0})
+        
+        # Assume equal distribution across categories if no specific allocation
+        unique_categories = set(expense.category for expense in expenses if expense.category)
+        if not unique_categories:
+            unique_categories = {'General'}
+        
+        planned_per_category = budget.allocated_amount / len(unique_categories)
+        
+        for category in unique_categories:
+            category_expenses = [e for e in expenses if e.category == category]
+            actual_amount = sum(e.amount for e in category_expenses)
+            
+            category_analysis[category] = {
+                'planned': planned_per_category,
+                'actual': actual_amount,
+                'variance': actual_amount - planned_per_category,
+                'variance_percentage': ((actual_amount - planned_per_category) / planned_per_category * 100) if planned_per_category > 0 else 0,
+                'expense_count': len(category_expenses)
+            }
+        
+        # Time-based variance analysis
+        monthly_variance = []
+        current_month = get_utc_now().replace(day=1)
+        
+        for i in range(6):  # Last 6 months
+            month_start = current_month - timedelta(days=i*30)
+            month_end = month_start + timedelta(days=30)
+            
+            month_expenses = [e for e in expenses if month_start <= e.incurred_at <= month_end]
+            month_actual = sum(e.amount for e in month_expenses)
+            month_planned = budget.allocated_amount / 12  # Assume monthly distribution
+            
+            monthly_variance.append({
+                'month': month_start.strftime('%Y-%m'),
+                'planned': month_planned,
+                'actual': month_actual,
+                'variance': month_actual - month_planned,
+                'variance_percentage': ((month_actual - month_planned) / month_planned * 100) if month_planned > 0 else 0
+            })
+        
+        monthly_variance.reverse()
+        
+        # Overall variance metrics
+        total_spent = sum(e.amount for e in expenses)
+        total_variance = total_spent - budget.allocated_amount
+        variance_percentage = (total_variance / budget.allocated_amount * 100) if budget.allocated_amount > 0 else 0
+        
+        # Identify cost drivers
+        cost_drivers = []
+        for category, data in category_analysis.items():
+            if abs(data['variance_percentage']) > 20:  # Significant variance
+                cost_drivers.append({
+                    'category': category,
+                    'variance': data['variance'],
+                    'variance_percentage': data['variance_percentage'],
+                    'impact': 'high' if abs(data['variance_percentage']) > 50 else 'medium'
+                })
+        
+        return {
+            'has_budget': True,
+            'budget_amount': budget.allocated_amount,
+            'total_spent': total_spent,
+            'total_variance': total_variance,
+            'variance_percentage': round(variance_percentage, 1),
+            'category_analysis': dict(category_analysis),
+            'monthly_variance': monthly_variance,
+            'cost_drivers': sorted(cost_drivers, key=lambda x: abs(x['variance']), reverse=True),
+            'status': FinanceService._get_variance_status(variance_percentage),
+            'recommendations': FinanceService._generate_variance_recommendations(category_analysis, cost_drivers, variance_percentage)
+        }
+
+    @staticmethod
+    def get_expense_forecasting(user_id: int, project_id: int, forecast_months: int = 3) -> Dict[str, Any]:
+        """
+        Generate expense forecasting based on historical data.
+        
+        Args:
+            user_id (int): User requesting the forecast
+            project_id (int): Project ID
+            forecast_months (int): Number of months to forecast
+            
+        Returns:
+            Dict[str, Any]: Expense forecast analysis
+        """
+        # Verify user is project member
+        project = Project.query.get_or_404(project_id)
+        is_member = any(member.id == user_id for member in project.members) or project.owner_id == user_id
+        if not is_member:
+            raise PermissionError("User is not a member of this project")
+        
+        expenses = Expense.query.filter_by(project_id=project_id).all()
+        budget = Budget.query.filter_by(project_id=project_id).first()
+        
+        if len(expenses) < 3:
+            return {
+                'forecast_available': False,
+                'message': 'Insufficient historical data for forecasting (minimum 3 expenses required)',
+                'data_points': len(expenses)
+            }
+        
+        # Group expenses by month
+        monthly_expenses = defaultdict(float)
+        category_monthly = defaultdict(lambda: defaultdict(float))
+        
+        for expense in expenses:
+            month_key = expense.incurred_at.strftime('%Y-%m')
+            monthly_expenses[month_key] += expense.amount
+            category_monthly[expense.category or 'General'][month_key] += expense.amount
+        
+        # Calculate historical monthly average
+        historical_months = list(monthly_expenses.keys())
+        historical_amounts = list(monthly_expenses.values())
+        
+        if len(historical_amounts) < 2:
+            avg_monthly = historical_amounts[0] if historical_amounts else 0
+            trend_slope = 0
+        else:
+            avg_monthly = np.mean(historical_amounts)
+            
+            # Simple linear regression for trend
+            x = list(range(len(historical_amounts)))
+            y = historical_amounts
+            
+            n = len(x)
+            sum_x = sum(x)
+            sum_y = sum(y)
+            sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+            sum_x2 = sum(xi * xi for xi in x)
+            
+            trend_slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x) if (n * sum_x2 - sum_x * sum_x) != 0 else 0
+        
+        # Generate forecast
+        forecast_data = []
+        current_month = get_utc_now().replace(day=1)
+        
+        for i in range(forecast_months):
+            future_month = current_month + timedelta(days=i*30)
+            predicted_amount = avg_monthly + (trend_slope * (len(historical_amounts) + i))
+            predicted_amount = max(0, predicted_amount)  # Ensure non-negative
+            
+            forecast_data.append({
+                'month': future_month.strftime('%Y-%m'),
+                'predicted_amount': round(predicted_amount, 2),
+                'confidence': FinanceService._calculate_forecast_confidence(historical_amounts, trend_slope)
+            })
+        
+        # Calculate total forecast and budget impact
+        total_forecast = sum(month['predicted_amount'] for month in forecast_data)
+        current_spent = sum(expense.amount for expense in expenses)
+        projected_total = current_spent + total_forecast
+        
+        budget_impact = {}
+        if budget:
+            remaining_budget = budget.allocated_amount - current_spent
+            budget_impact = {
+                'remaining_budget': remaining_budget,
+                'forecast_vs_remaining': total_forecast - remaining_budget,
+                'will_exceed_budget': total_forecast > remaining_budget,
+                'projected_total_spending': projected_total,
+                'projected_budget_utilization': (projected_total / budget.allocated_amount * 100) if budget.allocated_amount > 0 else 0
+            }
+        
+        # Category-wise forecasting
+        category_forecasts = {}
+        for category, month_data in category_monthly.items():
+            amounts = list(month_data.values())
+            if amounts:
+                cat_avg = np.mean(amounts)
+                category_forecasts[category] = {
+                    'monthly_average': round(cat_avg, 2),
+                    'forecast_total': round(cat_avg * forecast_months, 2)
+                }
+        
+        return {
+            'forecast_available': True,
+            'forecast_period_months': forecast_months,
+            'historical_data': {
+                'months_analyzed': len(historical_amounts),
+                'average_monthly_spending': round(avg_monthly, 2),
+                'trend_direction': 'increasing' if trend_slope > 5 else 'decreasing' if trend_slope < -5 else 'stable',
+                'trend_rate': round(trend_slope, 2)
+            },
+            'forecast_data': forecast_data,
+            'total_forecast': round(total_forecast, 2),
+            'budget_impact': budget_impact,
+            'category_forecasts': category_forecasts,
+            'recommendations': FinanceService._generate_forecast_recommendations(forecast_data, budget_impact, trend_slope)
+        }
+
+    @staticmethod
+    def get_cost_optimization_analysis(user_id: int, project_id: int) -> Dict[str, Any]:
+        """
+        Analyze expenses for cost optimization opportunities.
+        
+        Args:
+            user_id (int): User requesting the analysis
+            project_id (int): Project ID
+            
+        Returns:
+            Dict[str, Any]: Cost optimization analysis
+        """
+        # Verify user is project member
+        project = Project.query.get_or_404(project_id)
+        is_member = any(member.id == user_id for member in project.members) or project.owner_id == user_id
+        if not is_member:
+            raise PermissionError("User is not a member of this project")
+        
+        expenses = Expense.query.filter_by(project_id=project_id).all()
+        
+        if not expenses:
+            return {
+                'has_expenses': False,
+                'message': 'No expenses found for analysis'
+            }
+        
+        # Category analysis
+        category_totals = defaultdict(float)
+        category_counts = defaultdict(int)
+        category_avg = defaultdict(float)
+        
+        for expense in expenses:
+            category = expense.category or 'General'
+            category_totals[category] += expense.amount
+            category_counts[category] += 1
+        
+        for category in category_totals:
+            category_avg[category] = category_totals[category] / category_counts[category]
+        
+        # Identify optimization opportunities
+        optimization_opportunities = []
+        
+        # High-cost categories
+        total_spending = sum(category_totals.values())
+        for category, amount in category_totals.items():
+            percentage = (amount / total_spending * 100) if total_spending > 0 else 0
+            
+            if percentage > 30:  # Category represents more than 30% of total spending
+                optimization_opportunities.append({
+                    'type': 'high_cost_category',
+                    'category': category,
+                    'amount': amount,
+                    'percentage': round(percentage, 1),
+                    'description': f'{category} represents {percentage:.1f}% of total spending',
+                    'potential_savings': round(amount * 0.1, 2),  # Assume 10% potential savings
+                    'priority': 'high' if percentage > 50 else 'medium'
+                })
+        
+        # Frequent small expenses (potential for bundling)
+        for category, count in category_counts.items():
+            avg_amount = category_avg[category]
+            if count > 10 and avg_amount < 100:  # Many small expenses
+                optimization_opportunities.append({
+                    'type': 'frequent_small_expenses',
+                    'category': category,
+                    'count': count,
+                    'average_amount': round(avg_amount, 2),
+                    'description': f'{count} small expenses in {category} (avg: ₹{avg_amount:.2f})',
+                    'potential_savings': round(count * avg_amount * 0.05, 2),  # 5% savings through bundling
+                    'priority': 'low'
+                })
+        
+        # Unusual spending patterns
+        monthly_spending = defaultdict(float)
+        for expense in expenses:
+            month = expense.incurred_at.strftime('%Y-%m')
+            monthly_spending[month] += expense.amount
+        
+        if len(monthly_spending) >= 3:
+            amounts = list(monthly_spending.values())
+            mean_monthly = np.mean(amounts)
+            std_monthly = np.std(amounts)
+            
+            for month, amount in monthly_spending.items():
+                if amount > mean_monthly + (2 * std_monthly):  # Outlier detection
+                    optimization_opportunities.append({
+                        'type': 'spending_spike',
+                        'month': month,
+                        'amount': amount,
+                        'average_monthly': round(mean_monthly, 2),
+                        'description': f'Spending spike in {month}: ₹{amount:.2f} vs avg ₹{mean_monthly:.2f}',
+                        'potential_savings': round(amount - mean_monthly, 2),
+                        'priority': 'medium'
+                    })
+        
+        # Cost per task analysis
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        completed_tasks = [t for t in tasks if t.status and hasattr(t.status, 'value') and t.status.value == 'completed']
+        
+        cost_efficiency = {}
+        if completed_tasks:
+            cost_per_task = total_spending / len(completed_tasks)
+            cost_efficiency = {
+                'cost_per_completed_task': round(cost_per_task, 2),
+                'total_completed_tasks': len(completed_tasks),
+                'efficiency_rating': 'excellent' if cost_per_task < 1000 else 'good' if cost_per_task < 5000 else 'needs_improvement'
+            }
+        
+        # Generate recommendations
+        recommendations = FinanceService._generate_cost_optimization_recommendations(
+            optimization_opportunities, category_totals, cost_efficiency
+        )
+        
+        return {
+            'has_expenses': True,
+            'total_spending': round(total_spending, 2),
+            'category_breakdown': {k: round(v, 2) for k, v in category_totals.items()},
+            'optimization_opportunities': sorted(optimization_opportunities, 
+                                               key=lambda x: x.get('potential_savings', 0), reverse=True),
+            'cost_efficiency': cost_efficiency,
+            'potential_total_savings': round(sum(opp.get('potential_savings', 0) for opp in optimization_opportunities), 2),
+            'recommendations': recommendations
+        }
+
+    @staticmethod
+    def _get_variance_status(variance_percentage: float) -> str:
+        """Determine variance status based on percentage."""
+        if abs(variance_percentage) <= 5:
+            return 'on_track'
+        elif abs(variance_percentage) <= 15:
+            return 'minor_variance'
+        elif abs(variance_percentage) <= 30:
+            return 'significant_variance'
+        else:
+            return 'critical_variance'
+
+    @staticmethod
+    def _calculate_forecast_confidence(historical_amounts: List[float], trend_slope: float) -> str:
+        """Calculate confidence level for forecasting."""
+        if len(historical_amounts) < 3:
+            return 'low'
+        
+        variance = np.var(historical_amounts)
+        mean_amount = np.mean(historical_amounts)
+        
+        # Coefficient of variation
+        cv = (np.sqrt(variance) / mean_amount) if mean_amount > 0 else 0
+        
+        if cv < 0.2 and abs(trend_slope) < mean_amount * 0.1:
+            return 'high'
+        elif cv < 0.5:
+            return 'medium'
+        else:
+            return 'low'
+
+    @staticmethod
+    def _generate_variance_recommendations(category_analysis: Dict, cost_drivers: List[Dict], variance_percentage: float) -> List[str]:
+        """Generate recommendations based on variance analysis."""
+        recommendations = []
+        
+        if abs(variance_percentage) > 20:
+            recommendations.append("🚨 Significant budget variance detected - immediate review required")
+        
+        for driver in cost_drivers[:3]:  # Top 3 cost drivers
+            if driver['variance'] > 0:
+                recommendations.append(f"💰 Monitor {driver['category']} spending - {abs(driver['variance_percentage']):.1f}% over plan")
+            else:
+                recommendations.append(f"💡 {driver['category']} under budget - consider reallocating funds")
+        
+        if variance_percentage > 10:
+            recommendations.append("📊 Implement weekly budget reviews and approval processes")
+            recommendations.append("🔍 Analyze each expense against project value and necessity")
+        
+        if not recommendations:
+            recommendations.append("✅ Budget variance within acceptable range - maintain current controls")
+        
+        return recommendations
+
+    @staticmethod
+    def _generate_forecast_recommendations(forecast_data: List[Dict], budget_impact: Dict, trend_slope: float) -> List[str]:
+        """Generate recommendations based on expense forecasting."""
+        recommendations = []
+        
+        if budget_impact.get('will_exceed_budget'):
+            overage = budget_impact.get('forecast_vs_remaining', 0)
+            recommendations.append(f"⚠️ Projected to exceed budget by ₹{overage:.2f}")
+            recommendations.append("💡 Consider reducing discretionary expenses or increasing budget")
+        
+        if trend_slope > 100:  # Increasing trend
+            recommendations.append("📈 Expenses trending upward - review spending drivers")
+            recommendations.append("🔒 Implement stricter expense approval thresholds")
+        elif trend_slope < -50:  # Decreasing trend
+            recommendations.append("📉 Expenses trending downward - good cost control")
+        
+        avg_confidence = np.mean([1 if f['confidence'] == 'high' else 0.6 if f['confidence'] == 'medium' else 0.3 
+                                for f in forecast_data])
+        
+        if avg_confidence < 0.5:
+            recommendations.append("📊 Forecast confidence is low - establish more consistent spending patterns")
+        
+        return recommendations
+
+    @staticmethod
+    def _generate_cost_optimization_recommendations(opportunities: List[Dict], category_totals: Dict, cost_efficiency: Dict) -> List[str]:
+        """Generate cost optimization recommendations."""
+        recommendations = []
+        
+        if opportunities:
+            high_priority = [opp for opp in opportunities if opp.get('priority') == 'high']
+            if high_priority:
+                recommendations.append("🎯 Focus on high-priority optimization opportunities first")
+            
+            total_potential = sum(opp.get('potential_savings', 0) for opp in opportunities)
+            if total_potential > 1000:
+                recommendations.append(f"💰 Potential savings of ₹{total_potential:.2f} identified")
+        
+        # Category-specific recommendations
+        largest_category = max(category_totals.items(), key=lambda x: x[1])
+        if largest_category[1] > sum(category_totals.values()) * 0.4:
+            recommendations.append(f"🔍 {largest_category[0]} is largest expense category - review for optimization")
+        
+        if cost_efficiency.get('efficiency_rating') == 'needs_improvement':
+            recommendations.append("⚡ Cost per task is high - review task complexity and resource allocation")
+        
+        recommendations.append("📋 Regular expense audits and vendor negotiations recommended")
+        
+        return recommendations 

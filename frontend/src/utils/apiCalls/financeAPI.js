@@ -42,5 +42,23 @@ export const financeAPI = {
 
   getProjectFinancials: async (projectId) => {
     return await apiRequest(`/finance/projects/${projectId}/financials`, 'GET', null, 'project-financials-get');
+  },
+
+  // Advanced financial analytics
+  getBudgetVarianceAnalysis: async (projectId) => {
+    return await apiRequest(`/finance/projects/${projectId}/budget-variance`, 'GET', null, 'budget-variance-analysis');
+  },
+
+  getExpenseForecast: async (projectId, months = 3) => {
+    return await apiRequest(`/finance/projects/${projectId}/expense-forecast?months=${months}`, 'GET', null, 'expense-forecast');
+  },
+
+  getCostOptimizationAnalysis: async (projectId) => {
+    return await apiRequest(`/finance/projects/${projectId}/cost-optimization`, 'GET', null, 'cost-optimization-analysis');
+  },
+
+  // Task financial analytics
+  getTaskFinancialSummary: async (taskId) => {
+    return await apiRequest(`/finance/tasks/${taskId}/financial-summary`, 'GET', null, 'task-financial-summary');
   }
 }; 

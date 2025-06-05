@@ -11,7 +11,7 @@ from sqlalchemy import func, and_, or_, extract
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 
-from models import User, Project, Task, Membership
+from models import User, Project, Task, Membership, Expense
 from extensions import db
 from utils.datetime_utils import get_utc_now, ensure_utc
 from services.analytics_service import AnalyticsService
@@ -506,12 +506,175 @@ def get_project_health(project_id):
 @jwt_required()
 def get_resource_utilization(project_id):
     """Get resource utilization metrics for a project."""
-    user_id = int(get_jwt_identity())
-    
     try:
-        resources = AnalyticsService.get_resource_utilization(project_id, user_id)
-        return jsonify(resources), 200
+        user_id = int(get_jwt_identity())
+        metrics = AnalyticsService.get_resource_utilization(project_id, user_id)
+        return jsonify(metrics), 200
     except PermissionError as e:
         return jsonify({'msg': str(e)}), 403
     except Exception as e:
-        return jsonify({'msg': 'Error fetching resource utilization'}), 500
+        print(f"Resource utilization error: {e}")
+        return jsonify({'msg': 'Failed to fetch resource utilization'}), 500
+
+
+@analytics_bp.route('/analytics/trends', methods=['GET'])
+@jwt_required()
+def get_trend_analysis():
+    """Get trend analysis for user productivity and performance."""
+    try:
+        user_id = int(get_jwt_identity())
+        project_id = request.args.get('project_id', type=int)
+        days = request.args.get('days', 90, type=int)
+        
+        # Validate days parameter
+        if days not in [30, 60, 90, 180]:
+            days = 90
+        
+        trends = AnalyticsService.get_trend_analysis(user_id, project_id, days)
+        return jsonify(trends), 200
+        
+    except Exception as e:
+        print(f"Trend analysis error: {e}")
+        return jsonify({'msg': 'Failed to fetch trend analysis'}), 500
+
+
+@analytics_bp.route('/projects/<int:project_id>/risk-assessment', methods=['GET'])
+@jwt_required()
+def get_project_risk_assessment(project_id):
+    """Get comprehensive risk assessment for a project."""
+    try:
+        user_id = int(get_jwt_identity())
+        risk_data = AnalyticsService.get_risk_assessment(project_id, user_id)
+        return jsonify(risk_data), 200
+        
+    except PermissionError as e:
+        return jsonify({'msg': str(e)}), 403
+    except Exception as e:
+        print(f"Risk assessment error: {e}")
+        return jsonify({'msg': 'Failed to fetch risk assessment'}), 500
+
+
+@analytics_bp.route('/analytics/performance-prediction', methods=['GET'])
+@jwt_required()
+def get_performance_prediction():
+    """Get performance prediction based on historical data."""
+    try:
+        user_id = int(get_jwt_identity())
+        project_id = request.args.get('project_id', type=int)
+        
+        prediction = AnalyticsService.get_performance_prediction(user_id, project_id)
+        return jsonify(prediction), 200
+        
+    except Exception as e:
+        print(f"Performance prediction error: {e}")
+        return jsonify({'msg': 'Failed to fetch performance prediction'}), 500
+
+
+@analytics_bp.route('/tasks/<int:task_id>/analytics', methods=['GET'])
+@jwt_required()
+def get_task_analytics(task_id):
+    """Get analytics for a specific task."""
+    try:
+        user_id = int(get_jwt_identity())
+        
+        # Get task and verify permissions
+        task = Task.query.get_or_404(task_id)
+        project = task.project
+        
+        # Check if user is project member or task owner
+        is_member = any(member.id == user_id for member in project.members) or project.owner_id == user_id
+        if not is_member and task.owner_id != user_id:
+            return jsonify({'msg': 'Access denied'}), 403
+        
+        # Calculate task-specific metrics
+        task_expenses = Expense.query.filter_by(task_id=task_id).all()
+        total_expenses = sum(expense.amount for expense in task_expenses)
+        
+        # Task timeline analysis
+        timeline_data = {
+            'created_at': task.created_at.isoformat() if task.created_at else None,
+            'due_date': task.due_date.isoformat() if task.due_date else None,
+            'last_updated': task.last_progress_update.isoformat() if task.last_progress_update else None,
+            'is_overdue': task.is_overdue(),
+            'days_since_creation': (get_utc_now() - task.created_at).days if task.created_at else 0
+        }
+        
+        if task.due_date:
+            due_date = ensure_utc(task.due_date)
+            timeline_data['days_to_due'] = (due_date - get_utc_now()).days
+        
+        # Expense analysis
+        expense_analysis = {
+            'total_expenses': total_expenses,
+            'expense_count': len(task_expenses),
+            'average_expense': total_expenses / len(task_expenses) if task_expenses else 0,
+            'expenses_by_category': {}
+        }
+        
+        for expense in task_expenses:
+            category = expense.category or 'General'
+            if category not in expense_analysis['expenses_by_category']:
+                expense_analysis['expenses_by_category'][category] = 0
+            expense_analysis['expenses_by_category'][category] += expense.amount
+        
+        # Performance metrics
+        performance_metrics = {
+            'priority_score': task.priority_score,
+            'percent_complete': task.percent_complete,
+            'estimated_effort_hours': task.estimated_effort,
+            'has_dependencies': task.dependency_count > 0,
+            'dependency_count': task.dependency_count
+        }
+        
+        return jsonify({
+            'task_id': task_id,
+            'task_title': task.title,
+            'current_status': task.current_status,
+            'timeline': timeline_data,
+            'expenses': expense_analysis,
+            'performance': performance_metrics,
+            'insights': _generate_task_insights(task, timeline_data, expense_analysis)
+        }), 200
+        
+    except Exception as e:
+        print(f"Task analytics error: {e}")
+        return jsonify({'msg': 'Failed to fetch task analytics'}), 500
+
+
+def _generate_task_insights(task: Task, timeline_data: Dict, expense_analysis: Dict) -> List[str]:
+    """Generate insights for a specific task."""
+    insights = []
+    
+    # Timeline insights
+    if timeline_data['is_overdue']:
+        insights.append("⏰ Task is overdue - requires immediate attention")
+    elif timeline_data.get('days_to_due', 0) <= 3 and timeline_data.get('days_to_due', 0) > 0:
+        insights.append("🚨 Task due within 3 days - high priority")
+    elif timeline_data['days_since_creation'] > 30 and task.current_status == 'pending':
+        insights.append("📅 Task pending for over 30 days - review status")
+    
+    # Progress insights
+    if task.percent_complete > 0:
+        if task.percent_complete >= 80:
+            insights.append("🎯 Task nearly complete - push to finish")
+        elif task.percent_complete >= 50:
+            insights.append("📈 Good progress made - maintain momentum")
+        else:
+            insights.append("🔄 Task started but needs more progress")
+    elif timeline_data['days_since_creation'] > 7:
+        insights.append("🚀 Consider starting this task soon")
+    
+    # Expense insights
+    if expense_analysis['total_expenses'] > 1000:
+        insights.append("💰 High expense task - monitor costs closely")
+    elif expense_analysis['expense_count'] > 5:
+        insights.append("📊 Multiple expenses recorded - good tracking")
+    
+    # Dependency insights
+    if task.dependency_count > 3:
+        insights.append("🔗 Complex task with multiple dependencies")
+    
+    if not insights:
+        insights.append("✅ Task tracking looks good")
+    
+    return insights

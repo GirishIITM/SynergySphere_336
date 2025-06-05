@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
-from typing import List, Dict, Any
-from models import Task, Project, User, Expense, Budget
+from typing import List, Dict, Any, Optional
+from models import Task, Project, User, Expense, Budget, Membership
 from extensions import db
 from utils.datetime_utils import get_utc_now, ensure_utc
 from sqlalchemy import func, and_, or_, extract, case
+import numpy as np
+from collections import defaultdict
 
 
 class AnalyticsService:
@@ -390,3 +392,366 @@ class AnalyticsService:
             import traceback
             traceback.print_exc()
             raise e
+
+    @staticmethod
+    def get_trend_analysis(user_id: int, project_id: int = None, days: int = 90) -> Dict[str, Any]:
+        """
+        Get trend analysis for productivity and performance metrics.
+        
+        Args:
+            user_id (int): User ID
+            project_id (int, optional): Project ID to filter by
+            days (int): Number of days to analyze
+            
+        Returns:
+            Dict[str, Any]: Trend analysis data
+        """
+        end_date = get_utc_now()
+        start_date = end_date - timedelta(days=days)
+        
+        query = Task.query.filter(
+            and_(
+                Task.owner_id == user_id,
+                Task.created_at >= start_date
+            )
+        )
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        
+        tasks = query.all()
+        
+        # Daily productivity data
+        daily_data = defaultdict(lambda: {'created': 0, 'completed': 0, 'productivity_score': 0})
+        
+        for task in tasks:
+            if task.created_at:
+                day = task.created_at.strftime('%Y-%m-%d')
+                daily_data[day]['created'] += 1
+                
+                if task.status and hasattr(task.status, 'value') and task.status.value == 'completed':
+                    daily_data[day]['completed'] += 1
+        
+        # Calculate productivity scores and trends
+        productivity_trend = []
+        completion_trend = []
+        
+        for i in range(days):
+            day = (end_date - timedelta(days=i)).strftime('%Y-%m-%d')
+            data = daily_data[day]
+            
+            productivity_score = (data['completed'] / max(data['created'], 1)) * 100
+            daily_data[day]['productivity_score'] = productivity_score
+            
+            productivity_trend.append({
+                'date': day,
+                'productivity_score': round(productivity_score, 1),
+                'tasks_created': data['created'],
+                'tasks_completed': data['completed']
+            })
+        
+        productivity_trend.reverse()
+        
+        # Calculate trend direction and velocity
+        recent_scores = [d['productivity_score'] for d in productivity_trend[-14:]]  # Last 2 weeks
+        earlier_scores = [d['productivity_score'] for d in productivity_trend[-28:-14]]  # Previous 2 weeks
+        
+        recent_avg = np.mean(recent_scores) if recent_scores else 0
+        earlier_avg = np.mean(earlier_scores) if earlier_scores else 0
+        
+        trend_direction = 'improving' if recent_avg > earlier_avg else 'declining' if recent_avg < earlier_avg else 'stable'
+        trend_velocity = abs(recent_avg - earlier_avg)
+        
+        return {
+            'period': {'start_date': start_date.isoformat(), 'end_date': end_date.isoformat()},
+            'productivity_trend': productivity_trend,
+            'trend_summary': {
+                'direction': trend_direction,
+                'velocity': round(trend_velocity, 1),
+                'recent_average': round(recent_avg, 1),
+                'earlier_average': round(earlier_avg, 1)
+            },
+            'insights': AnalyticsService._generate_trend_insights(productivity_trend, trend_direction, trend_velocity)
+        }
+
+    @staticmethod
+    def get_risk_assessment(project_id: int, user_id: int) -> Dict[str, Any]:
+        """
+        Get risk assessment for a project including deadline risks and resource risks.
+        
+        Args:
+            project_id (int): Project ID
+            user_id (int): User ID (for permission check)
+            
+        Returns:
+            Dict[str, Any]: Risk assessment data
+        """
+        # Verify user has access
+        project = Project.query.get_or_404(project_id)
+        is_member = any(member.id == user_id for member in project.members) or project.owner_id == user_id
+        if not is_member:
+            raise PermissionError("User is not a member of this project")
+        
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        budget = Budget.query.filter_by(project_id=project_id).first()
+        expenses = Expense.query.filter_by(project_id=project_id).all()
+        
+        risk_factors = []
+        risk_score = 0
+        
+        # Deadline risk analysis
+        if project.deadline:
+            project_deadline = ensure_utc(project.deadline)
+            days_to_deadline = (project_deadline - get_utc_now()).days
+            
+            incomplete_tasks = [t for t in tasks if t.status and hasattr(t.status, 'value') and t.status.value != 'completed']
+            overdue_tasks = [t for t in tasks if t.is_overdue()]
+            
+            if days_to_deadline <= 0:
+                risk_factors.append({
+                    'type': 'deadline',
+                    'severity': 'critical',
+                    'message': f'Project deadline has passed {abs(days_to_deadline)} days ago',
+                    'impact': 90
+                })
+                risk_score += 40
+            elif days_to_deadline <= 7 and incomplete_tasks:
+                risk_factors.append({
+                    'type': 'deadline',
+                    'severity': 'high',
+                    'message': f'Only {days_to_deadline} days until deadline with {len(incomplete_tasks)} incomplete tasks',
+                    'impact': 70
+                })
+                risk_score += 30
+            elif len(overdue_tasks) > len(tasks) * 0.3:  # More than 30% overdue
+                risk_factors.append({
+                    'type': 'task_overdue',
+                    'severity': 'medium',
+                    'message': f'{len(overdue_tasks)} tasks are overdue ({(len(overdue_tasks)/len(tasks)*100):.1f}% of total)',
+                    'impact': 50
+                })
+                risk_score += 20
+        
+        # Budget risk analysis
+        if budget:
+            utilization = budget.utilization_percentage
+            if utilization > 100:
+                risk_factors.append({
+                    'type': 'budget',
+                    'severity': 'critical',
+                    'message': f'Budget exceeded by {utilization - 100:.1f}%',
+                    'impact': 80
+                })
+                risk_score += 35
+            elif utilization > 90:
+                risk_factors.append({
+                    'type': 'budget',
+                    'severity': 'high',
+                    'message': f'Budget utilization at {utilization:.1f}% - approaching limit',
+                    'impact': 60
+                })
+                risk_score += 25
+            elif utilization > 75:
+                risk_factors.append({
+                    'type': 'budget',
+                    'severity': 'medium',
+                    'message': f'Budget utilization at {utilization:.1f}% - monitor closely',
+                    'impact': 40
+                })
+                risk_score += 15
+        
+        # Team workload risk
+        team_size = len(project.members) + 1
+        tasks_per_member = len(tasks) / team_size if team_size > 0 else len(tasks)
+        
+        if tasks_per_member > 10:
+            risk_factors.append({
+                'type': 'workload',
+                'severity': 'medium',
+                'message': f'High task load: {tasks_per_member:.1f} tasks per team member',
+                'impact': 45
+            })
+            risk_score += 15
+        
+        # Velocity risk (based on completion trends)
+        completion_rate = len([t for t in tasks if t.status and hasattr(t.status, 'value') and t.status.value == 'completed']) / len(tasks) * 100 if tasks else 0
+        
+        if completion_rate < 30:
+            risk_factors.append({
+                'type': 'velocity',
+                'severity': 'high',
+                'message': f'Low completion rate: {completion_rate:.1f}%',
+                'impact': 65
+            })
+            risk_score += 25
+        
+        # Cap risk score at 100
+        risk_score = min(risk_score, 100)
+        
+        risk_level = 'low' if risk_score < 30 else 'medium' if risk_score < 60 else 'high' if risk_score < 80 else 'critical'
+        
+        return {
+            'overall_risk_score': risk_score,
+            'risk_level': risk_level,
+            'risk_factors': sorted(risk_factors, key=lambda x: x['impact'], reverse=True),
+            'recommendations': AnalyticsService._generate_risk_recommendations(risk_factors, project, tasks)
+        }
+
+    @staticmethod
+    def get_performance_prediction(user_id: int, project_id: int = None) -> Dict[str, Any]:
+        """
+        Predict future performance based on historical data.
+        
+        Args:
+            user_id (int): User ID
+            project_id (int, optional): Project ID to filter by
+            
+        Returns:
+            Dict[str, Any]: Performance predictions
+        """
+        # Get last 60 days of data for analysis
+        end_date = get_utc_now()
+        start_date = end_date - timedelta(days=60)
+        
+        query = Task.query.filter(
+            and_(
+                Task.owner_id == user_id,
+                Task.created_at >= start_date
+            )
+        )
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        
+        tasks = query.all()
+        
+        # Group by week for trend analysis
+        weekly_data = defaultdict(lambda: {'created': 0, 'completed': 0})
+        
+        for task in tasks:
+            if task.created_at:
+                week = task.created_at.strftime('%Y-W%U')
+                weekly_data[week]['created'] += 1
+                
+                if task.status and hasattr(task.status, 'value') and task.status.value == 'completed':
+                    weekly_data[week]['completed'] += 1
+        
+        # Calculate weekly completion rates
+        weekly_rates = []
+        for week_data in weekly_data.values():
+            rate = (week_data['completed'] / max(week_data['created'], 1)) * 100
+            weekly_rates.append(rate)
+        
+        if len(weekly_rates) < 3:
+            return {
+                'prediction_confidence': 'low',
+                'message': 'Insufficient data for reliable predictions',
+                'predicted_weekly_completion_rate': 0,
+                'trend': 'unknown'
+            }
+        
+        # Simple linear regression for trend
+        x = list(range(len(weekly_rates)))
+        y = weekly_rates
+        
+        n = len(x)
+        sum_x = sum(x)
+        sum_y = sum(y)
+        sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+        sum_x2 = sum(xi * xi for xi in x)
+        
+        slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x) if (n * sum_x2 - sum_x * sum_x) != 0 else 0
+        intercept = (sum_y - slope * sum_x) / n
+        
+        # Predict next week's performance
+        next_week_x = len(weekly_rates)
+        predicted_rate = slope * next_week_x + intercept
+        predicted_rate = max(0, min(100, predicted_rate))  # Clamp between 0-100%
+        
+        # Determine trend
+        trend = 'improving' if slope > 2 else 'declining' if slope < -2 else 'stable'
+        
+        # Calculate confidence based on data consistency
+        variance = np.var(weekly_rates) if len(weekly_rates) > 1 else 0
+        confidence = 'high' if variance < 100 else 'medium' if variance < 400 else 'low'
+        
+        return {
+            'predicted_weekly_completion_rate': round(predicted_rate, 1),
+            'trend': trend,
+            'trend_slope': round(slope, 2),
+            'prediction_confidence': confidence,
+            'historical_average': round(np.mean(weekly_rates), 1),
+            'data_points': len(weekly_rates),
+            'recommendations': AnalyticsService._generate_performance_recommendations(trend, predicted_rate, confidence)
+        }
+
+    @staticmethod
+    def _generate_trend_insights(trend_data: List[Dict], direction: str, velocity: float) -> List[str]:
+        """Generate insights based on trend analysis."""
+        insights = []
+        
+        if direction == 'improving' and velocity > 10:
+            insights.append("🚀 Strong productivity improvement trend detected")
+        elif direction == 'improving':
+            insights.append("📈 Gradual productivity improvement observed")
+        elif direction == 'declining' and velocity > 10:
+            insights.append("⚠️ Significant productivity decline - review workload and processes")
+        elif direction == 'declining':
+            insights.append("📉 Slight productivity decline - monitor closely")
+        else:
+            insights.append("📊 Stable productivity levels maintained")
+        
+        # Check for patterns
+        recent_week = trend_data[-7:] if len(trend_data) >= 7 else trend_data
+        avg_score = np.mean([d['productivity_score'] for d in recent_week])
+        
+        if avg_score > 80:
+            insights.append("💪 Excellent recent performance - keep up the great work!")
+        elif avg_score < 40:
+            insights.append("🎯 Consider breaking down tasks or adjusting workload")
+        
+        return insights
+
+    @staticmethod
+    def _generate_risk_recommendations(risk_factors: List[Dict], project: Project, tasks: List[Task]) -> List[str]:
+        """Generate recommendations based on risk factors."""
+        recommendations = []
+        
+        for risk in risk_factors:
+            if risk['type'] == 'deadline' and risk['severity'] in ['critical', 'high']:
+                recommendations.append("⏰ Prioritize critical tasks and consider deadline extension")
+                recommendations.append("👥 Consider adding team members or redistributing tasks")
+            elif risk['type'] == 'budget' and risk['severity'] in ['critical', 'high']:
+                recommendations.append("💰 Review and optimize expenses immediately")
+                recommendations.append("📊 Implement stricter budget monitoring and approval processes")
+            elif risk['type'] == 'workload':
+                recommendations.append("⚖️ Redistribute tasks more evenly across team members")
+                recommendations.append("🔄 Consider using task automation or outsourcing")
+            elif risk['type'] == 'velocity':
+                recommendations.append("🎯 Focus on completing existing tasks before starting new ones")
+                recommendations.append("🔍 Analyze blockers and remove impediments")
+        
+        if not recommendations:
+            recommendations.append("✅ Project is on track - maintain current practices")
+        
+        return list(set(recommendations))  # Remove duplicates
+
+    @staticmethod
+    def _generate_performance_recommendations(trend: str, predicted_rate: float, confidence: str) -> List[str]:
+        """Generate performance improvement recommendations."""
+        recommendations = []
+        
+        if trend == 'declining':
+            recommendations.append("📋 Review current task prioritization and focus areas")
+            recommendations.append("🛠️ Identify and address potential blockers or distractions")
+        elif trend == 'improving':
+            recommendations.append("🎉 Great progress! Document successful practices for consistency")
+        
+        if predicted_rate < 50:
+            recommendations.append("🎯 Consider reducing task complexity or breaking down larger tasks")
+            recommendations.append("⏱️ Implement time-blocking techniques for better focus")
+        elif predicted_rate > 80:
+            recommendations.append("🚀 Excellent productivity! Consider taking on additional responsibilities")
+        
+        if confidence == 'low':
+            recommendations.append("📊 Build more consistent work patterns for better predictability")
+        
+        return recommendations
