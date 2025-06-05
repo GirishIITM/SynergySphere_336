@@ -210,7 +210,7 @@ const TaskDetail = () => {
             </div>
           </div>
           <button
-            onClick={() => navigate(`/solutions/tasks/${taskId}/edit`)}
+            onClick={() => navigate(`/solutions/tasks/edit/${taskId}`)}
             className="task-detail-edit-btn"
           >
             <Edit className="h-4 w-4" />

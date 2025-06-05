@@ -113,6 +113,11 @@
 - [x] Update frontend taskAPI to handle new response structure ✅
 - [x] Update Tasks.jsx to properly handle pagination data ✅
 
+#### 13. Fix Edit Task Route in TaskDetail - 2025-01-16
+- [x] Fix navigation route in TaskDetail.jsx to use correct edit route pattern ✅
+- [x] Ensure consistency with other components that link to task edit ✅
+- [x] Test task edit navigation from TaskDetail page ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
