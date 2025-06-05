@@ -212,9 +212,32 @@ const TaskComments = ({ taskId }) => {
         }, 0);
     };
 
+    /**
+     * Render comment content with highlighted @mentions
+     */
     const renderCommentContent = (content) => {
-        // Simple mention rendering - replace @mentions with styled spans
-        return content.replace(/@(\w+(?:\s+\w+)*)/g, '<span class="mention">@$1</span>');
+        // Split content by @mentions and render with highlighting
+        const mentionRegex = /@([a-zA-Z0-9_]+|"[^"]+"|[A-Z][a-zA-Z]*\s+[A-Z][a-zA-Z]*)/g;
+        const parts = content.split(mentionRegex);
+        
+        return (
+            <div className="text-sm break-words">
+                {parts.map((part, index) => {
+                    // Every odd index contains the captured mention text
+                    if (index % 2 === 1) {
+                        return (
+                            <span 
+                                key={index} 
+                                className="inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border"
+                            >
+                                @{part.replace(/"/g, '')}
+                            </span>
+                        );
+                    }
+                    return <span key={index}>{part}</span>;
+                })}
+            </div>
+        );
     };
 
     const getUserInitials = (user) => {
@@ -296,11 +319,7 @@ const TaskComments = ({ taskId }) => {
                                                 }
                                             </span>
                                         </div>
-                                        <div className="text-sm break-words">
-                                            <div dangerouslySetInnerHTML={{ 
-                                                __html: renderCommentContent(comment.content) 
-                                            }} />
-                                        </div>
+                                        {renderCommentContent(comment.content)}
                                     </div>
                                 </div>
                             ))

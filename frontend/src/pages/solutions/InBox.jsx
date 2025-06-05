@@ -88,7 +88,7 @@ export default function Inbox() {
 
       // Navigate to task details if task_id is available
       if (notification.task_id) {
-        navigate(`/solutions/tasks/${notification.task_id}`);
+        navigate(`/solutions/tasks/${notification.task_id}?tab=comments`);
       } else if (notification.project_id) {
         navigate(`/solutions/projects/${notification.project_id}`);
       }
@@ -148,6 +148,30 @@ export default function Inbox() {
   };
 
   /**
+   * Render notification content with highlighted @mentions
+   */
+  const renderNotificationContent = (content) => {
+    // Split content by @mentions and render with highlighting
+    const mentionRegex = /@([a-zA-Z0-9_]+|"[^"]+"|[A-Z][a-zA-Z]*\s+[A-Z][a-zA-Z]*)/g;
+    const parts = content.split(mentionRegex);
+    
+    return parts.map((part, index) => {
+      // Every odd index contains the captured mention text
+      if (index % 2 === 1) {
+        return (
+          <span 
+            key={index} 
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+          >
+            @{part.replace(/"/g, '')}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  /**
    * Render a notification item
    */
   const renderNotificationItem = (notification) => (
@@ -167,9 +191,9 @@ export default function Inbox() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
-                <p className={`text-sm ${!notification.is_read ? 'font-semibold' : 'font-normal'}`}>
-                  {notification.message}
-                </p>
+                <div className={`text-sm ${!notification.is_read ? 'font-semibold' : 'font-normal'}`}>
+                  {renderNotificationContent(notification.message)}
+                </div>
                 
                 {/* Task and Project context */}
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">

@@ -183,6 +183,11 @@
   --color-gray-800: #f8fafc;
   --color-gray-900: #ffffff;
 
+  /* Mention highlights for dark theme */
+  --color-mention-bg: #1e3a8a;
+  --color-mention-text: #bfdbfe;
+  --color-mention-border: #3b82f6;
+
   /* Enhanced button styles for legacy compatibility */
   --color-btn-primary: hsl(var(--primary));
   --color-btn-primary-hover: hsl(var(--primary) / 0.9);
@@ -305,6 +310,27 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Mention highlights */
+.color-mention {
+  --color-mention-bg: #dbeafe;
+  --color-mention-text: #1e40af;
+  --color-mention-border: #93c5fd;
+}
+
+/* Global mention styling */
+.mention {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  margin: 0 0.125rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: var(--color-mention-bg);
+  color: var(--color-mention-text);
+  border: 1px solid var(--color-mention-border);
 }
 
 @layer base {
