@@ -453,10 +453,6 @@ const TaskDetail = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Priority Score</span>
-                <span className="font-medium">{task.priority_score || 0}</span>
-              </div>
-              <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtasks</span>
                 <span className="font-medium">{task.dependency_count || 0}</span>
               </div>

@@ -1,17 +1,9 @@
 import { apiRequest } from './apiRequest';
 
 /**
- * Advanced Task API for prioritization and deadline management
+ * Advanced Task API for progress and reminder management
  */
 export const taskAdvancedAPI = {
-  // Priority management
-  getPrioritizedTasks: async (projectId) => {
-    return await apiRequest(`/task_advanced/projects/${projectId}/tasks/prioritized`);
-  },
-
-  recalculatePriorityScores: async (userId) => {
-    return await apiRequest(`/task_advanced/users/${userId}/priority_scores`, 'POST');
-  },
 
   // Progress management
   updateTaskProgress: async (taskId, percentComplete) => {

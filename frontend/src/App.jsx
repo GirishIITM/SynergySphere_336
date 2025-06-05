@@ -1,4 +1,4 @@
-import TaskList from './components/TaskList';
+
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
@@ -127,15 +127,7 @@ function App() {
                   </AdminPanelLayout>
                 </PrivateRoute>
               } />
-              <Route path='/solutions/tasks-priority' element={
-                <PrivateRoute>
-                  <AdminPanelLayout>
-                    <ContentLayout title="Prioritized Tasks">
-                      <TaskList />
-                    </ContentLayout>
-                  </AdminPanelLayout>
-                </PrivateRoute>
-              } />
+
 
               <Route path='/solutions/tasks' element={
                 <PrivateRoute>
