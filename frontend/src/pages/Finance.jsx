@@ -17,7 +17,9 @@ import {
   Shield,
   Zap,
   Calculator,
-  Clock
+  Clock,
+  RefreshCcw,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -80,17 +82,30 @@ const Finance = () => {
 
       // Fetch user's projects first
       const projectsResponse = await projectAPI.getAllProjects();
-      const projectsData = projectsResponse.projects || [];
+      const projectsData = Array.isArray(projectsResponse?.projects) ? projectsResponse.projects : [];
       setProjects(projectsData);
 
-      // Fetch financial data for each project
+      if (projectsData.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Fetch financial data for each project with better error handling
       const financialPromises = projectsData.map(async (project) => {
         try {
           const financials = await financeAPI.getProjectFinancials(project.id);
           return { ...project, financials };
         } catch (err) {
           console.error(`Failed to fetch financials for project ${project.id}:`, err);
-          return { ...project, financials: null };
+          return { 
+            ...project, 
+            financials: { 
+              budget: null, 
+              total_expenses: 0, 
+              expenses: [],
+              monthly_expenses: []
+            } 
+          };
         }
       });
 
@@ -103,7 +118,7 @@ const Finance = () => {
       }
     } catch (err) {
       console.error('Error fetching financial data:', err);
-      setError('Failed to load financial data');
+      setError('Failed to load financial data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -112,9 +127,18 @@ const Finance = () => {
   const fetchProjectSpecificAnalytics = async (projectId) => {
     try {
       const [variance, forecast, optimization] = await Promise.all([
-        financeAPI.getBudgetVarianceAnalysis(projectId),
-        financeAPI.getExpenseForecast(projectId, parseInt(selectedTimeframe)),
-        financeAPI.getCostOptimizationAnalysis(projectId)
+        financeAPI.getBudgetVarianceAnalysis(projectId).catch(err => {
+          console.error('Failed to fetch variance analysis:', err);
+          return { status: 'unknown', variance_percentage: 0, category_analysis: {} };
+        }),
+        financeAPI.getExpenseForecast(projectId, parseInt(selectedTimeframe)).catch(err => {
+          console.error('Failed to fetch forecast:', err);
+          return { forecast_data: [], budget_impact: {}, trend_slope: 0 };
+        }),
+        financeAPI.getCostOptimizationAnalysis(projectId).catch(err => {
+          console.error('Failed to fetch optimization analysis:', err);
+          return { optimization_opportunities: [], category_totals: {}, cost_efficiency: {} };
+        })
       ]);
       
       setVarianceData(prev => ({ ...prev, [projectId]: variance }));
@@ -133,14 +157,22 @@ const Finance = () => {
       projectsOverBudget: 0
     };
 
+    if (!Array.isArray(projectFinancials)) {
+      return {
+        ...totals,
+        remainingBudget: 0,
+        budgetUtilization: 0
+      };
+    }
+
     projectFinancials.forEach(project => {
       if (project.financials) {
         const { budget, total_expenses } = project.financials;
-        if (budget) {
+        if (budget && budget.allocated_amount) {
           totals.totalBudget += budget.allocated_amount || 0;
           totals.projectsWithBudget++;
           
-          if (total_expenses > budget.allocated_amount) {
+          if ((total_expenses || 0) > budget.allocated_amount) {
             totals.projectsOverBudget++;
           }
         }
@@ -156,10 +188,14 @@ const Finance = () => {
   };
 
   const getBudgetStatusChartData = () => {
+    if (!Array.isArray(projectFinancials) || projectFinancials.length === 0) {
+      return [];
+    }
+
     const statusCounts = { underBudget: 0, nearBudget: 0, overBudget: 0 };
     
     projectFinancials.forEach(project => {
-      if (project.financials?.budget) {
+      if (project.financials?.budget?.allocated_amount) {
         const { allocated_amount } = project.financials.budget;
         const spent = project.financials.total_expenses || 0;
         const utilization = allocated_amount > 0 ? (spent / allocated_amount) * 100 : 0;
@@ -178,13 +214,17 @@ const Finance = () => {
   };
 
   const getExpensesByCategoryData = () => {
+    if (!Array.isArray(projectFinancials)) {
+      return [];
+    }
+
     const categoryTotals = {};
     
     projectFinancials.forEach(project => {
-      if (project.financials?.expenses) {
+      if (project.financials?.expenses && Array.isArray(project.financials.expenses)) {
         project.financials.expenses.forEach(expense => {
           const category = expense.category || 'Other';
-          categoryTotals[category] = (categoryTotals[category] || 0) + expense.amount;
+          categoryTotals[category] = (categoryTotals[category] || 0) + (expense.amount || 0);
         });
       }
     });
@@ -197,13 +237,24 @@ const Finance = () => {
   };
 
   const getMonthlySpendingData = () => {
+    if (!Array.isArray(projectFinancials)) {
+      return [];
+    }
+
     const monthlyData = {};
     
     projectFinancials.forEach(project => {
-      if (project.financials?.expenses) {
+      if (project.financials?.expenses && Array.isArray(project.financials.expenses)) {
         project.financials.expenses.forEach(expense => {
-          const month = new Date(expense.date).toISOString().slice(0, 7); // YYYY-MM format
-          monthlyData[month] = (monthlyData[month] || 0) + expense.amount;
+          try {
+            const date = new Date(expense.date || expense.incurred_at);
+            if (!isNaN(date.getTime())) {
+              const month = date.toISOString().slice(0, 7); // YYYY-MM format
+              monthlyData[month] = (monthlyData[month] || 0) + (expense.amount || 0);
+            }
+          } catch (err) {
+            console.warn('Invalid expense date:', expense);
+          }
         });
       }
     });
@@ -211,10 +262,16 @@ const Finance = () => {
     return Object.entries(monthlyData)
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-6) // Last 6 months
-      .map(([month, amount]) => ({
-        month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        amount
-      }));
+      .map(([month, amount]) => {
+        try {
+          return {
+            month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            amount: Number(amount) || 0
+          };
+        } catch (err) {
+          return { month: month, amount: Number(amount) || 0 };
+        }
+      });
   };
 
   const formatCurrency = (amount) => {
@@ -226,7 +283,7 @@ const Finance = () => {
   };
 
   const getBudgetStatus = (project) => {
-    if (!project.financials?.budget) return null;
+    if (!project.financials?.budget?.allocated_amount) return null;
     
     const { allocated_amount } = project.financials.budget;
     const spent = project.financials.total_expenses || 0;
@@ -252,21 +309,45 @@ const Finance = () => {
     
     return Object.entries(variance.category_analysis).map(([category, data]) => ({
       category,
-      planned: data.planned,
-      actual: data.actual,
-      variance: data.variance,
-      variance_percentage: data.variance_percentage
+      budgeted: data.budgeted || 0,
+      actual: data.actual || 0,
+      variance: data.variance_percentage || 0
     }));
   };
 
   const formatForecastData = (forecast) => {
-    if (!forecast?.forecast_data) return [];
+    if (!forecast?.forecast_data || !Array.isArray(forecast.forecast_data)) return [];
     
     return forecast.forecast_data.map(item => ({
-      month: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      amount: item.predicted_amount,
-      confidence: item.confidence
+      month: item.month || '',
+      amount: Number(item.amount) || 0,
+      confidence: item.confidence || 'medium'
     }));
+  };
+
+  // Chart components with better error handling
+  const EmptyChartState = ({ title, description }) => (
+    <div className="flex flex-col items-center justify-center h-80 text-center">
+      <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+      <h3 className="text-lg font-medium text-muted-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-md">{description}</p>
+    </div>
+  );
+
+  const CustomTooltip = ({ active, payload, label, formatter }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+          <p className="text-sm font-medium text-foreground mb-2">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
+              {`${entry.name}: ${formatter ? formatter(entry.value) : formatCurrency(entry.value)}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   if (loading) {
@@ -278,9 +359,35 @@ const Finance = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="border-destructive bg-destructive/10">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
               <p className="text-destructive font-medium">{error}</p>
+            </div>
+            <Button onClick={fetchAllFinancials} variant="outline" size="sm">
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show message if no projects
+  if (projects.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Projects Found</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first project to see financial data.
+              </p>
+              <Button asChild>
+                <Link to="/solutions/projects/create">Create Project</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -290,8 +397,8 @@ const Finance = () => {
 
   const overallFinancials = calculateOverallFinancials();
   const budgetStatusData = getBudgetStatusChartData();
-  const categoryData = getExpensesByCategoryData();
-  const monthlyData = getMonthlySpendingData();
+  const expensesByCategoryData = getExpensesByCategoryData();
+  const monthlySpendingData = getMonthlySpendingData();
   const selectedProjectVariance = varianceData[selectedProject];
   const selectedProjectForecast = forecastData[selectedProject];
   const selectedProjectOptimization = optimizationData[selectedProject];
@@ -303,10 +410,10 @@ const Finance = () => {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <DollarSign className="h-8 w-8" />
-            Advanced Finance Analytics
+            Financial Analytics
           </h1>
           <p className="text-muted-foreground">
-            Comprehensive financial insights with AI-powered analysis
+            Comprehensive budget and expense analysis
           </p>
         </div>
         <div className="flex gap-2">
@@ -322,6 +429,7 @@ const Finance = () => {
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={fetchAllFinancials}>
+            <RefreshCcw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
         </div>
@@ -370,11 +478,10 @@ const Finance = () => {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{overallFinancials.budgetUtilization.toFixed(1)}%</div>
-                <Progress 
-                  value={overallFinancials.budgetUtilization} 
-                  className="mt-2" 
-                />
+                <div className="text-2xl font-bold">
+                  {Math.round(overallFinancials.budgetUtilization)}%
+                </div>
+                <Progress value={overallFinancials.budgetUtilization} className="mt-2" />
               </CardContent>
             </Card>
 
@@ -395,15 +502,15 @@ const Finance = () => {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Budget Status Distribution */}
-            {budgetStatusData.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="h-5 w-5" />
-                    Budget Status Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Budget Status Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {budgetStatusData.length > 0 ? (
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
                       <RechartsPieChart>
@@ -420,49 +527,21 @@ const Finance = () => {
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip content={<CustomTooltip />} />
                         <Legend />
                       </RechartsPieChart>
                     </ResponsiveContainer>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                ) : (
+                  <EmptyChartState 
+                    title="No Budget Data"
+                    description="Budget status will appear here once project budgets are created."
+                  />
+                )}
+              </CardContent>
+            </Card>
 
-            {/* Monthly Spending Trend */}
-            {monthlyData.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Monthly Spending Trend
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip formatter={(value) => formatCurrency(value)} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="amount" 
-                          stroke="#8884d8" 
-                          fill="#8884d8" 
-                          fillOpacity={0.6} 
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          {/* Expenses by Category */}
-          {categoryData.length > 0 && (
+            {/* Expenses by Category */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -471,338 +550,341 @@ const Finance = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={categoryData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Bar dataKey="amount" fill="#8884d8" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="analysis" className="space-y-6">
-          {/* Project Selection for Analysis */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Budget Variance Analysis</CardTitle>
-              <Select value={selectedProject?.toString()} onValueChange={(value) => setSelectedProject(parseInt(value))}>
-                <SelectTrigger className="w-64">
-                  <SelectValue placeholder="Select a project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((project) => (
-                    <SelectItem key={project.id} value={project.id.toString()}>
-                      {project.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardHeader>
-          </Card>
-
-          {/* Variance Analysis */}
-          {selectedProjectVariance && selectedProjectVariance.has_budget && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Budget Variance Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(selectedProjectVariance.budget_amount)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Budget Allocated</p>
+                {expensesByCategoryData.length > 0 ? (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={expensesByCategoryData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="amount"
+                          label={({ category, amount }) => `${category}: ${formatCurrency(amount)}`}
+                        >
+                          {expensesByCategoryData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(selectedProjectVariance.total_spent)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Total Spent</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-r from-yellow-50 to-red-50 rounded-lg">
-                    <div className={`text-2xl font-bold ${selectedProjectVariance.total_variance >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {selectedProjectVariance.total_variance >= 0 ? '+' : ''}{formatCurrency(selectedProjectVariance.total_variance)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Variance</p>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium">Variance Status</h4>
-                    <Badge variant={getVarianceStatus(selectedProjectVariance.status).variant}>
-                      {getVarianceStatus(selectedProjectVariance.status).text}
-                    </Badge>
-                  </div>
-                  <Progress 
-                    value={Math.abs(selectedProjectVariance.variance_percentage)} 
-                    className="mb-3" 
+                ) : (
+                  <EmptyChartState 
+                    title="No Expense Data"
+                    description="Expense breakdown will appear here once expenses are added to projects."
                   />
-                  <p className="text-sm text-muted-foreground">
-                    {selectedProjectVariance.variance_percentage >= 0 ? 'Over' : 'Under'} budget by {Math.abs(selectedProjectVariance.variance_percentage).toFixed(1)}%
-                  </p>
-                </div>
-
-                {selectedProjectVariance.recommendations && (
-                  <div className="mt-6">
-                    <h4 className="font-medium mb-3">Recommendations:</h4>
-                    <div className="space-y-2">
-                      {selectedProjectVariance.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                          <Lightbulb className="h-4 w-4 mt-0.5 text-yellow-500" />
-                          <span className="text-sm">{rec}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 )}
               </CardContent>
             </Card>
-          )}
+          </div>
 
-          {/* Category Variance Chart */}
-          {selectedProjectVariance && selectedProjectVariance.has_budget && (
+          {/* Monthly Spending Trend */}
+          {monthlySpendingData.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Category Variance Analysis</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Monthly Spending Trend
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={formatVarianceData(selectedProjectVariance)}>
+                    <AreaChart data={monthlySpendingData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" />
+                      <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Legend />
-                      <Bar dataKey="planned" fill="#8884d8" name="Planned" />
-                      <Bar dataKey="actual" fill="#82ca9d" name="Actual" />
-                      <Line type="monotone" dataKey="variance" stroke="#ff7300" name="Variance" />
-                    </ComposedChart>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Area 
+                        type="monotone" 
+                        dataKey="amount" 
+                        stroke="#8884d8" 
+                        fill="#8884d8" 
+                        fillOpacity={0.6}
+                        name="Monthly Spending"
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Project Financial Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Financial Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {projectFinancials.map(project => {
+                  const budgetStatus = getBudgetStatus(project);
+                  return (
+                    <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <h4 className="font-medium">{project.name}</h4>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                          <span>Budget: {formatCurrency(project.financials?.budget?.allocated_amount || 0)}</span>
+                          <span>Spent: {formatCurrency(project.financials?.total_expenses || 0)}</span>
+                          {budgetStatus && (
+                            <Badge variant={budgetStatus.variant} className={budgetStatus.color}>
+                              {budgetStatus.text}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/solutions/projects/${project.id}/finance`}>
+                            View Details
+                            <ChevronRight className="h-4 w-4 ml-1" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analysis" className="space-y-6">
+          {/* Project Selection */}
+          <div className="flex items-center gap-4">
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map(project => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Budget Variance Analysis */}
+          {selectedProjectVariance && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  Budget Variance Analysis
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">
+                      {selectedProjectVariance.variance_percentage?.toFixed(1) || 0}%
+                    </div>
+                    <div className="text-sm text-muted-foreground">Overall Variance</div>
+                  </div>
+                  <div className="text-center">
+                    <Badge 
+                      variant={getVarianceStatus(selectedProjectVariance.status).variant}
+                      className={getVarianceStatus(selectedProjectVariance.status).color}
+                    >
+                      {getVarianceStatus(selectedProjectVariance.status).text}
+                    </Badge>
+                    <div className="text-sm text-muted-foreground mt-1">Status</div>
+                  </div>
+                </div>
+
+                {/* Variance by Category Chart */}
+                {formatVarianceData(selectedProjectVariance).length > 0 && (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={formatVarianceData(selectedProjectVariance)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="category" />
+                        <YAxis />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend />
+                        <Bar dataKey="budgeted" fill="#8884d8" name="Budgeted Amount" />
+                        <Bar dataKey="actual" fill="#82ca9d" name="Actual Amount" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
         <TabsContent value="forecasting" className="space-y-6">
-          {/* Forecast Analysis */}
-          {selectedProjectForecast && selectedProjectForecast.forecast_available && (
+          {/* Project Selection */}
+          <div className="flex items-center gap-4">
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map(project => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Expense Forecast */}
+          {selectedProjectForecast && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Expense Forecast ({selectedTimeframe} Months)
+                  <TrendingUp className="h-5 w-5" />
+                  Expense Forecast ({selectedTimeframe} months)
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="text-center p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(selectedProjectForecast.total_forecast)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Predicted Total</p>
+                {formatForecastData(selectedProjectForecast).length > 0 ? (
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={formatForecastData(selectedProjectForecast)}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="amount" 
+                          stroke="#8884d8" 
+                          strokeWidth={2}
+                          name="Predicted Amount"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg">
-                    <div className="text-lg font-semibold capitalize text-blue-600">
-                      {selectedProjectForecast.historical_data.trend_direction}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Trend Direction</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-yellow-50 rounded-lg">
-                    <div className="text-lg font-semibold text-green-600">
-                      {formatCurrency(selectedProjectForecast.historical_data.average_monthly_spending)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Monthly Average</p>
-                  </div>
-                </div>
+                ) : (
+                  <EmptyChartState 
+                    title="No Forecast Data"
+                    description="Expense forecasts will appear here based on historical spending patterns."
+                  />
+                )}
 
-                {/* Forecast Chart */}
-                <div className="h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={formatForecastData(selectedProjectForecast)}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => formatCurrency(value)} />
-                      <Line 
-                        type="monotone" 
-                        dataKey="amount" 
-                        stroke="#8884d8" 
-                        strokeWidth={2}
-                        name="Predicted Amount"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* Budget Impact */}
+                {/* Budget Impact Summary */}
                 {selectedProjectForecast.budget_impact && (
-                  <div className="mt-6 p-4 border rounded-lg">
-                    <h4 className="font-medium mb-3">Budget Impact Analysis</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-2">Budget Impact Assessment</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Remaining Budget:</span>
-                        <div className="font-semibold">{formatCurrency(selectedProjectForecast.budget_impact.remaining_budget)}</div>
+                        <span className="text-muted-foreground">Predicted Total:</span>
+                        <div className="font-medium">
+                          {formatCurrency(selectedProjectForecast.budget_impact.predicted_total || 0)}
+                        </div>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Projected Utilization:</span>
-                        <div className="font-semibold">{selectedProjectForecast.budget_impact.projected_budget_utilization.toFixed(1)}%</div>
-                      </div>
-                    </div>
-                    
-                    {selectedProjectForecast.budget_impact.will_exceed_budget && (
-                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-red-600">
-                          <AlertCircle className="h-4 w-4" />
-                          <span className="font-medium">Budget Overrun Warning</span>
+                        <span className="text-muted-foreground">Budget Remaining:</span>
+                        <div className="font-medium">
+                          {formatCurrency(selectedProjectForecast.budget_impact.budget_remaining || 0)}
                         </div>
-                        <p className="text-sm text-red-600 mt-1">
-                          Projected to exceed budget by {formatCurrency(selectedProjectForecast.budget_impact.forecast_vs_remaining)}
-                        </p>
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {selectedProjectForecast.recommendations && (
-                  <div className="mt-6">
-                    <h4 className="font-medium mb-3">Forecast Recommendations:</h4>
-                    <div className="space-y-2">
-                      {selectedProjectForecast.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                          <Lightbulb className="h-4 w-4 mt-0.5 text-yellow-500" />
-                          <span className="text-sm">{rec}</span>
+                      <div>
+                        <span className="text-muted-foreground">Risk Level:</span>
+                        <div className="font-medium">
+                          {selectedProjectForecast.budget_impact.risk_level || 'Unknown'}
                         </div>
-                      ))}
+                      </div>
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
-
-          {selectedProjectForecast && !selectedProjectForecast.forecast_available && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="font-medium">{selectedProjectForecast.message}</p>
-                  <p className="text-sm">Data points available: {selectedProjectForecast.data_points}</p>
-                </div>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
         <TabsContent value="optimization" className="space-y-6">
+          {/* Project Selection */}
+          <div className="flex items-center gap-4">
+            <Select value={selectedProject} onValueChange={setSelectedProject}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map(project => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Cost Optimization Analysis */}
-          {selectedProjectOptimization && selectedProjectOptimization.has_expenses && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5" />
-                  Cost Optimization Opportunities
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(selectedProjectOptimization.potential_total_savings)}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Potential Savings</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {selectedProjectOptimization.optimization_opportunities.length}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Opportunities Identified</p>
-                  </div>
-                </div>
-
-                {/* Optimization Opportunities */}
-                <div className="space-y-4">
-                  <h4 className="font-medium">Optimization Opportunities:</h4>
-                  {selectedProjectOptimization.optimization_opportunities.slice(0, 5).map((opportunity, index) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant={opportunity.priority === 'high' ? 'destructive' : opportunity.priority === 'medium' ? 'warning' : 'secondary'}>
-                          {opportunity.priority} Priority
-                        </Badge>
-                        <span className="font-semibold text-green-600">
-                          Save {formatCurrency(opportunity.potential_savings)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{opportunity.description}</p>
-                      <div className="text-xs text-muted-foreground mt-1 capitalize">
-                        Type: {opportunity.type.replace('_', ' ')}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Cost Efficiency */}
-                {selectedProjectOptimization.cost_efficiency && (
-                  <div className="mt-6 p-4 border rounded-lg">
-                    <h4 className="font-medium mb-3">Cost Efficiency Analysis</h4>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Cost per Completed Task:</span>
-                        <div className="font-semibold">{formatCurrency(selectedProjectOptimization.cost_efficiency.cost_per_completed_task)}</div>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Efficiency Rating:</span>
-                        <div className={`font-semibold capitalize ${
-                          selectedProjectOptimization.cost_efficiency.efficiency_rating === 'excellent' ? 'text-green-600' :
-                          selectedProjectOptimization.cost_efficiency.efficiency_rating === 'good' ? 'text-blue-600' : 'text-red-600'
-                        }`}>
-                          {selectedProjectOptimization.cost_efficiency.efficiency_rating.replace('_', ' ')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {selectedProjectOptimization.recommendations && (
-                  <div className="mt-6">
-                    <h4 className="font-medium mb-3">Optimization Recommendations:</h4>
-                    <div className="space-y-2">
-                      {selectedProjectOptimization.recommendations.map((rec, index) => (
-                        <div key={index} className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                          <Zap className="h-4 w-4 mt-0.5 text-blue-500" />
-                          <span className="text-sm">{rec}</span>
+          {selectedProjectOptimization && (
+            <div className="space-y-6">
+              {/* Optimization Opportunities */}
+              {selectedProjectOptimization.optimization_opportunities?.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Lightbulb className="h-5 w-5" />
+                      Cost Optimization Opportunities
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {selectedProjectOptimization.optimization_opportunities.map((opportunity, index) => (
+                        <div key={index} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                          <Zap className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <h4 className="font-medium">{opportunity.category}</h4>
+                            <p className="text-sm text-muted-foreground">{opportunity.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm">
+                              <span>Potential Savings: {formatCurrency(opportunity.potential_savings || 0)}</span>
+                              <Badge variant="secondary">{opportunity.priority || 'Medium'} Priority</Badge>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  </CardContent>
+                </Card>
+              )}
 
-          {selectedProjectOptimization && !selectedProjectOptimization.has_expenses && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p className="font-medium">{selectedProjectOptimization.message}</p>
-                  <p className="text-sm">Add expenses to enable cost optimization analysis</p>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Cost Efficiency Metrics */}
+              {selectedProjectOptimization.cost_efficiency && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Cost Efficiency Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="text-center p-4 bg-muted rounded-lg">
+                        <div className="text-2xl font-bold">
+                          {selectedProjectOptimization.cost_efficiency.efficiency_score?.toFixed(1) || 0}%
+                        </div>
+                        <div className="text-sm text-muted-foreground">Efficiency Score</div>
+                      </div>
+                      <div className="text-center p-4 bg-muted rounded-lg">
+                        <div className="text-2xl font-bold">
+                          {formatCurrency(selectedProjectOptimization.cost_efficiency.cost_per_task || 0)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">Cost per Task</div>
+                      </div>
+                      <div className="text-center p-4 bg-muted rounded-lg">
+                        <div className="text-2xl font-bold">
+                          {selectedProjectOptimization.cost_efficiency.waste_percentage?.toFixed(1) || 0}%
+                        </div>
+                        <div className="text-sm text-muted-foreground">Waste Percentage</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </TabsContent>
       </Tabs>

@@ -1,0 +1,1008 @@
+{
+	"info": {
+		"_postman_id": "sample-data-generator-001",
+		"name": "SynergySphere Sample Data Generator",
+		"description": "Comprehensive collection to generate realistic sample data for SynergySphere project management application",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "bearerToken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTE5NTcwMSwianRpIjoiZjZkNGVkMTQtZTNmZS00OWNmLWJjNDMtMGEzMDljYWVjYTFlIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjMiLCJuYmYiOjE3NDkxOTU3MDEsImNzcmYiOiI5MWFmZjA1OS02ZGU2LTRlZGMtYmQxYS0yZGM0MjdiY2RhMDMiLCJleHAiOjE3NDkyNDk3MDF9.BFTsF6VtV_T3rMCRCa5PEUXQ1kl-F4ABQKWVCnxRkok",
+			"type": "string"
+		},
+		{
+			"key": "project1Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "project2Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "project3Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "task1Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "task2Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "budget1Id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearerToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "0. Prerequisites - User Setup",
+			"description": "Check if user exists and handle authentication issues",
+			"item": [
+				{
+					"name": "Check Current User Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Check if the request was successful",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    console.log('✅ User exists:', responseJson.user);",
+									"    console.log('User ID:', responseJson.user.id);",
+									"    console.log('User Email:', responseJson.user.email);",
+									"} else if (pm.response.code === 401) {",
+									"    console.log('❌ Token is invalid or expired');",
+									"    console.log('Please get a new token by logging in');",
+									"} else if (pm.response.code === 404) {",
+									"    console.log('❌ User not found in database');",
+									"    console.log('The token refers to a user that doesn\\'t exist');",
+									"} else {",
+									"    console.log('❌ Unexpected error:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["profile"]
+						}
+					}
+				},
+				{
+					"name": "Alternative: Register New User (if needed)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// This is a backup request in case the user doesn't exist",
+									"// Only run this manually if the profile check fails",
+									"if (pm.response.code === 201) {",
+									"    console.log('✅ User registration initiated');",
+									"    console.log('Please check email for OTP verification');",
+									"} else {",
+									"    console.log('Registration response:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"full_name\": \"Sample Data User\",\n  \"username\": \"sampleuser\",\n  \"email\": \"gireeshbhat68@gmail.com\",\n  \"password\": \"SamplePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "register"]
+						}
+					}
+				},
+				{
+					"name": "Alternative: Get New Login Token (if needed)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// This can be used to get a fresh token",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    console.log('✅ New token obtained');",
+									"    console.log('Access Token:', responseJson.access_token);",
+									"    console.log('User:', responseJson.user);",
+									"    // Optionally update the collection variable",
+									"    // pm.collectionVariables.set('bearerToken', responseJson.access_token);",
+									"} else {",
+									"    console.log('Login failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username_or_email\": \"gireeshbhat68@gmail.com\",\n  \"password\": \"your_password_here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Projects",
+			"item": [
+				{
+					"name": "Create E-Commerce Platform Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('project1Id', responseJson.project.id);",
+									"    console.log('✅ Project 1 ID saved:', responseJson.project.id);",
+									"} else {",
+									"    console.log('❌ Project creation failed:', pm.response.code);",
+									"    console.log('Response:', pm.response.text());",
+									"    if (pm.response.code === 500 && pm.response.text().includes('foreign key constraint')) {",
+									"        console.log('💡 Hint: The user associated with your token doesn\\'t exist in the database.');",
+									"        console.log('💡 Please run the \"Check Current User Profile\" request first.');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"E-Commerce Platform Redesign\",\n  \"description\": \"Complete redesign and modernization of our e-commerce platform with new UI/UX, improved performance, and mobile responsiveness. This project includes frontend redesign, backend optimization, payment gateway integration, and comprehensive testing.\",\n  \"deadline\": \"2025-03-15T10:00:00Z\",\n  \"member_emails\": [\"john.doe@example.com\", \"sarah.wilson@example.com\"],\n  \"member_permissions\": [\"john.doe@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects"]
+						}
+					}
+				},
+				{
+					"name": "Create Mobile App Development Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('project2Id', responseJson.project.id);",
+									"    console.log('✅ Project 2 ID saved:', responseJson.project.id);",
+									"} else {",
+									"    console.log('❌ Project creation failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mobile App Development\",\n  \"description\": \"Development of native mobile applications for iOS and Android platforms. Features include user authentication, real-time notifications, offline sync, and analytics integration.\",\n  \"deadline\": \"2025-04-20T15:30:00Z\",\n  \"member_emails\": [\"alex.chen@example.com\", \"maria.garcia@example.com\"],\n  \"member_permissions\": [\"alex.chen@example.com\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects"]
+						}
+					}
+				},
+				{
+					"name": "Create Data Analytics Dashboard Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('project3Id', responseJson.project.id);",
+									"    console.log('✅ Project 3 ID saved:', responseJson.project.id);",
+									"} else {",
+									"    console.log('❌ Project creation failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Data Analytics Dashboard\",\n  \"description\": \"Implementation of comprehensive data analytics dashboard with real-time metrics, customizable reports, and predictive analytics capabilities. Includes data pipeline setup and visualization components.\",\n  \"deadline\": \"2025-02-28T12:00:00Z\",\n  \"member_emails\": [\"david.kim@example.com\"],\n  \"member_permissions\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Project Budgets",
+			"item": [
+				{
+					"name": "Create Budget for E-Commerce Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('budget1Id', responseJson.budget.id);",
+									"    console.log('✅ Budget 1 ID saved:', responseJson.budget.id);",
+									"} else {",
+									"    console.log('❌ Budget creation failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"allocated_amount\": 150000,\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/budget",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "budget"]
+						}
+					}
+				},
+				{
+					"name": "Create Budget for Mobile App Project",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"allocated_amount\": 200000,\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/budget",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "budget"]
+						}
+					}
+				},
+				{
+					"name": "Create Budget for Analytics Dashboard",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"allocated_amount\": 75000,\n  \"currency\": \"USD\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project3Id}}/budget",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project3Id}}", "budget"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Tasks",
+			"item": [
+				{
+					"name": "Create UI/UX Design Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('task1Id', responseJson.task.id);",
+									"    console.log('✅ Task 1 ID saved:', responseJson.task.id);",
+									"} else {",
+									"    console.log('❌ Task creation failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Design New User Interface\",\n  \"description\": \"Create modern, responsive UI designs for the e-commerce platform. Include wireframes, mockups, and interactive prototypes. Focus on user experience optimization and accessibility standards.\",\n  \"due_date\": \"2025-01-30T18:00:00Z\",\n  \"estimated_effort\": 40,\n  \"priority_score\": 8.5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Backend API Development Task",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('task2Id', responseJson.task.id);",
+									"    console.log('✅ Task 2 ID saved:', responseJson.task.id);",
+									"} else {",
+									"    console.log('❌ Task creation failed:', pm.response.code, pm.response.text());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Develop RESTful API Endpoints\",\n  \"description\": \"Implement comprehensive REST API for e-commerce functionality including user management, product catalog, shopping cart, and order processing. Include authentication, validation, and error handling.\",\n  \"due_date\": \"2025-02-15T17:00:00Z\",\n  \"estimated_effort\": 60,\n  \"priority_score\": 9.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Database Schema Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Design Database Schema\",\n  \"description\": \"Design and implement optimized database schema for e-commerce platform. Include tables for users, products, orders, payments, and analytics. Ensure proper indexing and relationships.\",\n  \"due_date\": \"2025-01-25T16:00:00Z\",\n  \"estimated_effort\": 24,\n  \"priority_score\": 8.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Mobile App Architecture Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Mobile App Architecture Planning\",\n  \"description\": \"Define architecture for cross-platform mobile application. Choose technology stack, design patterns, and implementation approach. Include performance considerations and scalability planning.\",\n  \"due_date\": \"2025-02-05T14:00:00Z\",\n  \"estimated_effort\": 32,\n  \"priority_score\": 7.5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Data Pipeline Setup Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Setup Data Processing Pipeline\",\n  \"description\": \"Implement ETL pipeline for analytics dashboard. Include data extraction from multiple sources, transformation logic, and loading into analytics database. Setup automated scheduling and monitoring.\",\n  \"due_date\": \"2025-02-10T13:00:00Z\",\n  \"estimated_effort\": 48,\n  \"priority_score\": 8.8\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project3Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project3Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Testing Framework Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Implement Testing Framework\",\n  \"description\": \"Setup comprehensive testing framework including unit tests, integration tests, and end-to-end tests. Configure CI/CD pipeline with automated testing and code coverage reporting.\",\n  \"due_date\": \"2025-02-20T15:30:00Z\",\n  \"estimated_effort\": 36,\n  \"priority_score\": 7.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Task Updates",
+			"item": [
+				{
+					"name": "Update Task Progress - UI Design",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percent_complete\": 45\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{task1Id}}/progress",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks", "{{task1Id}}", "progress"]
+						}
+					}
+				},
+				{
+					"name": "Update Task Status - Backend API",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"in_progress\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{task2Id}}/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks", "{{task2Id}}", "status"]
+						}
+					}
+				},
+				{
+					"name": "Mark Task as Favorite",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_favorite\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{task1Id}}/favorite",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks", "{{task1Id}}", "favorite"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Expenses",
+			"item": [
+				{
+					"name": "Add Development Tools Expense",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 2500.00,\n  \"description\": \"Annual licenses for development tools including IDEs, design software, and productivity tools\",\n  \"category\": \"Software & Tools\",\n  \"task_id\": {{task1Id}}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "expenses"]
+						}
+					}
+				},
+				{
+					"name": "Add Server Infrastructure Expense",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 1800.00,\n  \"description\": \"Cloud hosting and server infrastructure costs for development and staging environments\",\n  \"category\": \"Infrastructure\",\n  \"task_id\": {{task2Id}}\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "expenses"]
+						}
+					}
+				},
+				{
+					"name": "Add Training & Certification Expense",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 1200.00,\n  \"description\": \"Team training and certification programs for new technologies and best practices\",\n  \"category\": \"Training\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "expenses"]
+						}
+					}
+				},
+				{
+					"name": "Add Analytics Tools Expense",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 3200.00,\n  \"description\": \"Data analytics and visualization tools licensing, including premium data sources\",\n  \"category\": \"Software & Tools\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project3Id}}/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project3Id}}", "expenses"]
+						}
+					}
+				},
+				{
+					"name": "Add Hardware Equipment Expense",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 4500.00,\n  \"description\": \"Development hardware including laptops, monitors, and testing devices\",\n  \"category\": \"Hardware\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/expenses",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "expenses"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Messages & Communications",
+			"item": [
+				{
+					"name": "Post Project Kickoff Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"🚀 Project kickoff! Welcome everyone to the E-Commerce Platform Redesign project. Let's start with the planning phase and initial requirements gathering. @john.doe please prepare the technical specifications document.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Post Progress Update Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"📊 Weekly progress update: UI designs are 45% complete, database schema is finalized, and we're making good progress on the API endpoints. Next milestone: complete wireframes by end of week.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Post Task-Specific Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"✅ Great progress on the API development! The authentication endpoints are working perfectly. Moving on to the product catalog APIs next. @sarah.wilson please review the documentation when ready.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks/{{task2Id}}/messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks", "{{task2Id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Post Mobile Project Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"📱 Mobile app architecture meeting scheduled for tomorrow at 2 PM. We'll discuss the technology stack decision and implementation timeline. @alex.chen @maria.garcia please come prepared with your recommendations.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Post Analytics Project Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"📈 Data pipeline setup is progressing well. We've successfully integrated 3 out of 5 data sources. The real-time processing component is showing excellent performance metrics. Dashboard visualizations coming up next!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project3Id}}/messages",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project3Id}}", "messages"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Additional Sample Tasks",
+			"item": [
+				{
+					"name": "Create Payment Integration Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Payment Gateway Integration\",\n  \"description\": \"Integrate multiple payment gateways including Stripe, PayPal, and Apple Pay. Implement secure payment processing, refunds, and transaction monitoring.\",\n  \"due_date\": \"2025-03-01T16:00:00Z\",\n  \"estimated_effort\": 28,\n  \"priority_score\": 9.2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Security Audit Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Security Audit & Implementation\",\n  \"description\": \"Comprehensive security audit of the application. Implement OWASP security standards, penetration testing, and vulnerability assessments.\",\n  \"due_date\": \"2025-03-10T14:00:00Z\",\n  \"estimated_effort\": 20,\n  \"priority_score\": 8.9\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Push Notifications Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Push Notifications System\",\n  \"description\": \"Implement push notifications for mobile apps including real-time alerts, promotional messages, and user engagement features.\",\n  \"due_date\": \"2025-03-25T11:00:00Z\",\n  \"estimated_effort\": 16,\n  \"priority_score\": 7.8\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project2Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project2Id}}", "tasks"]
+						}
+					}
+				},
+				{
+					"name": "Create Performance Optimization Task",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Performance Optimization\",\n  \"description\": \"Optimize application performance including database queries, caching strategies, CDN implementation, and code optimization.\",\n  \"due_date\": \"2025-02-25T17:30:00Z\",\n  \"estimated_effort\": 32,\n  \"priority_score\": 8.1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project3Id}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project3Id}}", "tasks"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Data Verification",
+			"item": [
+				{
+					"name": "Get All Projects",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/projects",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects"]
+						}
+					}
+				},
+				{
+					"name": "Get All Tasks",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/tasks",
+							"host": ["{{baseUrl}}"],
+							"path": ["tasks"]
+						}
+					}
+				},
+				{
+					"name": "Get Project Financial Details",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{project1Id}}/financials",
+							"host": ["{{baseUrl}}"],
+							"path": ["projects", "{{project1Id}}", "financials"]
+						}
+					}
+				},
+				{
+					"name": "Get Dashboard Overview",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/overview",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "overview"]
+						}
+					}
+				},
+				{
+					"name": "Get Analytics Data",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/analytics/productivity",
+							"host": ["{{baseUrl}}"],
+							"path": ["analytics", "productivity"]
+						}
+					}
+				},
+				{
+					"name": "Get Notifications",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/notifications",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"]
+						}
+					}
+				}
+			]
+		}
+	]
+} 
