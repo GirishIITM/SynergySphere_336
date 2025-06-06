@@ -623,7 +623,7 @@ MIT License - Copyright (c) 2025 Girish Vishveshvara Bhat
 ## 📞 Contact & Support
 
 ### Get in Touch
-- **Email**: 23f3000802@ds.study.iitm.ac.in
+- **Email**: 23f2005217@ds.study.iitm.ac.in
 - **Project Repository**: [GitHub Repository]
 - **Live Demo**: https://voluble-tapioca-bc2df4.netlify.app
 
