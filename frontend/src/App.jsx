@@ -6,7 +6,7 @@ import LoadingIndicator from './components/LoadingIndicator';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import { setupCacheClearingOnRefresh, addNoCacheHeaders } from './utils/cacheManager';
-
+import TaskList from './components/TaskList';
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
 import About from './pages/About';
@@ -305,6 +305,7 @@ function App() {
             </Routes>
           </LoadingIndicator>
         </main>
+        <TaskList />
       </div>
     </BrowserRouter>
   );
