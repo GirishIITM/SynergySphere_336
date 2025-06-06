@@ -29,3 +29,12 @@ def register_blueprints(app):
     app.register_blueprint(message_advanced_bp)
     app.register_blueprint(task_advanced_bp, url_prefix='/task_advanced')
     app.register_blueprint(status_bp)
+
+    # Import Socket.IO events (this registers the event handlers)
+    try:
+        from . import socket_events
+        print("Socket.IO events registered successfully")
+    except ImportError as e:
+        print(f"Warning: Could not import Socket.IO events: {e}")
+    except Exception as e:
+        print(f"Error registering Socket.IO events: {e}")

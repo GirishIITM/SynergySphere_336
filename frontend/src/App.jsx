@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import './App.css';
@@ -6,7 +5,13 @@ import LoadingIndicator from './components/LoadingIndicator';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import { setupCacheClearingOnRefresh, addNoCacheHeaders } from './utils/cacheManager';
+<<<<<<< HEAD
 import TaskList from './components/TaskList';
+=======
+import socketService from './utils/socketService';
+import { Toaster } from "@/components/ui/sonner"
+
+>>>>>>> 7f457da226a4a9144d498d263cd75953d583f006
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
 import About from './pages/About';
@@ -50,6 +55,25 @@ function App() {
     // Subscribe to authentication state changes
     const unsubscribe = authState.subscribe((isAuth) => {
       setAuthenticated(isAuth);
+      
+      if (isAuth) {
+        // Connect to Socket.IO when user is authenticated
+        try {
+          socketService.connect();
+          socketService.requestNotificationPermission();
+          console.log('Socket.IO initialized for authenticated user');
+        } catch (error) {
+          console.error('Failed to initialize Socket.IO:', error);
+        }
+      } else {
+        // Disconnect when user logs out
+        try {
+          socketService.disconnect();
+          console.log('Socket.IO disconnected for unauthenticated user');
+        } catch (error) {
+          console.error('Error disconnecting Socket.IO:', error);
+        }
+      }
     });
     
     // Initial authentication check
@@ -64,6 +88,11 @@ function App() {
     return () => {
       unsubscribe();
       cleanupCacheClearing();
+      try {
+        socketService.disconnect();
+      } catch (error) {
+        console.error('Error in cleanup:', error);
+      }
     };
   }, []);
 
@@ -304,6 +333,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </LoadingIndicator>
+          <Toaster richColors closeButton />
         </main>
         <TaskList />
       </div>

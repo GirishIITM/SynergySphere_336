@@ -66,7 +66,9 @@ const TaskBoard = ({ initialTasksGrouped = null, onTaskUpdate, onTaskDelete }) =
    *   array: Array of tasks for the column (already sorted by backend with favorites first)
    */
   const getTasksForColumn = (columnStatus) => {
-    return tasksGrouped[columnStatus] || [];
+    // Sort so that favorited tasks appear at the top
+    const tasks = tasksGrouped[columnStatus] || [];
+    return [...tasks].sort((a, b) => (b.isFavorite === true) - (a.isFavorite === true));
   };
 
   /**

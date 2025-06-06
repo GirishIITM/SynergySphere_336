@@ -94,7 +94,7 @@ def create_mention_notifications(message_obj, mentioned_users, sender_user):
         list: List of created Notification objects
     """
     from models import Notification
-    from extensions import db
+    from extensions import db, socketio
     
     notifications = []
     
@@ -116,5 +116,30 @@ def create_mention_notifications(message_obj, mentioned_users, sender_user):
             )
             db.session.add(notification)
             notifications.append(notification)
+            
+            # Emit real-time notification to the tagged user
+            try:
+                socketio.emit('user_tagged', {
+                    'notification_id': notification.id,
+                    'message': notification_text,
+                    'sender': {
+                        'id': sender_user.id,
+                        'username': sender_user.username,
+                        'full_name': sender_user.full_name
+                    },
+                    'context': {
+                        'task_id': message_obj.task_id,
+                        'task_title': message_obj.task.title if message_obj.task_id else None,
+                        'project_id': message_obj.project_id,
+                        'project_name': message_obj.project.name,
+                        'message_id': message_obj.id,
+                        'message_content': message_obj.content[:100] + '...' if len(message_obj.content) > 100 else message_obj.content
+                    },
+                    'timestamp': notification.created_at.isoformat() if notification.created_at else None
+                }, room=f'user_{user.id}')
+                
+                print(f"Emitted user_tagged event to user {user.id}")
+            except Exception as e:
+                print(f"Error emitting Socket.IO event: {e}")
     
-    return notifications 
+    return notifications

@@ -204,7 +204,7 @@ const TaskCreate = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
+                    <SelectItem key={project.id} value={project.id.toString()}>
                       {project.name}
                     </SelectItem>
                   ))}

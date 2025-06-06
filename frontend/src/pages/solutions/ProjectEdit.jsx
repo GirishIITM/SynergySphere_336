@@ -284,24 +284,20 @@ const ProjectEdit = () => {
       setError('');
       setSuccess('');
 
-      // Create FormData for file upload support
-      const submitData = new FormData();
-      submitData.append('name', formData.name);
-      submitData.append('description', formData.description);
-      submitData.append('deadline', formData.deadline);
-      
-      if (formData.project_image) {
-        submitData.append('project_image', formData.project_image);
-      }
-      
-      // Handle member updates
-      submitData.append('member_emails', JSON.stringify(formData.member_emails));
-      submitData.append('member_permissions', JSON.stringify(formData.member_permissions));
+      // Send basic project data as JSON (not FormData)
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        deadline: formData.deadline
+      };
 
       await projectAPI.updateProject(id, submitData);
 
       setSuccess('Project updated successfully! Redirecting...');
 
+      // TODO: Handle image upload and member management separately
+      // For now, we're only updating basic project information
+      
       // setTimeout(() => {
       //   navigate('/solutions/projects');
       // }, 2000);

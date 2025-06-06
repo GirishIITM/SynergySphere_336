@@ -199,6 +199,12 @@
 - [x] Fix TypeError in mention detection where extract_mentions result was passed to find_mentioned_users instead of raw content ✅
 - [ ] Create tests for mention detection and notification functionality
 
+#### 22. Ensure Favorited Tasks Come to the Top - 2025-01-18
+- [ ] Update get_all_tasks endpoint to sort tasks with favorites first
+- [ ] Ensure consistent favorite sorting across all task endpoints
+- [ ] Test favorite sorting in task list view
+- [ ] Verify favorites work correctly with existing filters and pagination
+
 #### 22. Remove AI Insights Tab from Analytics - 2025-01-18
 - [x] Remove the AI Insights tab from Analytics page ✅
 - [x] Keep Brain icon import as it's still used in AI Performance Prediction ✅
