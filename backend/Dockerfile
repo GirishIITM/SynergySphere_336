@@ -42,6 +42,7 @@ ENV APP_VERSION=$APP_VERSION
 ENV BUILD_DATE=$BUILD_DATE
 ENV GIT_COMMIT=$GIT_COMMIT
 ENV DOCKER_TAG=$DOCKER_TAG
+ENV FRONTEND_URL=https://synergysphere-5fotpmpmi-adityar42069-8018s-projects.vercel.app
 
 # Expose Flask default port
 EXPOSE 8080

@@ -5,13 +5,9 @@ import LoadingIndicator from './components/LoadingIndicator';
 import Navbar from './components/Navbar';
 import PrivateRoute from './components/PrivateRoute';
 import { setupCacheClearingOnRefresh, addNoCacheHeaders } from './utils/cacheManager';
-<<<<<<< HEAD
 import TaskList from './components/TaskList';
-=======
 import socketService from './utils/socketService';
 import { Toaster } from "@/components/ui/sonner"
-
->>>>>>> 7f457da226a4a9144d498d263cd75953d583f006
 import AdminPanelLayout from './components/admin-panel/admin-panel-layout';
 import { ContentLayout } from './components/admin-panel/content-layout';
 import About from './pages/About';
