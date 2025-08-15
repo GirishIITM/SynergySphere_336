@@ -24,7 +24,7 @@ if "%current_branch%" neq "adityar" (
     pause
     exit /b 1
 )
-echo ✓ Currently on branch: %current_branch%
+echo [OK] Currently on branch: %current_branch%
 
 REM Check for uncommitted changes
 for /f %%i in ('git status --porcelain 2^>nul ^| find /c /v ""') do set uncommitted_count=%%i
@@ -35,7 +35,7 @@ if %uncommitted_count% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ No uncommitted changes found
+echo [OK] No uncommitted changes found
 
 REM Check if Node.js is installed
 node --version >nul 2>&1
@@ -56,8 +56,8 @@ if %errorlevel% neq 0 (
 
 for /f "tokens=*" %%i in ('node --version 2^>nul') do set node_version=%%i
 for /f "tokens=*" %%i in ('npm --version 2^>nul') do set npm_version=%%i
-echo ✓ Node.js version: %node_version%
-echo ✓ npm version: %npm_version%
+echo [OK] Node.js version: %node_version%
+echo [OK] npm version: %npm_version%
 
 REM Check if Vercel CLI is installed
 vercel --version >nul 2>&1
@@ -70,10 +70,10 @@ if %errorlevel% neq 0 (
         pause
         exit /b 1
     )
-    echo ✓ Vercel CLI installed successfully
+    echo [OK] Vercel CLI installed successfully
 ) else (
     for /f "tokens=*" %%i in ('vercel --version 2^>nul') do set vercel_version=%%i
-    echo ✓ Vercel CLI version: %vercel_version%
+    echo [OK] Vercel CLI version: %vercel_version%
 )
 
 REM Check if user is logged in to Vercel
@@ -98,7 +98,7 @@ if %errorlevel% neq 0 (
 )
 
 for /f "tokens=*" %%i in ('vercel whoami 2^>nul') do set vercel_user=%%i
-echo ✓ Logged in to Vercel as: %vercel_user%
+echo [OK] Logged in to Vercel as: %vercel_user%
 
 REM Check if package.json exists
 if not exist "package.json" (
@@ -106,7 +106,7 @@ if not exist "package.json" (
     pause
     exit /b 1
 )
-echo ✓ Found package.json
+echo [OK] Found package.json
 
 echo.
 echo Installing dependencies...
@@ -116,7 +116,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ Dependencies installed successfully
+echo [OK] Dependencies installed successfully
 
 echo.
 echo Building the project...
@@ -126,7 +126,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ Build completed successfully
+echo [OK] Build completed successfully
 
 REM Check vercel.json configuration
 if exist "vercel.json" (

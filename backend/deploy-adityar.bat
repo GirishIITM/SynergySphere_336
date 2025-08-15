@@ -24,7 +24,7 @@ if "%current_branch%" neq "adityar" (
     pause
     exit /b 1
 )
-echo ✓ Currently on branch: %current_branch%
+echo [OK] Currently on branch: %current_branch%
 
 REM Check for uncommitted changes
 for /f %%i in ('git status --porcelain 2^>nul ^| find /c /v ""') do set uncommitted_count=%%i
@@ -35,7 +35,7 @@ if %uncommitted_count% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ No uncommitted changes found
+echo [OK] No uncommitted changes found
 
 REM Check if gcloud is installed
 gcloud version >nul 2>&1
@@ -45,7 +45,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ Google Cloud CLI is available
+echo [OK] Google Cloud CLI is available
 
 REM Check authentication
 for /f "tokens=*" %%i in ('gcloud auth list --filter=status:ACTIVE --format="value(account)" 2^>nul') do set auth_account=%%i
@@ -55,7 +55,7 @@ if "%auth_account%"=="" (
     pause
     exit /b 1
 )
-echo ✓ Authenticated with Google Cloud as: %auth_account%
+echo [OK] Authenticated with Google Cloud as: %auth_account%
 
 echo.
 echo Deploying backend from adityar branch to Google Cloud Run...
@@ -67,7 +67,7 @@ if "%commit_sha%"=="" (
     pause
     exit /b 1
 )
-echo ✓ Commit SHA: %commit_sha%
+echo [OK] Commit SHA: %commit_sha%
 
 echo.
 echo Starting Cloud Build deployment...
@@ -79,7 +79,7 @@ if %errorlevel% neq 0 (
     pause
     exit /b 1
 )
-echo ✓ Cloud Build completed successfully
+echo [OK] Cloud Build completed successfully
 
 echo.
 echo Setting up public access permissions...
@@ -89,7 +89,7 @@ gcloud run services add-iam-policy-binding --region=us-central1 --member=allUser
 if %errorlevel% neq 0 (
     echo Warning: Failed to set public access permissions. Service may already be public.
 ) else (
-    echo ✓ Public access permissions set
+    echo [OK] Public access permissions set
 )
 
 echo.
