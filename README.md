@@ -294,7 +294,7 @@ MAIL_PASSWORD=your-app-password
 
 ### Base URLs
 - Development: `http://localhost:5000`
-- Production: `https://your-production-api.com`
+- Production: `https://synergysphere-backend-1021308958916.us-central1.run.app`
 
 ### Authentication
 All API endpoints (except auth) require JWT authentication:
@@ -417,34 +417,54 @@ frontend/src/__tests__/
 
 ### Production Deployment
 
-1. **Backend Deployment (Heroku/Railway)**
+#### Current Deployment
+- **Frontend**: [https://synergysphere-5fotpmpmi-adityar42069-8018s-projects.vercel.app](https://synergysphere-5fotpmpmi-adityar42069-8018s-projects.vercel.app)
+- **Backend**: [https://synergysphere-backend-1021308958916.us-central1.run.app](https://synergysphere-backend-1021308958916.us-central1.run.app)
+- **Branch**: `adityar`
+
+#### Backend Deployment (Google Cloud Run)
+
+1. **Ensure you're on the adityar branch**
    ```bash
-   # Install Gunicorn
-   pip install gunicorn
-   
-   # Create Procfile
-   echo "web: gunicorn app:app" > Procfile
-   
-   # Deploy
-   git push heroku main
+   git checkout adityar
    ```
 
-2. **Frontend Deployment (Netlify/Vercel)**
+2. **Deploy using the deployment script**
+   ```bash
+   cd backend
+   bash deploy-adityar.sh
+   ```
+
+   This script:
+   - Verifies you're on the adityar branch
+   - Builds and deploys the container to Google Cloud Run
+   - Makes the service publicly accessible
+   - Returns the deployed service URL
+
+#### Frontend Deployment (Vercel)
+
+1. **Ensure you're on the adityar branch**
+   ```bash
+   git checkout adityar
+   ```
+
+2. **Deploy using the deployment script**
    ```bash
    cd frontend
-   
-   # Build for production
-   npm run build
-   
-   # Deploy to Netlify
-   netlify deploy --prod --dir=dist
+   bash deploy-adityar.sh
    ```
 
-3. **Database Setup**
-   ```bash
-   # PostgreSQL setup
-   heroku addons:create heroku-postgresql:hobby-dev
-   heroku config:get DATABASE_URL
+   This script:
+   - Verifies you're on the adityar branch
+   - Deploys to Vercel with production flag
+   - Uses the adityar branch configuration
+
+3. **Environment Variables**
+   The frontend's `vercel.json` contains the environment variables:
+   ```json
+   "env": {
+     "VITE_API_URL": "https://synergysphere-backend-1021308958916.us-central1.run.app"
+   }
    ```
 
 ### Docker Deployment
@@ -624,8 +644,8 @@ MIT License - Copyright (c) 2025 Girish Vishveshvara Bhat
 
 ### Get in Touch
 - **Email**: 23f2005217@ds.study.iitm.ac.in
-- **Project Repository**: [GitHub Repository]
-- **Live Demo**: https://voluble-tapioca-bc2df4.netlify.app
+- **Project Repository**: [GitHub Repository](https://github.com/GirishIITM/SynergySphere_336)
+- **Live Demo**: https://synergysphere-5fotpmpmi-adityar42069-8018s-projects.vercel.app
 
 ### Support
 For bugs, feature requests, or questions:

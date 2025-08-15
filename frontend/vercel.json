@@ -19,6 +19,6 @@
     { "src": "/(.*)", "dest": "/index.html" }
   ],
   "env": {
-    "VITE_API_URL": "https://synergysphere-backend-cp4hpno3ia-uc.a.run.app"
+    "VITE_API_URL": "https://synergysphere-backend-1021308958916.us-central1.run.app"
   }
 }
