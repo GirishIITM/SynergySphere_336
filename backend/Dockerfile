@@ -44,7 +44,7 @@ ENV GIT_COMMIT=$GIT_COMMIT
 ENV DOCKER_TAG=$DOCKER_TAG
 
 # Expose Flask default port
-EXPOSE 5000
+EXPOSE 8080
 
 # Run the app (activate venv first)
-CMD ["/bin/bash", "-c", ". .venv/bin/activate && gunicorn -b 0.0.0.0:5000 app:app"]
+CMD ["/bin/bash", "-c", ". .venv/bin/activate && gunicorn -b 0.0.0.0:${PORT:-8080} app:app"]
