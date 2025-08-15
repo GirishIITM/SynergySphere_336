@@ -38,7 +38,7 @@ if %uncommitted_count% neq 0 (
 echo [OK] No uncommitted changes found
 
 REM Check if gcloud is installed
-gcloud version >nul 2>&1
+gcloud.cmd version >nul 2>&1
 if %errorlevel% neq 0 (
     echo Error: Google Cloud CLI (gcloud) is not installed or not in PATH.
     echo Please install it from: https://cloud.google.com/sdk/docs/install
@@ -48,7 +48,7 @@ if %errorlevel% neq 0 (
 echo [OK] Google Cloud CLI is available
 
 REM Check authentication
-for /f "tokens=*" %%i in ('gcloud auth list --filter=status:ACTIVE --format="value(account)" 2^>nul') do set auth_account=%%i
+for /f "tokens=*" %%i in ('gcloud.cmd auth list --filter=status:ACTIVE --format="value(account)" 2^>nul') do set auth_account=%%i
 if "%auth_account%"=="" (
     echo Error: You are not authenticated with Google Cloud.
     echo Please run: gcloud auth login
@@ -73,7 +73,7 @@ echo.
 echo Starting Cloud Build deployment...
 
 REM Build and deploy using Cloud Build
-gcloud builds submit --config cloudbuild.yaml --substitutions=COMMIT_SHA=%commit_sha% .
+gcloud.cmd builds submit --config cloudbuild.yaml --substitutions=COMMIT_SHA=%commit_sha% .
 if %errorlevel% neq 0 (
     echo Error: Cloud Build deployment failed.
     pause
@@ -85,7 +85,7 @@ echo.
 echo Setting up public access permissions...
 
 REM Make the service publicly accessible
-gcloud run services add-iam-policy-binding --region=us-central1 --member=allUsers --role=roles/run.invoker synergysphere-backend >nul 2>&1
+gcloud.cmd run services add-iam-policy-binding --region=us-central1 --member=allUsers --role=roles/run.invoker synergysphere-backend >nul 2>&1
 if %errorlevel% neq 0 (
     echo Warning: Failed to set public access permissions. Service may already be public.
 ) else (
@@ -96,7 +96,7 @@ echo.
 echo Retrieving deployment information...
 
 REM Get the deployed service URL
-for /f "tokens=*" %%i in ('gcloud run services describe synergysphere-backend --platform managed --region us-central1 --format "value(status.url)" 2^>nul') do set service_url=%%i
+for /f "tokens=*" %%i in ('gcloud.cmd run services describe synergysphere-backend --platform managed --region us-central1 --format "value(status.url)" 2^>nul') do set service_url=%%i
 if "%service_url%"=="" (
     echo Error: Unable to retrieve service URL.
     pause
