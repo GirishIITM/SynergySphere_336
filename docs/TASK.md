@@ -313,6 +313,16 @@
 - [x] Create deployment scripts for adityar branch ✅
 - [x] Document deployment process in README ✅
 
+#### 31. Create Windows PowerShell Deployment Scripts - 2025-01-19
+- [x] Create backend/deploy-adityar.ps1 script for Windows PowerShell deployment to Google Cloud Run ✅
+- [x] Create frontend/deploy-adityar.ps1 script for Windows PowerShell deployment to Vercel ✅
+- [x] Add comprehensive error handling and user feedback in PowerShell scripts ✅
+- [x] Include dependency checks (Git, gcloud, Node.js, npm, Vercel CLI) ✅
+- [x] Add branch validation and Git status checks ✅
+- [x] Include automatic dependency installation where possible ✅
+- [x] Add colored output and progress indicators ✅
+- [x] Update TASK.md with Windows deployment scripts task ✅
+
 ### ✅ Completed Tasks
 - Basic task management with CRUD operations
 - Project membership system
