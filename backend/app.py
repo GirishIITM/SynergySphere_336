@@ -38,12 +38,31 @@ def create_app(config_class=None):
     allowed_origins = [
         app.config['FRONTEND_URL'],
         "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://synergysphere-seven.vercel.app",
+        "https://synergysphere-cxk67hmcj-adityar42069-8018s-projects.vercel.app",
+        "https://synergysphere-p56sac8ik-adityar42069-8018s-projects.vercel.app",
+        "https://synergysphere-5fotpmpmi-adityar42069-8018s-projects.vercel.app"
     ]
+    
+    # Add wildcard support for Vercel domains
+    def check_origin(origin):
+        """Check if origin is allowed, including wildcard support for Vercel."""
+        if origin in allowed_origins:
+            return True
+        # Allow any Vercel subdomain for the specific project
+        if origin and (
+            origin.endswith('-adityar42069-8018s-projects.vercel.app') or
+            origin.endswith('.vercel.app')
+        ):
+            return True
+        return False
     
     CORS(
         app,
-        resources={r"/*": {"origins": allowed_origins}},
+        resources={r"/*": {"origins": check_origin}},
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials", "X-Requested-With", "Cache-Control", "Pragma", "Expires"],
         supports_credentials=True,
